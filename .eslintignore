@@ -1,0 +1,9 @@
+coverage/*
+dist/*
+test/polyfill/array.find.polyfill.js
+test/tests.entry.js
+test/global-test-setup
+node_modules/*
+README.md
+stats.json
+jest-test-results.json
