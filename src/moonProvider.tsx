@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Store, Action } from "redux";
 import { AxiosResponse, AxiosRequestConfig } from "axios";
+import { Store, Action } from "redux";
 import { Provider } from "react-redux";
 
 import { getClients } from "./utils";
@@ -29,7 +29,7 @@ export interface ILink {
   interceptors: IInterceptors;
 }
 
-interface IProps {
+interface IMoonProviderProps {
   links: ILink[];
   store?: Store<IMoonStore>;
   children: JSX.Element | JSX.Element[];
@@ -37,12 +37,12 @@ interface IProps {
 
 export const MoonContext: React.Context<IMoonContextValue> = React.createContext<IMoonContextValue>({ client: null });
 
-class MoonProvider extends React.Component<IProps> {
+class MoonProvider extends React.Component<IMoonProviderProps> {
   readonly client: MoonClient;
 
   readonly moonStore: Store<IMoonStore, Action<any>>;
 
-  constructor(props: IProps) {
+  constructor(props: IMoonProviderProps) {
     super(props);
     const { links, store } = this.props;
     this.moonStore = store || getMoonStore();

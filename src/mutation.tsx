@@ -21,7 +21,7 @@ export interface IMutationProps<MutationResponse = any, MutationVariables = any>
   onError?: (error: any) => void;
 }
 
-interface IProps<MutationResponse = any, MutationVariables = any>
+export interface IMutationPropsWithMoonClient<MutationResponse = any, MutationVariables = any>
   extends IMutationProps<MutationResponse, MutationVariables>,
     IMoonContextValue {}
 
@@ -32,14 +32,14 @@ interface IState<MutationResponse = any> {
 }
 
 export class DumbMutation<MutationResponse = AxiosResponse<any>, MutationVariables = any> extends React.PureComponent<
-  IProps<MutationResponse, MutationVariables>,
+  IMutationPropsWithMoonClient<MutationResponse, MutationVariables>,
   IState<MutationResponse>
 > {
   static defaultProps = {
     type: MutateType.Post
   };
 
-  constructor(props: IProps) {
+  constructor(props: IMutationPropsWithMoonClient) {
     super(props);
 
     this.state = {

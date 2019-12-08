@@ -3,13 +3,13 @@ import * as React from "react";
 import { MutateType, useMoonClient } from "./moonClient";
 import { Nullable } from "./typing";
 
-interface IMutationData<MutationResponse = any> {
+export interface IMutationData<MutationResponse = any> {
   response?: Nullable<MutationResponse>;
   loading: boolean;
   error: any;
 }
 
-export interface IMutationProps<MutationResponse = any, MutationVariables = any> {
+export interface IMutationHookProps<MutationResponse = any, MutationVariables = any> {
   source: string;
   endPoint: string;
   variables?: MutationVariables;
@@ -25,7 +25,7 @@ export default function useMutation<MutationResponse = any, MutationVariables = 
   variables,
   onResponse,
   onError
-}: IMutationProps<MutationResponse, MutationVariables>): [IMutationData<MutationResponse>, () => void] {
+}: IMutationHookProps<MutationResponse, MutationVariables>): [IMutationData<MutationResponse>, () => void] {
   const { client } = useMoonClient();
   const [error, setError] = React.useState<any>(null);
   const [loading, setLoading] = React.useState<boolean>(false);

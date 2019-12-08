@@ -43,7 +43,7 @@ export interface IQueryProps<QueryData = any, QueryVariables = any, Deserialized
   onError?: (error: any) => void;
 }
 
-interface IProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData>
+interface IQueryPropsWithMoonClient<QueryData = any, QueryVariables = any, DeserializedData = QueryData>
   extends IQueryProps<QueryData, QueryVariables, DeserializedData>,
     IMoonContextValue {}
 
@@ -55,7 +55,7 @@ interface IState<QueryData = any> {
 }
 
 export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData = QueryData> extends React.PureComponent<
-  IProps<QueryData, QueryVariables, DeserializedData>,
+  IQueryPropsWithMoonClient<QueryData, QueryVariables, DeserializedData>,
   IState<DeserializedData>
 > {
   static defaultProps = {
@@ -65,7 +65,7 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
     id: null
   };
 
-  constructor(props: IProps) {
+  constructor(props: IQueryPropsWithMoonClient) {
     super(props);
 
     this.state = {
@@ -82,7 +82,7 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
     }
   }
 
-  componentDidUpdate(prevProps: Readonly<IProps<QueryData, QueryVariables, DeserializedData>>): void {
+  componentDidUpdate(prevProps: Readonly<IQueryPropsWithMoonClient<QueryData, QueryVariables, DeserializedData>>): void {
     const { variables, endPoint, source, autoRefetchOnUpdate } = this.props;
 
     if (autoRefetchOnUpdate) {
