@@ -8,23 +8,23 @@ import { Nullable } from "./typing";
 import { useMoonClient } from "./moonClient";
 import { IAppWithMoonStore, IQueriesResult } from "./redux/reducers";
 
-interface QueriesIds {
+export interface QueriesIds {
   // queryId: prop name
   [queryId: string]: string;
 }
 
-interface IActions {
+export interface IQueryActions {
   refetch: () => void;
 }
 
-interface IQueryResponse<QueryData = any> {
+export interface IQueryHookResponse<QueryData = any> {
   data?: Nullable<QueryData>;
   loading: boolean;
   error: any;
   networkStatus: MoonNetworkStatus;
 }
 
-export interface IQueryProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData> {
+export interface IQueryHooksProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData> {
   id?: Nullable<string>;
   source: string;
   endPoint: string;
@@ -50,7 +50,7 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
   onError,
   fetchOnMount = true,
   autoRefetchOnUpdate = true
-}: IQueryProps<QueryData, QueryVariables, DeserializedData>): [IQueryResponse<DeserializedData>, IActions] {
+}: IQueryHooksProps<QueryData, QueryVariables, DeserializedData>): [IQueryHookResponse<DeserializedData>, IQueryActions] {
   const { client } = useMoonClient();
   const [error, setError] = React.useState<any>(null);
   const [loading, setLoading] = React.useState<boolean>(false);
