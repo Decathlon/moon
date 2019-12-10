@@ -18,7 +18,6 @@ describe("Query component", () => {
   });
   it("should call the moon client query method", () => {
     moonClient.query = jest.fn();
-    moonClient.readQuery = jest.fn();
     const props = {
       id: "FooQueryId",
       endPoint: "/fooEndPoint",
@@ -28,16 +27,18 @@ describe("Query component", () => {
       client: moonClient
     };
 
-    mount(<DumbQuery {...props} options={{ responseType: "blob" }} />);
-    expect(props.client.readQuery).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", { foo: "fooValue" });
+    const wrapper = mount(<DumbQuery {...props} options={{ responseType: "blob" }} />);
+    const queryInstance: DumbQuery = wrapper.instance() as DumbQuery;
+
     expect(props.client.query).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", { foo: "fooValue" }, props.deserialize, {
+      // @ts-ignore cancelToken is a private prop
+      cancelToken: queryInstance.cancelToken.token,
       responseType: "blob"
     });
   });
 
   it("should call the moon client query methode without cache", () => {
     moonClient.query = jest.fn();
-    moonClient.readQuery = jest.fn();
     const props = {
       id: "FooQueryId",
       endPoint: "/fooEndPoint",
@@ -46,16 +47,18 @@ describe("Query component", () => {
       client: moonClient,
       fetchPolicy: FetchPolicy.NetworkOnly
     };
-    mount(<DumbQuery {...props} />);
-    expect(props.client.readQuery).not.toHaveBeenCalled();
-    expect(props.client.query).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", undefined, props.deserialize, undefined);
+    const wrapper = mount(<DumbQuery {...props} />);
+    const queryInstance: DumbQuery = wrapper.instance() as DumbQuery;
+    expect(props.client.query).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", undefined, props.deserialize, {
+      // @ts-ignore cancelToken is a private prop
+      cancelToken: queryInstance.cancelToken.token
+    });
   });
 
   it("should return cached value", async () => {
     const response = { data: "foodata" };
     const cache = { data: "bardata" };
     moonClient.query = jest.fn().mockImplementation(() => Promise.resolve(response));
-    moonClient.readQuery = jest.fn().mockImplementation(() => cache);
     const props = {
       id: "FooQueryId",
       endPoint: "/fooEndPoint",
@@ -63,7 +66,8 @@ describe("Query component", () => {
       variables: { foo: "fooValue" },
       client: moonClient,
       children: jest.fn().mockImplementation(() => null),
-      fetchPolicy: FetchPolicy.CacheFirst
+      fetchPolicy: FetchPolicy.CacheFirst,
+      cache
     };
     const wrapper = mount(<DumbQuery {...props} />);
     await Promise.resolve();
@@ -72,7 +76,7 @@ describe("Query component", () => {
     const firstCall = {
       loading: false,
       error: null,
-      data: undefined,
+      data: cache,
       networkStatus: MoonNetworkStatus.Ready,
       // @ts-ignore
       actions: queryInstance.actions
@@ -95,7 +99,6 @@ describe("Query component", () => {
     const response = { data: "foodata" };
     const cache = { data: "bardata" };
     moonClient.query = jest.fn().mockImplementation(() => Promise.resolve(response));
-    moonClient.readQuery = jest.fn().mockImplementation(() => cache);
     const props = {
       id: "FooQueryId",
       endPoint: "/fooEndPoint",
@@ -103,7 +106,8 @@ describe("Query component", () => {
       variables: { foo: "fooValue" },
       client: moonClient,
       children: jest.fn().mockImplementation(() => null),
-      fetchPolicy: FetchPolicy.CacheAndNetwork
+      fetchPolicy: FetchPolicy.CacheAndNetwork,
+      cache
     };
     const wrapper = mount(<DumbQuery {...props} />);
     await Promise.resolve();
@@ -112,7 +116,7 @@ describe("Query component", () => {
     const firstCall = {
       loading: false,
       error: null,
-      data: undefined,
+      data: cache,
       networkStatus: MoonNetworkStatus.Ready,
       // @ts-ignore
       actions: queryInstance.actions
@@ -134,7 +138,6 @@ describe("Query component", () => {
       // @ts-ignore
       actions: queryInstance.actions
     };
-
     expect(props.children).toHaveBeenCalledTimes(3);
     expect(props.children.mock.calls).toEqual([[firstCall], [secondCall], [thirdCall]]);
   });
@@ -235,7 +238,10 @@ describe("Query component", () => {
 
   it("should call children with fetch function", async () => {
     const response = { data: "foodata" };
-    moonClient.query = jest.fn().mockImplementation(() => Promise.resolve(response));
+    moonClient.query = jest.fn().mockImplementation(() => {
+      wrapper.setProps({ cache: response });
+      return Promise.resolve(response);
+    });
     const props = {
       id: "FooQueryId",
       endPoint: "/fooEndPoint",
@@ -298,24 +304,18 @@ describe("Query component", () => {
       autoRefetchOnUpdate: true
     };
     const wrapper = mount(<DumbQuery {...props} />);
-    expect(props.client.query).toHaveBeenCalledWith(
-      "FooQueryId",
-      "Foo",
-      "/fooEndPoint",
-      { foo: "fooValue" },
-      undefined,
-      undefined
-    );
+    const queryInstance: DumbQuery = wrapper.instance() as DumbQuery;
+
+    expect(props.client.query).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", { foo: "fooValue" }, undefined, {
+      // @ts-ignore cancelToken is a private prop
+      cancelToken: queryInstance.cancelToken.token
+    });
     moonClient.query = jest.fn();
     wrapper.setProps({ variables: { foo: "newValue" } });
-    expect(props.client.query).toHaveBeenCalledWith(
-      "FooQueryId",
-      "Foo",
-      "/fooEndPoint",
-      { foo: "newValue" },
-      undefined,
-      undefined
-    );
+    expect(props.client.query).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", { foo: "newValue" }, undefined, {
+      // @ts-ignore cancelToken is a private prop
+      cancelToken: queryInstance.cancelToken.token
+    });
   });
 
   it("shouldn't refetch on update", () => {
@@ -331,15 +331,12 @@ describe("Query component", () => {
       autoRefetchOnUpdate: false
     };
     const wrapper = mount(<DumbQuery {...props} />);
+    const queryInstance: DumbQuery = wrapper.instance() as DumbQuery;
 
-    expect(props.client.query).toHaveBeenCalledWith(
-      "FooQueryId",
-      "Foo",
-      "/fooEndPoint",
-      { foo: "fooValue" },
-      undefined,
-      undefined
-    );
+    expect(props.client.query).toHaveBeenCalledWith("FooQueryId", "Foo", "/fooEndPoint", { foo: "fooValue" }, undefined, {
+      // @ts-ignore cancelToken is a private prop
+      cancelToken: queryInstance.cancelToken.token
+    });
     moonClient.query = jest.fn();
     wrapper.setProps({ variables: { foo: "newValue" } });
     expect(props.client.query).not.toBeCalled();

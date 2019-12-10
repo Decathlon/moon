@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AxiosResponse } from "axios";
+import StaticAxios, { AxiosResponse, CancelTokenSource, AxiosRequestConfig } from "axios";
 
 import { IMoonContextValue, MoonContext } from "./moonProvider";
 import { MutateType } from "./moonClient";
@@ -16,6 +16,7 @@ export interface IMutationProps<MutationResponse = any, MutationVariables = any>
   endPoint: string;
   variables?: MutationVariables;
   type?: MutateType;
+  options?: AxiosRequestConfig;
   children?: (props: IChildren<MutationResponse>) => React.ReactNode;
   onResponse?: (response: MutationResponse) => void;
   onError?: (error: any) => void;
@@ -39,6 +40,9 @@ export class DumbMutation<MutationResponse = AxiosResponse<any>, MutationVariabl
     type: MutateType.Post
   };
 
+  // @ts-ignore cancelToken is updated in setCacelToken
+  private cancelToken: CancelTokenSource;
+
   constructor(props: IMutationPropsWithMoonClient) {
     super(props);
 
@@ -46,26 +50,36 @@ export class DumbMutation<MutationResponse = AxiosResponse<any>, MutationVariabl
       loading: false,
       error: null
     };
+    this.setCacelToken();
   }
 
+  public componentWillUnmount() {
+    this.cancelToken.cancel();
+  }
+
+  private setCacelToken = () => {
+    this.cancelToken = StaticAxios.CancelToken.source();
+  };
+
   private mutate = () => {
-    const { client, source, type, endPoint, variables, onResponse, onError } = this.props;
+    const { client, source, type, endPoint, variables, options, onResponse, onError } = this.props;
 
     this.setState({ response: undefined, loading: true, error: null }, async () => {
       try {
         // @ts-ignore API context initialized to null
-        const response: MutationResponse | undefined = ((await client.mutate(
-          source,
-          endPoint,
-          type,
-          variables
-        )) as unknown) as MutationResponse;
+        const response: MutationResponse | undefined = ((await client.mutate(source, endPoint, type, variables, {
+          ...options,
+          cancelToken: this.cancelToken.token
+        })) as unknown) as MutationResponse;
         this.setState({ loading: false, response }, () => {
           if (onResponse) {
             onResponse(response);
           }
         });
       } catch (err) {
+        if (StaticAxios.isCancel(err)) {
+          return;
+        }
         this.setState({ error: err, loading: false }, () => {
           if (onError) {
             onError(err);

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
+import { Provider } from "react-redux";
 import MoonProvider from "../../src/moonProvider";
 import useQuery, { useQueriesResult } from "../../src/query-hook";
 import { links } from "../moonClient.test";
@@ -64,9 +65,11 @@ describe("Query component with MoonProvider", () => {
     mockAxiosClientConstructor(CustomAxiosClient);
     const store = createMoonStore();
     const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} store={store}>
-        {children}
-      </MoonProvider>
+      <Provider store={store}>
+        <MoonProvider links={links} store={store}>
+          {children}
+        </MoonProvider>
+      </Provider>
     );
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
@@ -112,9 +115,11 @@ describe("Query component with MoonProvider", () => {
     mockAxiosClientConstructor(CustomAxiosClient);
     const store = createMoonStore();
     const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} store={store}>
-        {children}
-      </MoonProvider>
+      <Provider store={store}>
+        <MoonProvider links={links} store={store}>
+          {children}
+        </MoonProvider>
+      </Provider>
     );
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(

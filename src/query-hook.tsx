@@ -1,9 +1,9 @@
 import * as React from "react";
-import { AxiosRequestConfig } from "axios";
+import StaticAxios, { AxiosRequestConfig, CancelTokenSource } from "axios";
 import { createSelector } from "reselect";
 import { useSelector, shallowEqual } from "react-redux";
 
-import { FetchPolicy, MoonNetworkStatus } from "./query";
+import { FetchPolicy, MoonNetworkStatus, IQueryActions } from "./query";
 import { Nullable } from "./typing";
 import { useMoonClient } from "./moonClient";
 import { IAppWithMoonStore, IQueriesResult } from "./redux/reducers";
@@ -11,10 +11,6 @@ import { IAppWithMoonStore, IQueriesResult } from "./redux/reducers";
 export interface QueriesIds {
   // queryId: prop name
   [queryId: string]: string;
-}
-
-export interface IQueryActions {
-  refetch: () => void;
 }
 
 export interface IQueryHookResponse<QueryData = any> {
@@ -57,8 +53,23 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
   const [data, setData] = React.useState<DeserializedData | undefined>(undefined);
   const [networkStatus, setNetworkStatus] = React.useState<MoonNetworkStatus>(MoonNetworkStatus.Ready);
   const isInitialMount = React.useRef(true);
+  const cancelSourceRef = React.useRef<CancelTokenSource>();
+  const queryId = client && client.getQueryId(id, source, endPoint, variables);
+  const cache = useSelector<IAppWithMoonStore, DeserializedData>(
+    (state: IAppWithMoonStore) => queryId && state.queriesResult[queryId]
+  );
+  const useCache = React.useMemo(() => [FetchPolicy.CacheFirst, FetchPolicy.CacheAndNetwork].includes(fetchPolicy), [
+    fetchPolicy
+  ]);
 
   React.useEffect(() => {
+    if ((useCache || networkStatus === MoonNetworkStatus.Finished) && data !== cache) {
+      setData(cache);
+    }
+  }, [cache]);
+
+  React.useEffect(() => {
+    cancelSourceRef.current = StaticAxios.CancelToken.source();
     if (isInitialMount.current) {
       isInitialMount.current = false;
       if (fetchOnMount) {
@@ -67,15 +78,21 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
     } else if (autoRefetchOnUpdate) {
       fetch();
     }
+    // @ts-ignore can't be undefined
+    return () => cancelSourceRef.current.cancel();
   }, [variables, endPoint, source]);
 
-  const useCache = React.useMemo(() => [FetchPolicy.CacheFirst, FetchPolicy.CacheAndNetwork].includes(fetchPolicy), [
-    fetchPolicy
-  ]);
+  const cancel = () => {
+    if (cancelSourceRef.current) {
+      cancelSourceRef.current.cancel();
+      setLoading(false);
+      setNetworkStatus(MoonNetworkStatus.Finished);
+    }
+  };
 
   const fetch = async () => {
     // @ts-ignore API context initialized to null
-    const response: DeserializedData = useCache ? client.readQuery(id, source, endPoint, variables) : null;
+    const response: DeserializedData = useCache ? cache : null;
     setError(null);
     setData(response);
     if (response && FetchPolicy.CacheFirst === fetchPolicy) {
@@ -89,7 +106,10 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
       setNetworkStatus(MoonNetworkStatus.Fetch);
       try {
         // @ts-ignore API context initialized to null
-        const deserializedResponse: DeserializedData = await client.query(id, source, endPoint, variables, deserialize, options);
+        const deserializedResponse: DeserializedData = await client.query(id, source, endPoint, variables, deserialize, {
+          ...options,
+          cancelToken: cancelSourceRef.current && cancelSourceRef.current.token
+        });
         setLoading(false);
         setData(deserializedResponse);
         setNetworkStatus(MoonNetworkStatus.Finished);
@@ -97,6 +117,9 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
           onResponse(deserializedResponse);
         }
       } catch (err) {
+        if (StaticAxios.isCancel(err)) {
+          return;
+        }
         setLoading(false);
         setError(err);
         setNetworkStatus(MoonNetworkStatus.Finished);
@@ -106,7 +129,10 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
       }
     }
   };
-  return [{ loading, data, error, networkStatus }, { refetch: fetch }];
+  return [
+    { loading, data, error, networkStatus },
+    { refetch: fetch, cancel }
+  ];
 }
 
 const selectQueriesResult = createSelector(

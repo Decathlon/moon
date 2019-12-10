@@ -30,6 +30,10 @@ export default class MoonClient {
     this.store = store;
   }
 
+  public getQueryId = (id: Nullable<string>, source?: string, endPoint?: string, variables?: any) => {
+    return id || generateId(source, endPoint, variables);
+  };
+
   public query = async (
     id: Nullable<string>,
     source: string,
@@ -46,29 +50,37 @@ export default class MoonClient {
         params: { ...variables }
       });
       response = deserialize ? deserialize(response) : response;
-      const queryId = id || generateId(source, endPoint, variables);
+      const queryId = this.getQueryId(id, source, endPoint, variables);
       this.store.dispatch(updateQueryResult(queryId, response));
     }
     return response;
   };
 
-  public mutate = async (source: string, endPoint: string, type: MutateType = MutateType.Post, variables: any = {}) => {
+  public mutate = async (
+    source: string,
+    endPoint: string,
+    type: MutateType = MutateType.Post,
+    variables: any = {},
+    options: AxiosRequestConfig = {}
+  ) => {
     const client = this.clients[source];
 
     let response;
 
+    const mutationOptions: AxiosRequestConfig = { ...options, params: { ...variables } };
+
     if (client) {
       switch (type) {
         case MutateType.Delete:
-          response = await client.delete(endPoint, variables);
+          response = await client.delete(endPoint, mutationOptions);
           break;
 
         case MutateType.Put:
-          response = await client.put(endPoint, variables);
+          response = await client.put(endPoint, mutationOptions);
           break;
 
         default:
-          response = await client.post(endPoint, variables);
+          response = await client.post(endPoint, mutationOptions);
           break;
       }
     }
@@ -77,7 +89,7 @@ export default class MoonClient {
   };
 
   public readQuery = (id: Nullable<string>, source?: string, endPoint?: string, variables: any = {}): any | undefined => {
-    const queryId = id || generateId(source, endPoint, variables);
+    const queryId = this.getQueryId(id, source, endPoint, variables);
     return this.store.getState().queriesResult[queryId];
   };
 }

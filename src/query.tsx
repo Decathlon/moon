@@ -1,9 +1,12 @@
 import * as React from "react";
 import { isEqual } from "lodash";
-import { AxiosRequestConfig } from "axios";
+import StaticAxios, { AxiosRequestConfig, CancelTokenSource } from "axios";
 
-import { IMoonContextValue, MoonContext } from "./moonProvider";
+import { useSelector, shallowEqual } from "react-redux";
+import { IMoonContextValue } from "./moonProvider";
 import { Nullable } from "./typing";
+import { useMoonClient } from "./moonClient";
+import { IAppWithMoonStore } from "./redux";
 
 export enum FetchPolicy {
   // always try reading data from your cache first
@@ -12,6 +15,11 @@ export enum FetchPolicy {
   CacheAndNetwork = "cache-and-network",
   // never return you initial data from the cache
   NetworkOnly = "network-only"
+}
+
+export interface IQueryActions {
+  refetch: () => void;
+  cancel: () => void;
 }
 
 export enum MoonNetworkStatus {
@@ -25,17 +33,17 @@ interface IChildren<QueryData = any> {
   loading: boolean;
   error: any;
   networkStatus: MoonNetworkStatus;
-  actions: { refetch: () => void };
+  actions: IQueryActions;
 }
 
 export interface IQueryProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData> {
-  id: string;
+  id?: string;
   source: string;
   endPoint: string;
   variables?: QueryVariables;
   fetchOnMount?: boolean;
   autoRefetchOnUpdate?: boolean;
-  fetchPolicy: FetchPolicy;
+  fetchPolicy?: FetchPolicy;
   options?: AxiosRequestConfig;
   deserialize?: (response: QueryData) => DeserializedData;
   children?: (props: IChildren<DeserializedData>) => Nullable<JSX.Element | JSX.Element[]>;
@@ -45,16 +53,19 @@ export interface IQueryProps<QueryData = any, QueryVariables = any, Deserialized
 
 interface IQueryPropsWithMoonClient<QueryData = any, QueryVariables = any, DeserializedData = QueryData>
   extends IQueryProps<QueryData, QueryVariables, DeserializedData>,
-    IMoonContextValue {}
+    IMoonContextValue {
+  cache?: DeserializedData;
+}
 
 interface IState<QueryData = any> {
   loading: boolean;
   error: any;
   data?: QueryData;
+  cache?: QueryData;
   networkStatus: MoonNetworkStatus;
 }
 
-export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData = QueryData> extends React.PureComponent<
+export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData = QueryData> extends React.Component<
   IQueryPropsWithMoonClient<QueryData, QueryVariables, DeserializedData>,
   IState<DeserializedData>
 > {
@@ -65,6 +76,9 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
     id: null
   };
 
+  // @ts-ignore cancelToken is updated in setCacelToken
+  private cancelToken: CancelTokenSource;
+
   constructor(props: IQueryPropsWithMoonClient) {
     super(props);
 
@@ -73,6 +87,28 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
       error: null,
       networkStatus: MoonNetworkStatus.Ready
     };
+    this.setCacelToken();
+  }
+
+  static getDerivedStateFromProps(props: IQueryPropsWithMoonClient, state: IState) {
+    const { cache: prevCache, data, networkStatus } = state;
+    const { cache, fetchPolicy } = props;
+    // @ts-ignore see defaultProps.fetchPolicy
+    const useCache = [FetchPolicy.CacheFirst, FetchPolicy.CacheAndNetwork].includes(fetchPolicy);
+    if ((useCache || networkStatus === MoonNetworkStatus.Finished) && prevCache !== cache && data !== cache) {
+      return { data: cache, cache };
+    }
+    return null;
+  }
+
+  public shouldComponentUpdate(nextProps: IQueryPropsWithMoonClient, nextState: IState) {
+    const { cache, ...rest } = this.props;
+    const { cache: nextCache, ...nextRest } = nextProps;
+    return !shallowEqual(rest, nextRest) || !shallowEqual(this.state, nextState);
+  }
+
+  public componentWillUnmount() {
+    this.cancelToken.cancel();
   }
 
   public componentDidMount() {
@@ -82,7 +118,7 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
     }
   }
 
-  componentDidUpdate(prevProps: Readonly<IQueryPropsWithMoonClient<QueryData, QueryVariables, DeserializedData>>): void {
+  public componentDidUpdate(prevProps: Readonly<IQueryPropsWithMoonClient<QueryData, QueryVariables, DeserializedData>>): void {
     const { variables, endPoint, source, autoRefetchOnUpdate } = this.props;
 
     if (autoRefetchOnUpdate) {
@@ -96,10 +132,23 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
     }
   }
 
+  private setCacelToken = () => {
+    this.cancelToken = StaticAxios.CancelToken.source();
+  };
+
+  private cancel = () => {
+    this.cancelToken.cancel();
+    this.setState({
+      loading: false,
+      networkStatus: MoonNetworkStatus.Finished
+    });
+  };
+
   private fetch = () => {
-    const { id, client, source, endPoint, options, variables, fetchPolicy, deserialize, onResponse, onError } = this.props;
+    const { id, client, source, endPoint, options, variables, fetchPolicy, deserialize, onResponse, onError, cache } = this.props;
+    // @ts-ignore see defaultProps.fetchPolicy
     const useCache = [FetchPolicy.CacheFirst, FetchPolicy.CacheAndNetwork].includes(fetchPolicy);
-    const response: DeserializedData = useCache && client ? client.readQuery(id, source, endPoint, variables) : undefined;
+    const response: DeserializedData | undefined = useCache ? cache : undefined;
 
     if (response && FetchPolicy.CacheFirst === fetchPolicy) {
       this.setState(
@@ -126,14 +175,10 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
         async () => {
           try {
             // @ts-ignore API context initialized to null
-            const deserializedResponse: DeserializedData = await client.query(
-              id,
-              source,
-              endPoint,
-              variables,
-              deserialize,
-              options
-            );
+            const deserializedResponse: DeserializedData = await client.query(id, source, endPoint, variables, deserialize, {
+              ...options,
+              cancelToken: this.cancelToken.token
+            });
             this.setState(
               {
                 loading: false,
@@ -144,9 +189,13 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
                 if (onResponse) {
                   onResponse(deserializedResponse);
                 }
+                this.setCacelToken();
               }
             );
           } catch (err) {
+            if (StaticAxios.isCancel(err)) {
+              return;
+            }
             this.setState(
               {
                 error: err,
@@ -158,6 +207,7 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
                 if (onError) {
                   onError(err);
                 }
+                this.setCacelToken();
               }
             );
           }
@@ -167,7 +217,8 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
   };
 
   private actions = {
-    refetch: this.fetch
+    refetch: this.fetch,
+    cancel: this.cancel
   };
 
   public render() {
@@ -177,21 +228,23 @@ export class DumbQuery<QueryData = any, QueryVariables = any, DeserializedData =
   }
 }
 
-export default class Query<QueryData = any, QueryVariables = any, DeserializedData = QueryData> extends React.PureComponent<
-  IQueryProps<QueryData, QueryVariables, DeserializedData>
-> {
-  static defaultProps = {
-    fetchOnMount: true,
-    autoRefetchOnUpdate: true,
-    fetchPolicy: FetchPolicy.CacheAndNetwork,
-    id: null
-  };
-
-  render() {
-    return (
-      <MoonContext.Consumer>
-        {({ client }) => <DumbQuery<QueryData, QueryVariables, DeserializedData> client={client} {...this.props} />}
-      </MoonContext.Consumer>
-    );
-  }
+function Query<QueryData = any, QueryVariables = any, DeserializedData = QueryData>(
+  props: IQueryProps<QueryData, QueryVariables, DeserializedData>
+) {
+  const { client } = useMoonClient();
+  const { id, source, endPoint, variables } = props;
+  const queryId = client && client.getQueryId(id || null, source, endPoint, variables);
+  const cache = useSelector<IAppWithMoonStore, DeserializedData>(
+    (state: IAppWithMoonStore) => queryId && state.queriesResult[queryId]
+  );
+  return <DumbQuery<QueryData, QueryVariables, DeserializedData> client={client} {...props} cache={cache} />;
 }
+
+Query.defaultProps = {
+  fetchOnMount: true,
+  autoRefetchOnUpdate: true,
+  fetchPolicy: FetchPolicy.CacheAndNetwork,
+  id: null
+};
+
+export default Query;

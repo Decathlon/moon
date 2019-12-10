@@ -26,7 +26,16 @@ describe("Mutation component", () => {
     const mutationInstance: DumbMutation = wrapper.instance() as DumbMutation;
     // @ts-ignore private function
     mutationInstance.mutate();
-    expect(props.client.mutate).toHaveBeenCalledWith("Foo", "/fooEndPoint", MutateType.Put, { foo: "fooValue" });
+    expect(props.client.mutate).toHaveBeenCalledWith(
+      "Foo",
+      "/fooEndPoint",
+      MutateType.Put,
+      { foo: "fooValue" },
+      {
+        // @ts-ignore cancelToken is a private prop
+        cancelToken: mutationInstance.cancelToken.token
+      }
+    );
   });
 
   it("should call children with error", () => {
