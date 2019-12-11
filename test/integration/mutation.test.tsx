@@ -1,4 +1,4 @@
-// / <reference path="../typings/tests-entry.d.ts" />
+/// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
 import { cleanup, render, wait, fireEvent } from "@testing-library/react";
 
@@ -32,7 +32,7 @@ describe("Mutation component with MoonProvider", () => {
     const { container, getByText } = render(
       <MoonProvider links={links}>
         <Mutation<MutationResponse, MutationVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-          {({ mutate, response }) => {
+          {({ actions: { mutate }, response }) => {
             return response && response.status ? (
               <span>Success</span>
             ) : (
@@ -75,7 +75,7 @@ describe("Mutation component with MoonProvider", () => {
     const { container, getByText } = render(
       <MoonProvider links={links}>
         <Mutation<MutationResponse, MutationVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-          {({ response, mutate, error }) => {
+          {({ response, error, actions: { mutate } }) => {
             const result = response ? (
               <span id="response">{response.status && "Success"}</span>
             ) : (

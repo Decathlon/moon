@@ -112,7 +112,7 @@ import { Mutation } from '@decathlon/moon';
 const MyComponent = () => {
   return (
     <Mutation<MutationResponse, MutationVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-      {({ response, mutate, error }) => {
+      {({ response, error, actions: { mutate } }) => {
         const result = response ? <span>{response.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
         return error ? <span>{error.message}</span> : result;
       }}
@@ -129,7 +129,7 @@ import { useQuery } from '@decathlon/moon';
 
 const MyComponent = () => {
   const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
-  const [{ loading, error, response }, mutate] = useMutation<MutationResponse, MutationVariables>({
+  const [{ loading, error, response }, { mutate }] = useMutation<MutationResponse, MutationVariables>({
     source: "FOO",
     endPoint: "/users",
     variables
@@ -173,18 +173,18 @@ This the Typescript interface of the Query/useQuery component/hook.
 
 ```js
 interface IQueryProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData> {
-  id: string;
+  id?: string;
   source: string;
   endPoint: string;
   variables?: QueryVariables;
   fetchOnMount?: boolean;
   autoRefetchOnUpdate?: boolean;
-  fetchPolicy: FetchPolicy;
+  fetchPolicy?: FetchPolicy;
   options?: AxiosRequestConfig;
   deserialize?: (response: QueryData) => DeserializedData;
-  children?: (props: IChildren<DeserializedData>) => Nullable<JSX.Element | JSX.Element[]>;
   onResponse?: (response: DeserializedData) => void;
   onError?: (error: any) => void;
+  children?: (props: IChildren<DeserializedData>) => Nullable<JSX.Element | JSX.Element[]>;
 }
 
 ```

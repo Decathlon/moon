@@ -5,7 +5,6 @@ import { AxiosRequestConfig } from "axios";
 import { generateId, IClients } from "./utils";
 import { updateQueryResult } from "./redux/actions";
 import { IMoonStore } from "./redux/reducers";
-import { Nullable } from "./typing";
 import { MoonContext } from "./moonProvider";
 
 export enum MutateType {
@@ -30,12 +29,12 @@ export default class MoonClient {
     this.store = store;
   }
 
-  public getQueryId = (id: Nullable<string>, source?: string, endPoint?: string, variables?: any) => {
+  public getQueryId = (id?: string, source?: string, endPoint?: string, variables?: any) => {
     return id || generateId(source, endPoint, variables);
   };
 
   public query = async (
-    id: Nullable<string>,
+    id = "",
     source: string,
     endPoint: string,
     variables: any = {},
@@ -88,7 +87,7 @@ export default class MoonClient {
     return response;
   };
 
-  public readQuery = (id: Nullable<string>, source?: string, endPoint?: string, variables: any = {}): any | undefined => {
+  public readQuery = (id?: string, source?: string, endPoint?: string, variables: any = {}): any | undefined => {
     const queryId = this.getQueryId(id, source, endPoint, variables);
     return this.store.getState().queriesResult[queryId];
   };

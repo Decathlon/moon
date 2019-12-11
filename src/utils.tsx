@@ -1,6 +1,8 @@
+import * as React from "react";
 import * as qs from "qs";
-import axios, { AxiosInstance } from "axios";
 import * as hash from "object-hash";
+import axios, { AxiosInstance } from "axios";
+import { shallowEqual } from "react-redux";
 
 import { ILink, IInterceptors } from "./moonProvider";
 
@@ -39,4 +41,13 @@ export function getClients(links: ILink[]): IClients {
 
 export function generateId(...args: any[]) {
   return hash(args);
+}
+
+export function usePrevValue(value?: any) {
+  const valueRef = React.useRef(value);
+  const prevValue = valueRef.current;
+  if (!shallowEqual(prevValue, value)) {
+    valueRef.current = value;
+  }
+  return { value: valueRef.current, prevValue };
 }

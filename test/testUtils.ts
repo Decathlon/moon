@@ -1,4 +1,4 @@
-// / <reference path="../../../typings/tests-entry.d.ts" />
+/// <reference path="./typings/tests-entry.d.ts" />
 
 import Axios from "axios";
 
