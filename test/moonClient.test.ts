@@ -1,4 +1,4 @@
-// / <reference path="./typings/tests-entry.d.ts" />
+/// <reference path="./typings/tests-entry.d.ts" />
 
 import { getMockedMoonClient, AxiosClient } from "./testUtils";
 import { generateId } from "../src/utils";
@@ -65,7 +65,7 @@ describe("MoonClient class", () => {
     // @ts-ignore
     const { store } = moonClient;
     const queryId = generateId("FOO", "/users", { foo: "bar" });
-    const result = await moonClient.query(null, "FOO", "/users", {
+    const result = await moonClient.query(undefined, "FOO", "/users", {
       foo: "bar"
     });
     expect(result).toEqual(response);
@@ -99,22 +99,22 @@ describe("MoonClient class", () => {
     await moonClient.mutate("FOO", "/users", undefined, { foo: "bar" });
     // @ts-ignore
     expect(moonClient.clients.FOO.post).toHaveBeenCalledWith("/users", {
-      foo: "bar"
+      params: { foo: "bar" }
     });
     await moonClient.mutate("FOO", "/users", MutateType.Post, { foo: "bar" });
     // @ts-ignore
     expect(moonClient.clients.FOO.post).toHaveBeenCalledWith("/users", {
-      foo: "bar"
+      params: { foo: "bar" }
     });
     await moonClient.mutate("FOO", "/users", MutateType.Delete, { foo: "bar" });
     // @ts-ignore
     expect(moonClient.clients.FOO.delete).toHaveBeenCalledWith("/users", {
-      foo: "bar"
+      params: { foo: "bar" }
     });
     await moonClient.mutate("FOO", "/users", MutateType.Put, { foo: "bar" });
     // @ts-ignore
     expect(moonClient.clients.FOO.put).toHaveBeenCalledWith("/users", {
-      foo: "bar"
+      params: { foo: "bar" }
     });
   });
 
@@ -128,7 +128,7 @@ describe("MoonClient class", () => {
     }
     const moonClient = getMockedMoonClient(links, CustomAxiosClient);
     expect.assertions(1);
-    moonClient.query(null, "FOO", "/users", { foo: "bar" }).catch((err: Error) => {
+    moonClient.query(undefined, "FOO", "/users", { foo: "bar" }).catch((err: Error) => {
       expect(err).toEqual(error);
     });
   });
@@ -146,5 +146,15 @@ describe("MoonClient class", () => {
     moonClient.mutate("FOO", "/users", undefined, { foo: "bar" }).catch((err: Error) => {
       expect(err).toEqual(error);
     });
+  });
+
+  it("should return the query id", () => {
+    const moonClient = getMockedMoonClient(links);
+    let queryId = moonClient.getQueryId("myId", "FOO", "/users", { foo: "bar" });
+    expect(queryId).toEqual("myId");
+    // null id
+    queryId = moonClient.getQueryId(undefined, "FOO", "/users", { foo: "bar" });
+    const expectedId = generateId("FOO", "/users", { foo: "bar" });
+    expect(queryId).toEqual(expectedId);
   });
 });

@@ -1,5 +1,5 @@
 /* eslint-disable  prefer-destructuring */
-// / <reference path="../typings/tests-entry.d.ts" />
+/// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
@@ -36,7 +36,7 @@ describe("Mutation hook with MoonProvider", () => {
       { wrapper }
     );
     act(() => {
-      const [{ response, loading, error }, mutate] = result.current;
+      const [{ response, loading, error }, { mutate }] = result.current;
       expect(response).toBeUndefined();
       expect(loading).toBeFalsy();
       expect(error).toBeNull();
@@ -71,7 +71,7 @@ describe("Mutation hook with MoonProvider", () => {
       { wrapper }
     );
     act(() => {
-      const [{ response, loading, error }, mutate] = result.current;
+      const [{ response, loading, error }, { mutate }] = result.current;
       expect(response).toBeUndefined();
       expect(loading).toBeFalsy();
       expect(error).toBeNull();
