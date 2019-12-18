@@ -2,9 +2,9 @@
 import * as React from "react";
 import { cleanup, render, wait, fireEvent } from "@testing-library/react";
 
-import MoonProvider from "../../src/moonProvider";
+import MoonProvider from "../../src/moon-provider";
 import Mutation from "../../src/mutation";
-import { links } from "../moonClient.test";
+import { links } from "../moon-client.test";
 import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
 
 interface MutationResponse {

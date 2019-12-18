@@ -64,3 +64,6 @@ jest-test-results.json
 .DS_Store
 .idea/
 
+# IDE
+.vscode
+

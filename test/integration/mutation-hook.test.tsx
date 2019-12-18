@@ -3,9 +3,9 @@
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
-import MoonProvider from "../../src/moonProvider";
+import MoonProvider from "../../src/moon-provider";
 import useMutation from "../../src/mutation-hook";
-import { links } from "../moonClient.test";
+import { links } from "../moon-client.test";
 import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
 
 interface MutationResponse {
@@ -30,9 +30,17 @@ describe("Mutation hook with MoonProvider", () => {
     }
 
     mockAxiosClientConstructor(CustomAxiosClient);
+
+    const onResponse = jest.fn();
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const { result, waitForNextUpdate } = renderHook(
-      () => useMutation<MutationResponse, MutationVariables>({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } }),
+      () =>
+        useMutation<MutationResponse, MutationVariables>({
+          source: "FOO",
+          endPoint: "/users",
+          variables: { foo: "bar" },
+          onResponse
+        }),
       { wrapper }
     );
     act(() => {
@@ -51,11 +59,12 @@ describe("Mutation hook with MoonProvider", () => {
     expect(state.response).toBe(response);
     expect(state.loading).toBeFalsy();
     expect(state.error).toBeNull();
+    expect(onResponse).toBeCalledTimes(1);
+    expect(onResponse).toBeCalledWith(response);
   });
 
   test("should render an error", async () => {
     const error = new Error("Bimm!");
-
     const post = jest.fn().mockImplementation(() => Promise.reject(error));
     class CustomAxiosClient extends AxiosClient {
       constructor(baseUrl: string) {
@@ -63,11 +72,18 @@ describe("Mutation hook with MoonProvider", () => {
         this.post = post;
       }
     }
-
     mockAxiosClientConstructor(CustomAxiosClient);
+
+    const onError = jest.fn();
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const { result, waitForNextUpdate } = renderHook(
-      () => useMutation<MutationResponse, MutationVariables>({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } }),
+      () =>
+        useMutation<MutationResponse, MutationVariables>({
+          source: "FOO",
+          endPoint: "/users",
+          variables: { foo: "bar" },
+          onError
+        }),
       { wrapper }
     );
     act(() => {
@@ -86,5 +102,7 @@ describe("Mutation hook with MoonProvider", () => {
     expect(state.response).toBeUndefined();
     expect(state.loading).toBeFalsy();
     expect(state.error).toBe(error);
+    expect(onError).toBeCalledTimes(1);
+    expect(onError).toBeCalledWith(error);
   });
 });

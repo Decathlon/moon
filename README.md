@@ -41,31 +41,6 @@ const App = () => {
 
 ```
 
-For this first version we use Redux as a cache system. If you are using Redux, you must wrap MoonProvider with the Redux provider like this:
-
-
-```js
-import { MoonProvider } from "@decathlon/moon";
-
-const links = [
-  {
-    id: "FOO",
-    baseUrl: "http://foo.com"
-  }
-];
-
-const App = () => {
-  return (
-    <Provider store={yourReduxStore}>
-      <MoonProvider links={links} store={yourReduxStore}>
-        <MyComponent />
-      </MoonProvider>
-    </Provider>
-  );
-};
-
-```
-
 Once your **MoonProvider** is hooked up, you're ready to start requesting data with the Query component or with  the useQuery hook!
 
 #### Query Component
@@ -142,29 +117,124 @@ const MyComponent = () => {
 
 ## Other Hooks
 
-Sometimes we need to retrieve the result of a query in another component. useQueriesResult allows you to do this. For that, it is enough to give him the ids of the queries:
+Sometimes we need to retrieve the state/result of a query in another component. useQueryResult/useQueriesResult/useQueryState/useQueriesStates allows you to do this. For that, it is enough to give him the id/ids of the query/queries:
+
+### useQueryState
+
+Updated when the query state is changed.
 
 ```js
-import { useQueriesResult } from '@decathlon/moon';
+import { useQueryState } from '@decathlon/moon';
 
 const MyComponent = () => {
-  // queryId is the id of the query and foo is the prop containing the result of the query
-  const { foo } = useQueriesResult({ queryId: "foo" });
-  return <span>{foo ? "Loading..." : "success"}</span>;
+  // queryId is the id of the query and stateToProps to transform the query state 
+  const stateToProps = (queryState) => queryState
+  const { loading } = useQueryState("queryId", stateToProps);
+  return <span>{loading ? "Loading..." : "success"}</span>;
 };
 ```
+### useQueriesStates
+
+Updated when one of the query states is changed.
+
+```js
+import { useQueriesStates } from '@decathlon/moon';
+
+const MyComponent = () => {
+  // queryId is the id of the query and statesToProps to transform the queries states 
+  const statesToProps = (queriesStates) => queriesStates
+  const { queryId: { loading } } = useQueriesStates(["queryId"], statesToProps);
+  return <span>{loading ? "Loading..." : "success"}</span>;
+};
+```
+
+### useQueryResult
+
+Updated only when the query result is changed.
+
+```js
+import { useQueryResult } from '@decathlon/moon';
+
+const MyComponent = () => {
+  // queryId is the id of the query and resultToProps to transform the query result 
+  const resultToProps = (queryResult) => queryResult
+  const result = useQueryResult("queryId", resultToProps);
+  return <span>{...result...}</span>;
+};
+```
+
+### useQueriesResults
+
+Updated only when one of the query results is changed.
+
+```js
+import { useQueriesResults } from '@decathlon/moon';
+
+const MyComponent = () => {
+    // queryId is the id of the query and resultsToProps to transform the queries results 
+  const resultsToProps = (queriesResults) => queriesResults
+  const { queryId: queryIdResult } = useQueriesResults(["queryId"], statesToProps);
+  return <span>{...queryIdResult...}</span>;
+};
+```
+### useMoon
 
 You can use the moon client directly like this:
 
 ```js
-import { useMoonClient } from '@decathlon/moon';
+import { useMoon } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const { client } = useMoonClient();
+  const { client, store } = useMoon();
   client.query(...);
   client.mutate(...);
-  client.readQuery(...);
+  store.readQuery(...);
+  store.writeQuery(...);
 };
+```
+
+## HOCs
+
+### withMoon
+
+Same as useMoon hook.
+
+```js
+import { withMoon } from '@decathlon/moon';
+
+const MyComponent = ({ client, store }) => {
+  ...
+};
+
+export withMoon(MyComponent);
+```
+
+### withQueryResult
+
+Same as useQueryResult hook.
+
+```js
+import { withQueryResult } from '@decathlon/moon';
+
+const MyComponent = ({ queryId }) => {
+  ...
+};
+
+export withQueryResult(queryId, resultToProps)(MyComponent);
+```
+
+
+### withQueriesResults
+
+Same as useQueriesResults hook.
+```js
+import { withQueriesResults } from '@decathlon/moon';
+
+const MyComponent = ({ queryId, queryId2 }) => {
+  ...
+};
+
+export withQueriesResults([queryId, queryId2], resultsToProps)(MyComponent);
 ```
 
 ## Query options

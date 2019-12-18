@@ -1,8 +1,8 @@
-export { default as MoonClient } from "./moonClient";
-export * from "./moonClient";
+export { default as MoonClient } from "./moon-client";
+export * from "./moon-client";
 
-export { default as MoonProvider } from "./moonProvider";
-export * from "./moonProvider";
+export { default as MoonProvider } from "./moon-provider";
+export * from "./moon-provider";
 
 export { default as Query } from "./query";
 export * from "./query";
@@ -16,6 +16,7 @@ export * from "./mutation";
 export { default as useMutation } from "./mutation-hook";
 export * from "./mutation-hook";
 
-export * from "./typing";
 export * from "./utils";
-export * from "./redux";
+export * from "./hooks";
+export { default as getMoonStore } from "./store";
+export * from "./store";
