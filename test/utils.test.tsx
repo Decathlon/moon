@@ -1,12 +1,18 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="./typings/tests-entry.d.ts" />
-import { renderHook } from "@testing-library/react-hooks";
+import * as hash from "object-hash";
 
-import { createHttpClient, getClients, usePrevValue } from "../src/utils";
+import { createHttpClient, getClients, getQueryId } from "../src/utils";
+import { ILink } from "../src/moon-client";
 
-const links = [
-  { id: "FOO", baseUrl: "http://foo.com", interceptors: {} },
-  { id: "BAR", baseUrl: "http://bar.com", interceptors: {} }
+const interceptor = {
+  onFulfilled: jest.fn(),
+  onRejected: jest.fn()
+};
+
+const links: ILink[] = [
+  { id: "FOO", baseUrl: "http://foo.com", interceptors: { request: [interceptor] } },
+  { id: "BAR", baseUrl: "http://bar.com", interceptors: { response: [interceptor] } }
 ];
 
 describe("Utils", () => {
@@ -22,17 +28,12 @@ describe("Utils", () => {
     expect(clientsIds).toEqual(["FOO", "BAR"]);
   });
 
-  test("should usePrevValue hook return prev props", async () => {
-    const query = { source: "FOO", endPoint: "/users" };
-    const { result, rerender } = renderHook(props => usePrevValue(props || query));
-
-    rerender({ source: "FOO", endPoint: "/users" });
-    const { value, prevValue } = result.current;
-    expect(value === query).toBeTruthy();
-    expect(prevValue === query).toBeTruthy();
-    rerender({ source: "BAR", endPoint: "/users" });
-    const { value: newValue, prevValue: newPrevProps } = result.current;
-    expect(value).toEqual(newPrevProps);
-    expect(newValue).not.toEqual(value);
+  it("should return the query id", () => {
+    let queryId = getQueryId("myId", "FOO", "/users", { foo: "bar" });
+    expect(queryId).toEqual("myId");
+    // null id
+    queryId = getQueryId(undefined, "FOO", "/users", { foo: "bar" });
+    const expectedId = hash(["FOO", "/users", { foo: "bar" }]);
+    expect(queryId).toEqual(expectedId);
   });
 });

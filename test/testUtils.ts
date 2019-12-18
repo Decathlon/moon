@@ -2,10 +2,7 @@
 
 import Axios from "axios";
 
-import MoonClient from "../src/moonClient";
-import { getClients } from "../src/utils";
-import { ILink } from "../src/moonProvider";
-import { createMoonStore } from "../src/redux/store";
+import MoonClient, { ILink } from "../src/moon-client";
 
 jest.unmock("axios");
 
@@ -41,6 +38,5 @@ export function mockAxiosClientConstructor(ClientFactory = AxiosClient) {
 
 export function getMockedMoonClient(links: ILink[], ClientFactory = AxiosClient) {
   mockAxiosClientConstructor(ClientFactory);
-  const clients = getClients(links);
-  return new MoonClient(clients, createMoonStore());
+  return new MoonClient(links);
 }

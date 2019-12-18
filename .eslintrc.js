@@ -40,6 +40,7 @@ module.exports = {
     "no-restricted-syntax": 0,
     "spaced-comment": 0,
     "@typescript-eslint/triple-slash-reference": 0,
+    "import/extensions": 0,
     "react/sort-comp": 1,
     "no-restricted-globals": 1,
     "react/no-did-update-set-state": 1,

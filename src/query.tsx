@@ -1,7 +1,9 @@
 import * as React from "react";
 
-import { Nullable } from "./typing";
+import { Nullable, PropsWithForwardRef } from "./typing";
 import useQuery, { IQueryProps, IQueryState, IQueryActions, FetchPolicy } from "./query-hook";
+import { useQueryResult, useQueriesResults, ResultProps } from "./hooks";
+import { QueriesResults } from "./store";
 
 export type QueryChildren<QueryData> = (props: IQueryChildrenProps<QueryData>) => Nullable<JSX.Element | JSX.Element[]>;
 
@@ -42,5 +44,58 @@ Query.defaultProps = {
   autoRefetchOnUpdate: true,
   fetchPolicy: FetchPolicy.CacheAndNetwork
 };
+
+export function withQueryResult<
+  Props = any,
+  WrappedComponentPropsWithoutQuery = Props,
+  Data = any,
+  QueryResultProps = ResultProps
+>(queryId: string, resutToProps?: (result?: Data) => QueryResultProps) {
+  return (WrappedComponent: React.ComponentClass<Props> | React.FunctionComponent<Props>) => {
+    // @ts-ignore Type 'ComponentClass| FunctionComponent' does not satisfy the constraint 'new (...args: any[]) => any' of  InstanceType.
+    type WrappedComponentInstance = InstanceType<typeof WrappedComponent>;
+
+    const WithQueryComponent: React.FunctionComponent<PropsWithForwardRef<
+      WrappedComponentPropsWithoutQuery,
+      WrappedComponentInstance
+    >> = props => {
+      const { forwardedRef, ...rest } = props;
+      const queryResult = useQueryResult<Data, QueryResultProps>(queryId, resutToProps);
+      const queryProps = resutToProps ? queryResult : { [queryId]: queryResult };
+      // @ts-ignore I don't know how to implement this without breaking out of the types.
+      return <WrappedComponent ref={forwardedRef} {...queryProps} {...(rest as WrappedComponentPropsWithoutQuery)} />;
+    };
+
+    return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutQuery>((props, ref) => {
+      return <WithQueryComponent forwardedRef={ref} {...props} />;
+    });
+  };
+}
+
+export function withQueriesResults<
+  Props = any,
+  WrappedComponentPropsWithoutQuery = Props,
+  Data = any,
+  QueryResultProps = ResultProps
+>(queriesIds: string[], resultsToProps?: (results: QueriesResults<Data>) => QueryResultProps) {
+  return (WrappedComponent: React.ComponentClass<Props> | React.FunctionComponent<Props>) => {
+    // @ts-ignore Type 'ComponentClass| FunctionComponent' does not satisfy the constraint 'new (...args: any[]) => any' of  InstanceType.
+    type WrappedComponentInstance = InstanceType<typeof WrappedComponent>;
+
+    const WithQueryComponent: React.FunctionComponent<PropsWithForwardRef<
+      WrappedComponentPropsWithoutQuery,
+      WrappedComponentInstance
+    >> = props => {
+      const { forwardedRef, ...rest } = props;
+      const queryResult = useQueriesResults<Data, QueryResultProps>(queriesIds, resultsToProps);
+      // @ts-ignore I don't know how to implement this without breaking out of the types.
+      return <WrappedComponent ref={forwardedRef} {...queryResult} {...(rest as WrappedComponentPropsWithoutQuery)} />;
+    };
+
+    return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutQuery>((props, ref) => {
+      return <WithQueryComponent forwardedRef={ref} {...props} />;
+    });
+  };
+}
 
 export default Query;

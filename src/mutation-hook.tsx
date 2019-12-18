@@ -1,9 +1,9 @@
 import * as React from "react";
 import StaticAxios, { AxiosRequestConfig, CancelTokenSource } from "axios";
 
-import { MutateType, useMoonClient } from "./moonClient";
+import { MutateType } from "./moon-client";
+import { usePrevValue, useMoon } from "./hooks";
 import { Nullable } from "./typing";
-import { usePrevValue } from "./utils";
 
 export interface IMutationActions {
   mutate: () => void;
@@ -41,7 +41,7 @@ export default function useMutation<MutationResponse = any, MutationVariables = 
   onResponse,
   onError
 }: IMutationProps<MutationResponse, MutationVariables>): [IMutationData<MutationResponse>, IMutationActions] {
-  const { client } = useMoonClient();
+  const { client } = useMoon();
   const { value } = usePrevValue(variables);
   const [state, setState] = React.useState<IMutationState<MutationResponse>>({
     response: undefined,
@@ -67,7 +67,6 @@ export default function useMutation<MutationResponse = any, MutationVariables = 
   const mutate = async () => {
     setState({ ...state, loading: true, error: null, response: undefined });
     try {
-      // @ts-ignore API context initialized to null
       const response: MutationResponse = ((await client.mutate(source, endPoint, type, variables, {
         ...options,
         cancelToken: cancelSourceRef.current && cancelSourceRef.current.token
