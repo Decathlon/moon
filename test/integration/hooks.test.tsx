@@ -178,6 +178,7 @@ describe("Hooks", () => {
       () => useQueriesStates<QueryData, { myQuery3: QueryState }>(["myQuery3"]),
       { wrapper }
     );
+    //@ts-ignore myQuery3 can't be undefined
     expect(result.current.myQuery3.data).toEqual(response);
   });
 
