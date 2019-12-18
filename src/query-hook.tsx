@@ -73,28 +73,25 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
     } else if (autoRefetchOnUpdate) {
       fetch();
     }
-    // @ts-ignore can't be undefined
+    // @ts-ignore cancelSourceRef.current can't be undefined
     return () => cancelSourceRef.current.cancel();
   }, [currentVariables, endPoint, source]);
 
   const cancel = () => {
     if (cancelSourceRef.current) {
       cancelSourceRef.current.cancel();
-      //@ts-ignore
       store.setQueryState(queryId, { ...state, loading: false, networkStatus: MoonNetworkStatus.Finished });
     }
   };
 
   const fetch = async () => {
     if (data && currentVariables === prevVariables && FetchPolicy.CacheFirst === fetchPolicy) {
-      //@ts-ignore can't be null
       store.setQueryState(queryId, { ...state, loading: false, networkStatus: MoonNetworkStatus.Finished, error: null });
       if (onResponse) {
         onResponse(data);
       }
     } else {
       const reponse = FetchPolicy.NetworkOnly === fetchPolicy ? undefined : data;
-      //@ts-ignore can't be null
       store.setQueryState(queryId, {
         ...state,
         loading: true,
@@ -103,12 +100,10 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
         data: reponse
       });
       try {
-        //@ts-ignore can't be null
         const deserializedResponse: DeserializedData = await client.query(source, endPoint, variables, deserialize, {
           ...options,
           cancelToken: cancelSourceRef.current && cancelSourceRef.current.token
         });
-        //@ts-ignore can't be null
         store.setQueryState(queryId, {
           ...state,
           data: deserializedResponse,
@@ -122,7 +117,6 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
         if (StaticAxios.isCancel(err)) {
           return;
         }
-        //@ts-ignore can't be null
         store.setQueryState(queryId, { ...state, loading: false, networkStatus: MoonNetworkStatus.Finished, error: err });
         if (onError) {
           onError(err);

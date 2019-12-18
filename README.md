@@ -121,13 +121,12 @@ Sometimes we need to retrieve the state/result of a query in another component. 
 
 ### useQueryState
 
-Updated when the query state is changed.
+Updated when the query state is changed. The optional **stateToProps** function is used for selecting the part of the data from the query state that the connected component needs.
 
 ```js
 import { useQueryState } from '@decathlon/moon';
 
 const MyComponent = () => {
-  // queryId is the id of the query and stateToProps to transform the query state 
   const stateToProps = (queryState) => queryState
   const { loading } = useQueryState("queryId", stateToProps);
   return <span>{loading ? "Loading..." : "success"}</span>;
@@ -135,13 +134,12 @@ const MyComponent = () => {
 ```
 ### useQueriesStates
 
-Updated when one of the query states is changed.
+Updated when one of the query states is changed.The optional **statesToProps** function is used for selecting the part of the data from the query state that the connected component needs.
 
 ```js
 import { useQueriesStates } from '@decathlon/moon';
 
 const MyComponent = () => {
-  // queryId is the id of the query and statesToProps to transform the queries states 
   const statesToProps = (queriesStates) => queriesStates
   const { queryId: { loading } } = useQueriesStates(["queryId"], statesToProps);
   return <span>{loading ? "Loading..." : "success"}</span>;
@@ -150,13 +148,12 @@ const MyComponent = () => {
 
 ### useQueryResult
 
-Updated only when the query result is changed.
+Updated only when the query result is changed. .The optional **resultToProps** function is used for selecting the part of the data from the query result that the connected component needs.
 
 ```js
 import { useQueryResult } from '@decathlon/moon';
 
 const MyComponent = () => {
-  // queryId is the id of the query and resultToProps to transform the query result 
   const resultToProps = (queryResult) => queryResult
   const result = useQueryResult("queryId", resultToProps);
   return <span>{...result...}</span>;
@@ -165,13 +162,12 @@ const MyComponent = () => {
 
 ### useQueriesResults
 
-Updated only when one of the query results is changed.
+Updated only when one of the query results is changed. The optional **statesToProps** function is used for selecting the part of the data from the queries results that the connected component needs.
 
 ```js
 import { useQueriesResults } from '@decathlon/moon';
 
 const MyComponent = () => {
-    // queryId is the id of the query and resultsToProps to transform the queries results 
   const resultsToProps = (queriesResults) => queriesResults
   const { queryId: queryIdResult } = useQueriesResults(["queryId"], statesToProps);
   return <span>{...queryIdResult...}</span>;

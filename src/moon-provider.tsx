@@ -9,6 +9,11 @@ export interface IMoonContextValue {
   store: Nullable<Store>;
 }
 
+export interface RquiredMoonContextValue {
+  client: MoonClient;
+  store: Store;
+}
+
 interface IMoonProviderProps {
   links: ILink[];
   initialStore?: Queries;

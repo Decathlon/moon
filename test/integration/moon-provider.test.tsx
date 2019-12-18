@@ -7,11 +7,11 @@ import { links } from "../moon-client.test";
 import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
 
 const MyComponent: React.FunctionComponent<IMoonContextValue> = ({ client }) => {
-  const [response, setRespons] = React.useState<any>(null);
+  const [response, setResponse] = React.useState<any>(null);
   React.useEffect(() => {
     //@ts-ignore can't be null
     client.query("FOO", "/users", { foo: "bar" }).then(result => {
-      setRespons(result);
+      setResponse(result);
     });
   }, []);
   return <span>{!response ? "Loading" : "Success"}</span>;

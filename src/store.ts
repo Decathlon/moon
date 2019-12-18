@@ -28,12 +28,12 @@ export interface Queries<Datas = any> {
   [queryId: string]: Query<Datas>;
 }
 
-export interface QieriesStates<Datas = any> {
-  [queryId: string]: QueryState<Datas>;
+export interface QueriesStates<Datas = any> {
+  [queryId: string]: QueryState<Datas> | undefined;
 }
 
 export interface QueriesResults<Data = any> {
-  [queryId: string]: Data;
+  [queryId: string]: Data | undefined;
 }
 
 export const getDefaultQuery = (queryId: string): Query => {

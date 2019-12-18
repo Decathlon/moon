@@ -1,8 +1,8 @@
 import * as React from "react";
 
-import { MoonContext } from "./moon-provider";
-import { QueryState, QieriesStates, QueriesResults } from "./store";
+import { QueryState, QueriesStates, QueriesResults } from "./store";
 import shallowEqual from "./utils/shallow-equal";
+import { MoonContext, RquiredMoonContextValue } from "./moon-provider";
 
 export interface ResultProps {
   [propName: string]: any;
@@ -12,16 +12,13 @@ export function useQueryResult<Data = any, Props = ResultProps>(
   queryId: string,
   resultToProps?: (state?: Data) => Props
 ): Data | Props | undefined {
-  const { store } = React.useContext(MoonContext);
-  //@ts-ignore can't be undefined
+  const { store } = useMoon();
   const queryResult = store.readQuery<Data>(queryId).data;
   const [state, setState] = React.useState<Data | undefined>(queryResult);
-  //@ts-ignore can't be undefined
-  store?.subscribeToQueryResult(queryId, setState);
+  store.subscribeToQueryResult(queryId, setState);
 
   React.useEffect(() => {
-    //@ts-ignore can't be undefined
-    return () => store?.unsubscribeFromQueryResult(queryId, setState);
+    return () => store.unsubscribeFromQueryResult(queryId, setState);
   }, [queryId]);
 
   return resultToProps ? resultToProps(state) : state;
@@ -31,10 +28,9 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
   queriesIds: string[],
   resultsToProps?: (results: QueriesResults<Data>) => Props
 ): QueriesResults<Data> | Props {
-  const { store } = React.useContext(MoonContext);
+  const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
   const queriesStates = currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
-    //@ts-ignore can't be undefined
     result[queryId] = store.readQuery<Data>(queryId).data;
     return result;
   }, {});
@@ -55,13 +51,11 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
 
   React.useEffect(() => {
     currentQueriesIds.forEach(queryId => {
-      //@ts-ignore can't be undefined
-      store?.subscribeToQueryResult(queryId, queriesHandlers[queryId]);
+      store.subscribeToQueryResult(queryId, queriesHandlers[queryId]);
     });
     return () =>
       queriesIds.forEach(queryId => {
-        //@ts-ignore can't be undefined
-        store?.unsubscribeFromQueryResult(queryId, prevQueriesHandlers[queryId]);
+        store.unsubscribeFromQueryResult(queryId, prevQueriesHandlers[queryId]);
       });
   }, [currentQueriesIds]);
 
@@ -72,15 +66,12 @@ export function useQueryState<Data = any, Props = ResultProps>(
   queryId: string,
   stateToProps?: (state: QueryState<Data>) => Props
 ): QueryState<Data> | Props {
-  const { store } = React.useContext(MoonContext);
-  //@ts-ignore can't be undefined
-  const queryState = store.readQuery(queryId);
+  const { store } = useMoon();
+  const queryState = store.readQuery(queryId) as QueryState<Data>;
   const [state, setState] = React.useState<QueryState<Data>>(queryState);
-  //@ts-ignore can't be undefined
   store.subscribeToQuery(queryId, setState);
 
   React.useEffect(() => {
-    //@ts-ignore can't be undefined
     return () => store.unsubscribeFromQuery(queryId, setState);
   }, [queryId]);
 
@@ -89,16 +80,15 @@ export function useQueryState<Data = any, Props = ResultProps>(
 
 export function useQueriesStates<Data = any, Props = ResultProps>(
   queriesIds: string[],
-  statesToProps?: (states: QieriesStates<Data>) => Props
-): QieriesStates<Data> | Props {
-  const { store } = React.useContext(MoonContext);
+  statesToProps?: (states: QueriesStates<Data>) => Props
+): QueriesStates<Data> | Props {
+  const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-  const queriesStates = currentQueriesIds.reduce<QieriesStates<Data>>((result, queryId) => {
-    //@ts-ignore can't be undefined
+  const queriesStates = currentQueriesIds.reduce<QueriesStates<Data>>((result, queryId) => {
     result[queryId] = store.readQuery(queryId);
     return result;
   }, {});
-  const [states, setStates] = React.useState<QieriesStates<Data>>(queriesStates);
+  const [states, setStates] = React.useState<QueriesStates<Data>>(queriesStates);
   const setState = (queryId: string) => (state: QueryState<Data>) => {
     setStates({ ...states, [queryId]: state });
   };
@@ -115,12 +105,10 @@ export function useQueriesStates<Data = any, Props = ResultProps>(
 
   React.useEffect(() => {
     currentQueriesIds.forEach(queryId => {
-      //@ts-ignore can't be undefined
       store.subscribeToQuery(queryId, queriesHandlers[queryId]);
     });
     return () =>
       queriesIds.forEach(queryId => {
-        //@ts-ignore can't be undefined
         store.unsubscribeFromQuery(queryId, prevQueriesHandlers[queryId]);
       });
   }, [currentQueriesIds]);
@@ -138,6 +126,11 @@ export function usePrevValue<Value = any>(value: Value) {
   return { value: valueRef.current, prevValue };
 }
 
-export function useMoon() {
-  return React.useContext(MoonContext);
+export function useMoon(): RquiredMoonContextValue {
+  const moonContext = React.useContext(MoonContext);
+  const { client, store } = moonContext;
+  if (!client || !store) {
+    throw new Error("Invariant Violation: Please wrap the root component in a <MoonProvider>");
+  }
+  return moonContext as RquiredMoonContextValue;
 }

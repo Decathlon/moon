@@ -67,7 +67,6 @@ export default function useMutation<MutationResponse = any, MutationVariables = 
   const mutate = async () => {
     setState({ ...state, loading: true, error: null, response: undefined });
     try {
-      // @ts-ignore API context initialized to null
       const response: MutationResponse = ((await client.mutate(source, endPoint, type, variables, {
         ...options,
         cancelToken: cancelSourceRef.current && cancelSourceRef.current.token
