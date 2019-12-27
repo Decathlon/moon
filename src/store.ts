@@ -14,8 +14,8 @@ export interface QueryState<Data = any> {
   data?: Data;
 }
 
-export type OnStateChangeHandler<Data = any> = (state: QueryState<Data>) => void;
-export type OnResultChangeHandler<Data = any> = (data: Data) => void;
+export type OnStateChangeHandler<Data = any> = (queryId: string, state: QueryState<Data>) => void;
+export type OnResultChangeHandler<Data = any> = (queryId: string, data: Data) => void;
 
 interface Query<Data = any> {
   id: string;
@@ -95,11 +95,11 @@ export class Store {
     const newState = { ...currentQuery.state, ...queryState };
     if (!shallowEqual(newState, currentQuery.state)) {
       currentQuery.onStateChangeHandlers.forEach(onStateChangeHandler => {
-        onStateChangeHandler(newState);
+        onStateChangeHandler(queryId, newState);
       });
       if (!shallowEqual(newState.data, currentQuery.state.data)) {
         currentQuery.onResultChangeHandlers.forEach(onResultChangeHandler => {
-          onResultChangeHandler(newState.data);
+          onResultChangeHandler(queryId, newState.data);
         });
       }
       currentQuery.state = newState;
