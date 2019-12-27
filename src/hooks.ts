@@ -38,18 +38,18 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
   const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
 
-  const readdQueriesResults = () => {
+  const readQueriesResults = () => {
     return currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
       result[queryId] = store.readQuery<Data>(queryId).data;
       return result;
     }, {});
   };
 
-  const [states, setStates] = React.useState<QueriesResults<Data>>(readdQueriesResults());
+  const [states, setStates] = React.useState<QueriesResults<Data>>(readQueriesResults());
 
   const setQueriesResults = React.useCallback(
     (queryId: string, result: Data) => {
-      const newQueries = readdQueriesResults();
+      const newQueries = readQueriesResults();
       setStates({ ...newQueries, [queryId]: result });
     },
     [currentQueriesIds]
@@ -108,18 +108,18 @@ export function useQueriesStates<Data = any, Props = ResultProps>(
 ): QueriesStates<Data> | Props {
   const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-  const readdQueriesStates = () => {
+  const readQueriesStates = () => {
     return currentQueriesIds.reduce<QueriesStates<Data>>((result, queryId) => {
       result[queryId] = store.readQuery<Data>(queryId);
       return result;
     }, {});
   };
 
-  const [states, setStates] = React.useState<QueriesStates<Data>>(readdQueriesStates);
+  const [states, setStates] = React.useState<QueriesStates<Data>>(readQueriesStates);
 
   const setQueriesStates = React.useCallback(
     (queryId: string, state: QueryState<Data>) => {
-      const newQueries = readdQueriesStates();
+      const newQueries = readQueriesStates();
       setStates({ ...newQueries, [queryId]: state });
     },
     [currentQueriesIds]
