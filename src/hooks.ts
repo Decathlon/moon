@@ -15,10 +15,17 @@ export function useQueryResult<Data = any, Props = ResultProps>(
   const { store } = useMoon();
   const queryResult = store.readQuery<Data>(queryId).data;
   const [state, setState] = React.useState<Data | undefined>(queryResult);
-  store.subscribeToQueryResult(queryId, setState);
+  const setQueryResult = React.useCallback(
+    (_queryId: string, result: Data) => {
+      setState(result);
+    },
+    [queryId]
+  );
+
+  store.subscribeToQueryResult(queryId, setQueryResult);
 
   React.useEffect(() => {
-    return () => store.unsubscribeFromQueryResult(queryId, setState);
+    return () => store.unsubscribeFromQueryResult(queryId, setQueryResult);
   }, [queryId]);
 
   return resultToProps ? resultToProps(state) : state;
@@ -30,19 +37,28 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
 ): QueriesResults<Data> | Props {
   const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-  const queriesStates = currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
-    result[queryId] = store.readQuery<Data>(queryId).data;
-    return result;
-  }, {});
-  const [states, setStates] = React.useState<QueriesResults<Data>>(queriesStates);
-  const setState = (queryId: string) => (result: Data) => {
-    setStates({ ...states, [queryId]: result });
+
+  const readQueriesResults = () => {
+    return currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
+      result[queryId] = store.readQuery<Data>(queryId).data;
+      return result;
+    }, {});
   };
+
+  const [states, setStates] = React.useState<QueriesResults<Data>>(readQueriesResults());
+
+  const setQueriesResults = React.useCallback(
+    (queryId: string, result: Data) => {
+      const newQueries = readQueriesResults();
+      setStates({ ...newQueries, [queryId]: result });
+    },
+    [currentQueriesIds]
+  );
 
   const queriesHandlers = React.useMemo(
     () =>
       currentQueriesIds.reduce((handlers, queryId) => {
-        handlers[queryId] = setState(queryId);
+        handlers[queryId] = setQueriesResults;
         return handlers;
       }, {}),
     [currentQueriesIds]
@@ -57,7 +73,7 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
       queriesIds.forEach(queryId => {
         store.unsubscribeFromQueryResult(queryId, prevQueriesHandlers[queryId]);
       });
-  }, [currentQueriesIds]);
+  }, [queriesHandlers]);
 
   return resultsToProps ? resultsToProps(states) : states;
 }
@@ -69,10 +85,18 @@ export function useQueryState<Data = any, Props = ResultProps>(
   const { store } = useMoon();
   const queryState = store.readQuery(queryId) as QueryState<Data>;
   const [state, setState] = React.useState<QueryState<Data>>(queryState);
-  store.subscribeToQuery(queryId, setState);
+
+  const setQueryState = React.useCallback(
+    (_queryId: string, state: QueryState<Data>) => {
+      setState(state);
+    },
+    [queryId]
+  );
+
+  store.subscribeToQuery(queryId, setQueryState);
 
   React.useEffect(() => {
-    return () => store.unsubscribeFromQuery(queryId, setState);
+    return () => store.unsubscribeFromQuery(queryId, setQueryState);
   }, [queryId]);
 
   return stateToProps ? stateToProps(state) : state;
@@ -84,19 +108,27 @@ export function useQueriesStates<Data = any, Props = ResultProps>(
 ): QueriesStates<Data> | Props {
   const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-  const queriesStates = currentQueriesIds.reduce<QueriesStates<Data>>((result, queryId) => {
-    result[queryId] = store.readQuery(queryId);
-    return result;
-  }, {});
-  const [states, setStates] = React.useState<QueriesStates<Data>>(queriesStates);
-  const setState = (queryId: string) => (state: QueryState<Data>) => {
-    setStates({ ...states, [queryId]: state });
+  const readQueriesStates = () => {
+    return currentQueriesIds.reduce<QueriesStates<Data>>((result, queryId) => {
+      result[queryId] = store.readQuery<Data>(queryId);
+      return result;
+    }, {});
   };
+
+  const [states, setStates] = React.useState<QueriesStates<Data>>(readQueriesStates);
+
+  const setQueriesStates = React.useCallback(
+    (queryId: string, state: QueryState<Data>) => {
+      const newQueries = readQueriesStates();
+      setStates({ ...newQueries, [queryId]: state });
+    },
+    [currentQueriesIds]
+  );
 
   const queriesHandlers = React.useMemo(
     () =>
       currentQueriesIds.reduce((handlers, queryId) => {
-        handlers[queryId] = setState(queryId);
+        handlers[queryId] = setQueriesStates;
         return handlers;
       }, {}),
     [currentQueriesIds]
@@ -111,7 +143,7 @@ export function useQueriesStates<Data = any, Props = ResultProps>(
       queriesIds.forEach(queryId => {
         store.unsubscribeFromQuery(queryId, prevQueriesHandlers[queryId]);
       });
-  }, [currentQueriesIds]);
+  }, [queriesHandlers]);
 
   return statesToProps ? statesToProps(states) : states;
 }
