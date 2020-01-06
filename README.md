@@ -1,4 +1,6 @@
 # <img src='images/moon-title.png' height='50' alt='Moon Logo'/>
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDecathlon%2Fmoon.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FDecathlon%2Fmoon?ref=badge_shield)
+
 
 **Moon** is a featured, production ready caching **REST** client for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via Axios.
 The only thing you have to do is transmit the configuration. **Moon does the rest !** 🚀
@@ -354,3 +356,6 @@ See also the list of [contributors](https://github.com/Decathlon/moon/graphs/con
 ## License
 
 This project is licensed under the Apache-2.0 License - see the [LICENSE.md](https://github.com/Decathlon/moon/blob/master/LICENSE) file for details
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FDecathlon%2Fmoon.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FDecathlon%2Fmoon?ref=badge_large)
