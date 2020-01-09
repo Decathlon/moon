@@ -106,6 +106,7 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
         });
         store.setQueryState(queryId, {
           ...state,
+          error: null,
           data: deserializedResponse,
           loading: false,
           networkStatus: MoonNetworkStatus.Finished
