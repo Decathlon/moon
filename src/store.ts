@@ -91,20 +91,29 @@ export class Store {
   };
 
   public setQueryState = (queryId: string, queryState: Partial<QueryState>) => {
-    const currentQuery = this.queries[queryId] || getDefaultQuery(queryId);
+    const query = this.queries[queryId];
+    const currentQuery = query || getDefaultQuery(queryId);
     const newState = { ...currentQuery.state, ...queryState };
-    if (!shallowEqual(newState, currentQuery.state)) {
+    const updateStateHandlers = !shallowEqual(newState, currentQuery.state);
+    const updateDataHandlers = updateStateHandlers && !shallowEqual(newState.data, currentQuery.state.data);
+    if (updateStateHandlers) {
+      currentQuery.state = newState;
+      this.queries[queryId] = currentQuery;
+      const {
+        state,
+        state: { data }
+      } = currentQuery;
       currentQuery.onStateChangeHandlers.forEach(onStateChangeHandler => {
-        onStateChangeHandler(queryId, newState);
+        onStateChangeHandler(queryId, state);
       });
-      if (!shallowEqual(newState.data, currentQuery.state.data)) {
+      if (updateDataHandlers) {
         currentQuery.onResultChangeHandlers.forEach(onResultChangeHandler => {
-          onResultChangeHandler(queryId, newState.data);
+          onResultChangeHandler(queryId, data);
         });
       }
-      currentQuery.state = newState;
+    } else if (!query) {
+      this.queries[queryId] = currentQuery;
     }
-    this.queries[queryId] = currentQuery;
   };
 
   public writeQuery = (queryId: string, data: any) => {
