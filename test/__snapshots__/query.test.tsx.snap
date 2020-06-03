@@ -2,6 +2,6 @@
 
 exports[`Query component should call children with the query state 1`] = `
 <div>
-  {"actions":{},"loading":false,"error":null,"data":{"foo":"bar"}}
+  {"actions":{},"loading":false,"error":null,"data":{"foo":"bar"},"networkStatus":3}
 </div>
 `;

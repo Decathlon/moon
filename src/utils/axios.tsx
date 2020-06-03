@@ -16,10 +16,10 @@ export function createHttpClient(baseURL: string, interceptors: IInterceptors = 
   });
 
   // create interceptors
-  if (interceptors && interceptors.request && interceptors.request.length > 0) {
+  if (interceptors && interceptors.request && interceptors.request.length > 0 && client.interceptors.request) {
     interceptors.request.forEach(interceptor => client.interceptors.request.use(interceptor.onFulfilled, interceptor.onRejected));
   }
-  if (interceptors && interceptors.response && interceptors.response.length > 0) {
+  if (interceptors && interceptors.response && interceptors.response.length > 0 && client.interceptors.response) {
     interceptors.response.forEach(interceptor =>
       client.interceptors.response.use(interceptor.onFulfilled, interceptor.onRejected)
     );

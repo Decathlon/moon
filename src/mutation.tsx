@@ -23,10 +23,10 @@ export interface IMutationComponentProps<MutationResponse, MutationVariables>
 }
 
 // @ts-ignore ignore children type
-export const DumbMutation = React.memo(function DumbMutation<MutationResponse>(props: IDumbMutationProps<MutationResponse>) {
+export function DumbMutation<MutationResponse>(props: IDumbMutationProps<MutationResponse>) {
   const { children, ...childrenProps } = props;
   return children ? children({ ...childrenProps }) : null;
-});
+}
 
 function Mutation<MutationResponse = AxiosResponse<any>, MutationVariables = any>(
   props: IMutationComponentProps<MutationResponse, MutationVariables>
@@ -34,6 +34,7 @@ function Mutation<MutationResponse = AxiosResponse<any>, MutationVariables = any
   const { children, ...mutationProps } = props;
   const [state, actions] = useMutation(mutationProps);
   return (
+    // @ts-ignore Type 'Element[]' is missing the following properties from type 'Element'
     <DumbMutation<MutationResponse> actions={actions} {...state}>
       {children}
     </DumbMutation>
