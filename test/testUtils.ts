@@ -7,13 +7,13 @@ import MoonClient, { ILink } from "../src/moon-client";
 jest.unmock("axios");
 
 export class AxiosClient {
-  public get: () => {};
+  public get: () => Promise<any>;
 
-  public post: () => {};
+  public post: () => Promise<any>;
 
-  public delete: () => {};
+  public delete: () => Promise<any>;
 
-  public put: () => {};
+  public put: () => Promise<any>;
 
   public baseUrl: string;
 

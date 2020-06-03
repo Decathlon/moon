@@ -19,7 +19,7 @@ export interface IMutationData<MutationResponse = any> {
 export interface IMutationState<MutationResponse = any> {
   loading: boolean;
   error: any;
-  response?: MutationResponse;
+  response?: Nullable<MutationResponse>;
 }
 
 export interface IMutationProps<MutationResponse = any, MutationVariables = any> {

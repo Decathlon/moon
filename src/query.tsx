@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Nullable, PropsWithForwardRef } from "./typing";
+import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { IQueryProps, IQueryState, IQueryActions, FetchPolicy } from "./query-hook";
 import { useQueryResult, useQueriesResults, ResultProps } from "./hooks";
 import { QueriesResults } from "./store";
@@ -20,11 +20,10 @@ export interface IQueryComponentProps<QueryData, QueryVariables, DeserializedDat
   children?: QueryChildren<DeserializedData>;
 }
 
-// @ts-ignore ignore children type
-export const DumbQuery = React.memo(function DumbQuery<QueryData>(props: IDumbQueryProps<QueryData>) {
+export function DumbQuery<QueryData>(props: IDumbQueryProps<QueryData>) {
   const { children, ...childrenProps } = props;
   return children ? children({ ...childrenProps }) : null;
-});
+}
 
 function Query<QueryData = any, QueryVariables = any, DeserializedData = QueryData>(
   props: IQueryComponentProps<QueryData, QueryVariables, DeserializedData>
@@ -33,6 +32,7 @@ function Query<QueryData = any, QueryVariables = any, DeserializedData = QueryDa
   const [state, actions] = useQuery(queryProps);
 
   return (
+    // @ts-ignore Type 'Element[]' is missing the following properties from type 'Element'
     <DumbQuery<DeserializedData> actions={actions} {...state}>
       {children}
     </DumbQuery>
@@ -67,6 +67,7 @@ export function withQueryResult<
     };
 
     return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutQuery>((props, ref) => {
+      // @ts-ignore I don't know how to implement this without breaking out of the types.
       return <WithQueryComponent forwardedRef={ref} {...props} />;
     });
   };
@@ -93,6 +94,7 @@ export function withQueriesResults<
     };
 
     return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutQuery>((props, ref) => {
+      // @ts-ignore I don't know how to implement this without breaking out of the types.
       return <WithQueryComponent forwardedRef={ref} {...props} />;
     });
   };

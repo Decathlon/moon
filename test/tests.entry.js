@@ -4,4 +4,4 @@ const Adapter = require("enzyme-adapter-react-16");
 
 Enzyme.configure({ adapter: new Adapter() });
 
-window.ga = function() {};
+window.ga = function () {};

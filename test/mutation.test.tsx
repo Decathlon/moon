@@ -16,6 +16,7 @@ describe("Mutation component", () => {
       children: (props: IMutationChildrenProps<{ foo: string }>) => <div>{JSON.stringify(props)}</div>
     };
     const shallowRenderer = createRenderer();
+    //@ts-ignore 'DumbMutation' cannot be used as a JSX component.
     shallowRenderer.render(<DumbMutation {...props} />);
     const rendered = shallowRenderer.getRenderOutput();
     expect(rendered).toMatchSnapshot();
