@@ -1,6 +1,6 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="./typings/tests-entry.d.ts" />
-import * as hash from "object-hash";
+import hash from "object-hash";
 
 import { createHttpClient, getClients, getQueryId } from "../src/utils";
 import { ILink } from "../src/moon-client";

@@ -1,31 +1,45 @@
 import * as React from "react";
+import { useQueryCache, QueryCache, Query } from "react-query";
+import { QueryState } from "react-query/types/core/query";
 
-import { QueryState, QueriesStates, QueriesResults } from "./store";
 import shallowEqual from "./utils/shallow-equal";
 import { MoonContext, RquiredMoonContextValue } from "./moon-provider";
 
+export interface QueriesStates {
+  [queryId: string]: QueryState<unknown, unknown> | undefined;
+}
+
 export interface ResultProps {
   [propName: string]: any;
+}
+
+export interface QueriesResults<Data = any> {
+  [queryId: string]: Data | undefined;
 }
 
 export function useQueryResult<Data = any, Props = ResultProps>(
   queryId: string,
   resultToProps?: (state?: Data) => Props
 ): Data | Props | undefined {
-  const { store } = useMoon();
-  const queryResult = store.readQuery<Data>(queryId).data;
+  const queryCache = useQueryCache();
+  const queryResult = queryCache.getQueryData<Data>(queryId);
   const [state, setState] = React.useState<Data | undefined>(queryResult);
-  const setQueryResult = React.useCallback(
-    (_queryId: string, result: Data) => {
-      setState(result);
+
+  const listener = React.useCallback(
+    (cache: QueryCache, query?: Query<unknown, unknown>) => {
+      if ((query?.queryKey || []).includes(queryId)) {
+        const queryData = cache.getQueryData<Data>(queryId);
+        if (!shallowEqual(state || null, queryData || null)) {
+          setState(queryData);
+        }
+      }
     },
     [queryId]
   );
-
-  store.subscribeToQueryResult(queryId, setQueryResult);
+  const unsubscribe = queryCache.subscribe(listener);
 
   React.useEffect(() => {
-    return () => store.unsubscribeFromQueryResult(queryId, setQueryResult);
+    return unsubscribe;
   }, [queryId]);
 
   return resultToProps ? resultToProps(state) : state;
@@ -35,120 +49,103 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
   queriesIds: string[],
   resultsToProps?: (results: QueriesResults<Data>) => Props
 ): QueriesResults<Data> | Props {
-  const { store } = useMoon();
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-
+  const queryCache = useQueryCache();
   const readQueriesResults = () => {
     return currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
-      result[queryId] = store.readQuery<Data>(queryId).data;
+      result[queryId] = queryCache.getQueryData<Data>(queryId);
       return result;
     }, {});
   };
-
   const [states, setStates] = React.useState<QueriesResults<Data>>(readQueriesResults());
 
-  const setQueriesResults = React.useCallback(
-    (queryId: string, result: Data) => {
-      const newQueries = readQueriesResults();
-      setStates({ ...newQueries, [queryId]: result });
+  const listener = React.useCallback(
+    (cache: QueryCache, query?: Query<unknown, unknown>) => {
+      const queryKeys = query?.queryKey || [];
+      if (queryKeys.some(queryId => typeof queryId === "string" && currentQueriesIds.includes(queryId))) {
+        const queryId = queryKeys[0] as string;
+        const queryData = cache.getQueryData<Data>(queryId);
+        if (!shallowEqual(states[queryId] || null, queryData || null)) {
+          setStates({ [queryId]: queryData });
+        }
+      }
     },
     [currentQueriesIds]
   );
-
-  const queriesHandlers = React.useMemo(
-    () =>
-      currentQueriesIds.reduce((handlers, queryId) => {
-        handlers[queryId] = setQueriesResults;
-        return handlers;
-      }, {}),
-    [currentQueriesIds]
-  );
-  const { prevValue: prevQueriesHandlers } = usePrevValue(queriesHandlers);
+  const unsubscribe = queryCache.subscribe(listener);
 
   React.useEffect(() => {
-    currentQueriesIds.forEach(queryId => {
-      store.subscribeToQueryResult(queryId, queriesHandlers[queryId]);
-    });
-    return () =>
-      queriesIds.forEach(queryId => {
-        store.unsubscribeFromQueryResult(queryId, prevQueriesHandlers[queryId]);
-      });
-  }, [queriesHandlers]);
+    return unsubscribe;
+  }, [currentQueriesIds]);
 
   return resultsToProps ? resultsToProps(states) : states;
 }
 
 export function useQueryState<Data = any, Props = ResultProps>(
   queryId: string,
-  stateToProps?: (state: QueryState<Data>) => Props
-): QueryState<Data> | Props {
-  const { store } = useMoon();
-  const queryState = store.readQuery(queryId) as QueryState<Data>;
-  const [state, setState] = React.useState<QueryState<Data>>(queryState);
+  stateToProps?: (state: QueryState<Data, unknown>) => Props
+): QueryState<Data, unknown> | Props | undefined {
+  const queryCache = useQueryCache();
+  const query = queryCache.getQuery<Data>(queryId);
+  const [state, setState] = React.useState<QueryState<Data, unknown> | undefined>(query?.state);
 
-  const setQueryState = React.useCallback(
-    (_queryId: string, state: QueryState<Data>) => {
-      setState(state);
+  const listener = React.useCallback(
+    (cache: QueryCache, query?: Query<unknown, unknown>) => {
+      if ((query?.queryKey || []).includes(queryId)) {
+        const query = cache.getQuery<Data>(queryId);
+        if (!shallowEqual(state || null, query?.state || null)) {
+          setState(query?.state);
+        }
+      }
     },
     [queryId]
   );
-
-  store.subscribeToQuery(queryId, setQueryState);
+  const unsubscribe = queryCache.subscribe(listener);
 
   React.useEffect(() => {
-    return () => store.unsubscribeFromQuery(queryId, setQueryState);
+    return unsubscribe;
   }, [queryId]);
 
-  return stateToProps ? stateToProps(state) : state;
+  return stateToProps && state ? stateToProps(state) : state;
 }
 
-export function useQueriesStates<Data = any, Props = ResultProps>(
+export function useQueriesStates<Props = ResultProps>(
   queriesIds: string[],
-  statesToProps?: (states: QueriesStates<Data>) => Props
-): QueriesStates<Data> | Props {
-  const { store } = useMoon();
+  statesToProps?: (states: QueriesStates) => Props
+): QueriesStates | Props {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
+  const queryCache = useQueryCache();
   const readQueriesStates = () => {
-    return currentQueriesIds.reduce<QueriesStates<Data>>((result, queryId) => {
-      result[queryId] = store.readQuery<Data>(queryId);
+    return currentQueriesIds.reduce<QueriesStates>((result, queryId) => {
+      result[queryId] = queryCache.getQuery(queryId)?.state;
       return result;
     }, {});
   };
+  const [states, setStates] = React.useState<QueriesStates>(readQueriesStates());
 
-  const [states, setStates] = React.useState<QueriesStates<Data>>(readQueriesStates);
-
-  const setQueriesStates = React.useCallback(
-    (queryId: string, state: QueryState<Data>) => {
-      const newQueries = readQueriesStates();
-      setStates({ ...newQueries, [queryId]: state });
+  const listener = React.useCallback(
+    (cache: QueryCache, query?: Query<unknown, unknown>) => {
+      const queryKeys = query?.queryKey || [];
+      if (queryKeys.some(queryId => typeof queryId === "string" && currentQueriesIds.includes(queryId))) {
+        const queryId = queryKeys[0] as string;
+        const queryState = cache.getQuery(queryId)?.state;
+        if (!shallowEqual(states[queryId] || null, queryState || null)) {
+          setStates({ [queryId]: queryState });
+        }
+      }
     },
     [currentQueriesIds]
   );
-
-  const queriesHandlers = React.useMemo(
-    () =>
-      currentQueriesIds.reduce((handlers, queryId) => {
-        handlers[queryId] = setQueriesStates;
-        return handlers;
-      }, {}),
-    [currentQueriesIds]
-  );
-  const { prevValue: prevQueriesHandlers } = usePrevValue(queriesHandlers);
+  const unsubscribe = queryCache.subscribe(listener);
 
   React.useEffect(() => {
-    currentQueriesIds.forEach(queryId => {
-      store.subscribeToQuery(queryId, queriesHandlers[queryId]);
-    });
-    return () =>
-      queriesIds.forEach(queryId => {
-        store.unsubscribeFromQuery(queryId, prevQueriesHandlers[queryId]);
-      });
-  }, [queriesHandlers]);
+    return unsubscribe;
+  }, [currentQueriesIds]);
 
   return statesToProps ? statesToProps(states) : states;
 }
 
-export function usePrevValue<Value = any>(value: Value) {
+export function usePrevValue<Value = any>(value: Value): { value: Value; prevValue: Value } {
   const valueRef = React.useRef<Value>(value);
   const prevValue = valueRef.current;
   //@ts-ignore prevValue is an object
@@ -160,8 +157,8 @@ export function usePrevValue<Value = any>(value: Value) {
 
 export function useMoon(): RquiredMoonContextValue {
   const moonContext = React.useContext(MoonContext);
-  const { client, store } = moonContext;
-  if (!client || !store) {
+  const { client } = moonContext;
+  if (!client) {
     throw new Error("Invariant Violation: Please wrap the root component in a <MoonProvider>");
   }
   return moonContext as RquiredMoonContextValue;

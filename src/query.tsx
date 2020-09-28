@@ -1,42 +1,33 @@
 import * as React from "react";
+import { QueryResult } from "react-query";
+import { AxiosResponse } from "axios";
 
 import { PropsWithForwardRef, Nullable } from "./typing";
-import useQuery, { IQueryProps, IQueryState, IQueryActions, FetchPolicy } from "./query-hook";
-import { useQueryResult, useQueriesResults, ResultProps } from "./hooks";
-import { QueriesResults } from "./store";
+import useQuery, { FetchPolicy, IQueryProps } from "./query-hook";
+import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
 
-export type QueryChildren<QueryData> = (props: IQueryChildrenProps<QueryData>) => Nullable<JSX.Element | JSX.Element[]>;
-
-export interface IQueryChildrenProps<QueryData = any> extends IQueryState<QueryData> {
-  actions: IQueryActions;
+export interface IQueryChildrenProps<QueryData, DeserializedData = QueryData>
+  extends Omit<QueryResult<AxiosResponse<QueryData | DeserializedData>>, "clear" | "fetchMore" | "refetch" | "remove"> {
+  actions: Pick<QueryResult<AxiosResponse<QueryData | DeserializedData>>, "clear" | "fetchMore" | "refetch" | "remove">;
 }
 
-interface IDumbQueryProps<QueryData = any> extends IQueryChildrenProps<QueryData> {
-  children?: QueryChildren<QueryData>;
-}
+export type QueryChildren<QueryData, DeserializedData = QueryData> = (
+  props: IQueryChildrenProps<QueryData, DeserializedData>
+  // eslint-disable-next-line no-undef
+) => Nullable<JSX.Element>;
 
-export interface IQueryComponentProps<QueryData, QueryVariables, DeserializedData>
+export interface IQueryComponentProps<QueryData, QueryVariables, DeserializedData = QueryData>
   extends IQueryProps<QueryData, QueryVariables, DeserializedData> {
-  children?: QueryChildren<DeserializedData>;
-}
-
-export function DumbQuery<QueryData>(props: IDumbQueryProps<QueryData>) {
-  const { children, ...childrenProps } = props;
-  return children ? children({ ...childrenProps }) : null;
+  children?: QueryChildren<QueryData, DeserializedData>;
 }
 
 function Query<QueryData = any, QueryVariables = any, DeserializedData = QueryData>(
   props: IQueryComponentProps<QueryData, QueryVariables, DeserializedData>
-) {
+  // eslint-disable-next-line no-undef
+): Nullable<JSX.Element> {
   const { children, ...queryProps } = props;
-  const [state, actions] = useQuery(queryProps);
-
-  return (
-    // @ts-ignore Type 'Element[]' is missing the following properties from type 'Element'
-    <DumbQuery<DeserializedData> actions={actions} {...state}>
-      {children}
-    </DumbQuery>
-  );
+  const [actions, state] = useQuery<QueryData, QueryVariables, DeserializedData>(queryProps);
+  return children ? children({ ...state, actions }) : null;
 }
 
 Query.defaultProps = {

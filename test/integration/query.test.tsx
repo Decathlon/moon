@@ -7,7 +7,6 @@ import { FetchPolicy } from "../../src/query-hook";
 import Query from "../../src/query";
 import { links } from "../moon-client.test";
 import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
-import { getDefaultQuery, createMoonStore, MoonNetworkStatus } from "../../src/store";
 
 interface QueryData {
   users: { id: number; name: string }[];
@@ -18,11 +17,11 @@ interface QueryVariables {
 }
 
 const cachedResponse = {
-  users: [{ id: 2, name: "Alice Smith" }]
+  data: { users: [{ id: 2, name: "Alice Smith" }] }
 };
 
 const response = {
-  users: [{ id: 1, name: "John Smith" }]
+  data: { users: [{ id: 1, name: "John Smith" }] }
 };
 
 describe("Query component with MoonProvider", () => {
@@ -40,11 +39,15 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider links={links}>
         <Query<QueryData, QueryVariables> id="query1" source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
           {({ data }) => {
-            return data
-              ? data.users.map(user => {
-                  return <span>{user.name}</span>;
-                })
-              : null;
+            return (
+              <div>
+                {data
+                  ? data.data.users.map(user => {
+                      return <span key={user.name}>{user.name}</span>;
+                    })
+                  : null}
+              </div>
+            );
           }}
         </Query>
       </MoonProvider>
@@ -72,15 +75,17 @@ describe("Query component with MoonProvider", () => {
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
-          fetchOnMount={false}
+          queryConfig={{ enabled: false }}
         >
           {({ data, actions: { refetch } }) => {
             return data ? (
-              data.users.map(user => {
-                return <span>{user.name}</span>;
-              })
+              <div>
+                {data.data.users.map(user => {
+                  return <span key={user.name}>{user.name}</span>;
+                })}
+              </div>
             ) : (
-              <div id="button" onClick={refetch}>
+              <div id="button" onClick={() => refetch()}>
                 Go
               </div>
             );
@@ -102,7 +107,7 @@ describe("Query component with MoonProvider", () => {
   });
 
   test("should render an error", async () => {
-    const error = new Error("Bimm!");
+    const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
     class CustomAxiosClient extends AxiosClient {
       constructor(baseUrl: string) {
@@ -114,20 +119,27 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links}>
-        <Query<QueryData, QueryVariables> id="query3" source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+        <Query<QueryData, QueryVariables>
+          id="query3"
+          source="FOO"
+          endPoint="/users"
+          variables={{ foo: "bar" }}
+          queryConfig={{
+            retry: 0
+          }}
+        >
           {({ data, error }) => {
             const users = data
-              ? data.users.map(user => {
-                  return <span>{user.name}</span>;
+              ? data.data.users.map(user => {
+                  return <span key={user.name}>{user.name}</span>;
                 })
               : null;
-            return error ? <span>{error.message}</span> : users;
+            return error ? <span>{error as string}</span> : <div>{users}</div>;
           }}
         </Query>
       </MoonProvider>
     );
     await wait(() => container.querySelector("span"));
-    expect(get).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/Bimm!/)).toBeTruthy();
   });
@@ -142,27 +154,23 @@ describe("Query component with MoonProvider", () => {
     }
     mockAxiosClientConstructor(CustomAxiosClient);
 
-    const query = getDefaultQuery("query4");
-    query.state.data = cachedResponse;
-    createMoonStore({ query4: query });
-
     const { container, getByText } = render(
-      <MoonProvider links={links}>
+      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
         <Query<QueryData, QueryVariables>
           id="query4"
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
-          fetchOnMount={false}
+          queryConfig={{ enabled: false }}
         >
           {({ data, actions: { refetch } }) => {
-            const users = data ? data.users : [];
+            const users = data ? data.data.users : [];
             return (
               <div>
                 {users.map(user => {
-                  return <span>{user.name}</span>;
+                  return <span key={user.name}>{user.name}</span>;
                 })}
-                <div id="button" onClick={refetch}>
+                <div id="button" onClick={() => refetch()}>
                   Go
                 </div>
               </div>
@@ -195,28 +203,24 @@ describe("Query component with MoonProvider", () => {
     }
     mockAxiosClientConstructor(CustomAxiosClient);
 
-    const query = getDefaultQuery("query4");
-    query.state.data = cachedResponse;
-    createMoonStore({ query4: query });
-
     const { container, getByText } = render(
-      <MoonProvider links={links}>
+      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
         <Query<QueryData, QueryVariables>
           id="query4"
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
-          fetchOnMount={false}
           fetchPolicy={FetchPolicy.NetworkOnly}
+          queryConfig={{ enabled: false }}
         >
-          {({ data, networkStatus, actions: { refetch } }) => {
-            const users = data && networkStatus !== MoonNetworkStatus.Ready ? data.users : [];
+          {({ data, actions: { refetch } }) => {
+            const users = data?.data?.users || [];
             return (
               <div>
                 {users.map(user => {
-                  return <span>{user.name}</span>;
+                  return <span key={user.name}>{user.name}</span>;
                 })}
-                <div id="button" onClick={refetch}>
+                <div id="button" onClick={() => refetch()}>
                   Go
                 </div>
               </div>
@@ -249,28 +253,24 @@ describe("Query component with MoonProvider", () => {
     }
     mockAxiosClientConstructor(CustomAxiosClient);
 
-    const query = getDefaultQuery("query4");
-    query.state.data = cachedResponse;
-    createMoonStore({ query4: query });
-
     const { container, getByText } = render(
-      <MoonProvider links={links}>
+      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
         <Query<QueryData, QueryVariables>
           id="query4"
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
-          fetchOnMount={false}
           fetchPolicy={FetchPolicy.NetworkOnly}
+          queryConfig={{ enabled: false }}
         >
-          {({ data, networkStatus, actions: { refetch } }) => {
-            const users = data && networkStatus !== MoonNetworkStatus.Ready ? data.users : [];
+          {({ data, actions: { refetch } }) => {
+            const users = data?.data?.users || [];
             return (
               <div>
                 {users.map(user => {
-                  return <span>{user.name}</span>;
+                  return <span key={user.name}>{user.name}</span>;
                 })}
-                <div id="button" onClick={refetch}>
+                <div id="button" onClick={() => refetch()}>
                   Go
                 </div>
               </div>

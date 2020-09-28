@@ -18,10 +18,10 @@ interface MutationVariables {
 
 describe("Mutation hook with MoonProvider", () => {
   test("should call the mutate action", async () => {
-    const response = {
-      status: true
+    const data = {
+      data: { status: true }
     };
-    const post = jest.fn().mockImplementation(() => Promise.resolve(response));
+    const post = jest.fn().mockImplementation(() => Promise.resolve(data));
     class CustomAxiosClient extends AxiosClient {
       constructor(baseUrl: string) {
         super(baseUrl);
@@ -39,28 +39,28 @@ describe("Mutation hook with MoonProvider", () => {
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },
-          onResponse
+          mutationConfig: { onSuccess: onResponse }
         }),
       { wrapper }
     );
     act(() => {
-      const [{ response, loading, error }, { mutate }] = result.current;
-      expect(response).toBeUndefined();
-      expect(loading).toBeFalsy();
+      const [mutate, { data, isLoading, error }] = result.current;
+      expect(data).toBeUndefined();
+      expect(isLoading).toBeFalsy();
       expect(error).toBeNull();
       mutate();
     });
-    let state = result.current[0];
-    expect(state.response).toBeUndefined();
-    expect(state.loading).toBeTruthy();
+    let state = result.current[1];
+    expect(state.data).toBeUndefined();
+    expect(state.isLoading).toBeTruthy();
     expect(state.error).toBeNull();
     await waitForNextUpdate();
-    state = result.current[0];
-    expect(state.response).toBe(response);
-    expect(state.loading).toBeFalsy();
+    state = result.current[1];
+    expect(state.data).toBe(data);
+    expect(state.isLoading).toBeFalsy();
     expect(state.error).toBeNull();
     expect(onResponse).toBeCalledTimes(1);
-    expect(onResponse).toBeCalledWith(response);
+    expect(onResponse).toBeCalledWith(data, undefined);
   });
 
   test("should render an error", async () => {
@@ -82,27 +82,27 @@ describe("Mutation hook with MoonProvider", () => {
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },
-          onError
+          mutationConfig: { onError }
         }),
       { wrapper }
     );
     act(() => {
-      const [{ response, loading, error }, { mutate }] = result.current;
-      expect(response).toBeUndefined();
-      expect(loading).toBeFalsy();
+      const [mutate, { data, isLoading, error }] = result.current;
+      expect(data).toBeUndefined();
+      expect(isLoading).toBeFalsy();
       expect(error).toBeNull();
       mutate();
     });
-    let state = result.current[0];
-    expect(state.response).toBeUndefined();
-    expect(state.loading).toBeTruthy();
+    let state = result.current[1];
+    expect(state.data).toBeUndefined();
+    expect(state.isLoading).toBeTruthy();
     expect(state.error).toBeNull();
     await waitForNextUpdate();
-    state = result.current[0];
-    expect(state.response).toBeUndefined();
-    expect(state.loading).toBeFalsy();
+    state = result.current[1];
+    expect(state.data).toBeUndefined();
+    expect(state.isLoading).toBeFalsy();
     expect(state.error).toBe(error);
     expect(onError).toBeCalledTimes(1);
-    expect(onError).toBeCalledWith(error);
+    expect(onError).toBeCalledWith(error, undefined, undefined);
   });
 });

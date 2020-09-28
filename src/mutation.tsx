@@ -1,44 +1,32 @@
-import * as React from "react";
 import { AxiosResponse } from "axios";
+import { MutateFunction, MutationResult } from "react-query";
 
 import { MutateType } from "./moon-client";
-import useMutation, { IMutationActions, IMutationState, IMutationProps } from "./mutation-hook";
 import { Nullable } from "./typing";
+import useMutation, { IMutationProps } from "./mutation-hook";
 
-export type MutationChildren<MutationResponse> = (
-  props: IMutationChildrenProps<MutationResponse>
-) => Nullable<JSX.Element | JSX.Element[]>;
-
-export interface IMutationChildrenProps<MutationResponse = any> extends IMutationState<MutationResponse> {
-  actions: IMutationActions;
+export interface IMutationChildrenProps<MutationResponse = any, MutationVariables = any>
+  extends MutationResult<MutationResponse, unknown> {
+  actions: { mutate: MutateFunction<MutationResponse, unknown, MutationVariables, unknown> };
 }
 
-interface IDumbMutationProps<MutationResponse = any> extends IMutationChildrenProps<MutationResponse> {
-  children?: MutationChildren<MutationResponse>;
-}
+export type MutationChildren<MutationResponse, MutationVariables> = (
+  props: IMutationChildrenProps<MutationResponse, MutationVariables>
+  // eslint-disable-next-line no-undef
+) => Nullable<JSX.Element>;
 
 export interface IMutationComponentProps<MutationResponse, MutationVariables>
   extends IMutationProps<MutationResponse, MutationVariables> {
-  children?: MutationChildren<MutationResponse>;
+  children?: MutationChildren<MutationResponse, MutationVariables>;
 }
 
-// @ts-ignore ignore children type
-export function DumbMutation<MutationResponse>(props: IDumbMutationProps<MutationResponse>) {
-  const { children, ...childrenProps } = props;
-  return children ? children({ ...childrenProps }) : null;
-}
-
-function Mutation<MutationResponse = AxiosResponse<any>, MutationVariables = any>(
-  props: IMutationComponentProps<MutationResponse, MutationVariables>
-) {
+function Mutation<MutationResponse = any, MutationVariables = any>(
+  props: IMutationComponentProps<AxiosResponse<MutationResponse> | undefined, MutationVariables>
+  // eslint-disable-next-line no-undef
+): Nullable<JSX.Element> {
   const { children, ...mutationProps } = props;
-  const [state, actions] = useMutation(mutationProps);
-  return (
-    // @ts-ignore Type 'Element[]' is missing the following properties from type 'Element'
-    <DumbMutation<MutationResponse> actions={actions} {...state}>
-      {children}
-    </DumbMutation>
-  );
+  const [mutate, state] = useMutation<MutationResponse, MutationVariables>(mutationProps);
+  return children ? children({ ...state, actions: { mutate } }) : null;
 }
 
 Mutation.defaultProps = {

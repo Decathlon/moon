@@ -31,54 +31,45 @@ export default class MoonClient {
     this.clients = getClients(links);
   }
 
-  public query = async (
+  public query<Data = any, DeserializedData = any, Variables = any>(
     source: string,
     endPoint: string,
-    variables: any = {},
-    deserialize?: (response: any) => any,
+    variables: Variables,
+    deserialize?: (data: Data) => DeserializedData,
     options: AxiosRequestConfig = {}
-  ) => {
+  ): Promise<AxiosResponse<Data | DeserializedData>> {
     const client = this.clients[source];
-    let response;
     if (client) {
-      response = await client.get(endPoint, {
+      return client.get<Data>(endPoint, {
         ...options,
-        params: { ...variables }
+        params: { ...variables },
+        transformResponse: deserialize
       });
-      response = deserialize ? deserialize(response) : response;
     }
-    return response;
-  };
+    return new Promise(resolve => resolve(undefined));
+  }
 
-  public mutate = async (
+  public mutate<MutationResponse = any, Variables = any>(
     source: string,
     endPoint: string,
     type: MutateType = MutateType.Post,
-    variables: any = {},
+    variables: Variables,
     options: AxiosRequestConfig = {}
-  ) => {
+  ): Promise<AxiosResponse<MutationResponse>> {
     const client = this.clients[source];
-    let response;
-
     if (client) {
       switch (type) {
-        case MutateType.Delete:
-          {
-            const mutationOptions: AxiosRequestConfig = { ...options, params: { ...variables } };
-            response = await client.delete(endPoint, mutationOptions);
-          }
-          break;
-
+        case MutateType.Delete: {
+          const mutationOptions: AxiosRequestConfig = { ...options, params: { ...variables } };
+          return client.delete(endPoint, mutationOptions);
+        }
         case MutateType.Put:
-          response = await client.put(endPoint, variables, options);
-          break;
-
+          return client.put(endPoint, variables, options);
         default:
-          response = await client.post(endPoint, variables, options);
-          break;
+          return client.post(endPoint, variables, options);
       }
     }
 
-    return response;
-  };
+    return new Promise(resolve => resolve(undefined));
+  }
 }

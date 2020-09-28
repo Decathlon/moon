@@ -1,49 +1,49 @@
+/* eslint-disable max-classes-per-file */
 import * as React from "react";
+import { Hydrate, HydrateProps } from "react-query/hydration";
 
 import MoonClient, { ILink } from "./moon-client";
 import { Nullable, PropsWithForwardRef } from "./typing";
-import getMoonStore, { Queries, Store } from "./store";
 
 export interface IMoonContextValue {
   client: Nullable<MoonClient>;
-  store: Nullable<Store>;
 }
 
 export interface RquiredMoonContextValue {
   client: MoonClient;
-  store: Store;
 }
 
 interface IMoonProviderProps {
   links: ILink[];
-  initialStore?: Queries;
+  // eslint-disable-next-line no-undef
   children: JSX.Element;
+  hydrate?: HydrateProps;
 }
 
 export type PropsWithoutMoon<P> = Omit<P, "client" | "store">;
 
-export type PropsWithMoon<P> = P & { client: MoonClient; store: Store };
+export type PropsWithMoon<P> = P & { client: MoonClient };
 
 export const MoonContext: React.Context<IMoonContextValue> = React.createContext<IMoonContextValue>({
-  client: null,
-  store: null
+  client: null
 });
 
 class MoonProvider extends React.Component<IMoonProviderProps> {
   readonly client: MoonClient;
 
-  readonly store: Store;
-
   constructor(props: IMoonProviderProps) {
     super(props);
-    const { links, initialStore } = this.props;
-    this.store = getMoonStore(initialStore);
+    const { links } = this.props;
     this.client = new MoonClient(links);
   }
 
   render() {
-    const { children } = this.props;
-    return <MoonContext.Provider value={{ client: this.client, store: this.store }}>{children}</MoonContext.Provider>;
+    const { children, hydrate } = this.props;
+    return (
+      <Hydrate {...hydrate}>
+        <MoonContext.Provider value={{ client: this.client }}>{children}</MoonContext.Provider>
+      </Hydrate>
+    );
   }
 }
 
@@ -59,13 +59,12 @@ export function withMoon<Props = any>(WrappedComponent: React.ComponentClass<Pro
       const { forwardedRef, ...rest } = this.props;
       return (
         <MoonContext.Consumer>
-          {({ client, store }) => {
+          {({ client }) => {
             return (
               // @ts-ignore I don't know how to implement this without breaking out of the types.
               <WrappedComponent
                 ref={forwardedRef}
                 client={client}
-                store={store}
                 // @ts-ignore same
                 {...(rest as WrappedComponentPropsWithoutMoon)}
               />

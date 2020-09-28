@@ -7,7 +7,7 @@ function is(x: any, y: any) {
   return x !== x && y !== y;
 }
 
-export default function shallowEqual(objA: Record<string, any>, objB: Record<string, any>) {
+export default function shallowEqual(objA: Record<string, any> | null, objB: Record<string, any> | null): boolean {
   if (is(objA, objB)) return true;
 
   if (typeof objA !== "object" || objA === null || typeof objB !== "object" || objB === null) {

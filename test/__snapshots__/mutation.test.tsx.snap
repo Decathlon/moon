@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`Mutation component should call children with the mutation state 1`] = `
-<div>
-  {"actions":{},"loading":false,"error":null,"response":{"foo":"bar"}}
-</div>
-`;

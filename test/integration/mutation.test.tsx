@@ -32,11 +32,11 @@ describe("Mutation component with MoonProvider", () => {
     const { container, getByText } = render(
       <MoonProvider links={links}>
         <Mutation<MutationResponse, MutationVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-          {({ actions: { mutate }, response }) => {
-            return response && response.status ? (
+          {({ actions: { mutate }, data }) => {
+            return data && data.status ? (
               <span>Success</span>
             ) : (
-              <div id="button" onClick={mutate}>
+              <div id="button" onClick={() => mutate()}>
                 Go
               </div>
             );
@@ -75,14 +75,15 @@ describe("Mutation component with MoonProvider", () => {
     const { container, getByText } = render(
       <MoonProvider links={links}>
         <Mutation<MutationResponse, MutationVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-          {({ response, error, actions: { mutate } }) => {
-            const result = response ? (
-              <span id="response">{response.status && "Success"}</span>
+          {({ data, error, actions: { mutate } }) => {
+            const result = data ? (
+              <span id="response">{data.status && "Success"}</span>
             ) : (
-              <div id="button" onClick={mutate}>
+              <div id="button" onClick={() => mutate()}>
                 Go
               </div>
             );
+            //@ts-ignore
             return error ? <span>{error.message}</span> : result;
           }}
         </Mutation>

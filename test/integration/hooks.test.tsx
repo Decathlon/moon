@@ -1,15 +1,17 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
 import { renderHook } from "@testing-library/react-hooks";
 import { render } from "@testing-library/react";
+import { QueryState } from "react-query/types/core/query";
+import { AxiosResponse } from "axios";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
+import useQuery from "../../src/query-hook";
 import { AxiosClient, mockAxiosClientConstructor } from "../testUtils";
 import MoonProvider from "../../src/moon-provider";
-import useQuery from "../../src/query-hook";
 import { links } from "../moon-client.test";
-import { QueryState } from "../../src/store";
 import { withQueryResult, withQueriesResults } from "../../src/query";
 
 interface QueryData {
@@ -25,7 +27,7 @@ const response = {
 };
 
 interface Props {
-  queryId: QueryState;
+  queryId: QueryState<typeof response, unknown>;
 }
 
 const MyComponent: React.FunctionComponent<Props> = ({ queryId }) => {
@@ -125,7 +127,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     const { result } = renderHook(
-      () => useQueriesResults<QueryData, { myQuery1: QueryState }>(["myQuery1"]),
+      () => useQueriesResults<QueryData, { myQuery1: QueryState<AxiosResponse<QueryData>, unknown> }>(["myQuery1"]),
       { wrapper }
     );
     expect(result.current.myQuery1).toEqual(response);
@@ -175,7 +177,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     const { result } = renderHook(
-      () => useQueriesStates<QueryData, { myQuery3: QueryState }>(["myQuery3"]),
+      () => useQueriesStates<QueryData>(["myQuery3"]),
       { wrapper }
     );
     //@ts-ignore myQuery3 can't be undefined

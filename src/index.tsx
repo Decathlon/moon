@@ -18,5 +18,3 @@ export * from "./mutation-hook";
 
 export * from "./utils";
 export * from "./hooks";
-export { default as getMoonStore } from "./store";
-export * from "./store";
