@@ -1,22 +1,5 @@
-import { AxiosRequestConfig, AxiosResponse } from "axios";
-
-import { IClients, getClients } from "./utils/axios";
-
-interface InterceptorManagerUseParams<V> {
-  onFulfilled?: (value: V) => V | Promise<V>;
-  onRejected?: (error: any) => any;
-}
-
-export interface IInterceptors {
-  request?: InterceptorManagerUseParams<AxiosRequestConfig>[];
-  response?: InterceptorManagerUseParams<AxiosResponse>[];
-}
-
-export interface ILink {
-  baseUrl: string;
-  id: string;
-  interceptors: IInterceptors;
-}
+import { DEFAULT_CLIENT_FACTORY } from "./utils";
+import { IClients, getClients, ClientFactory, ILink } from "./utils/client";
 
 export enum MutateType {
   Delete = "DELETE",
@@ -27,40 +10,38 @@ export enum MutateType {
 export default class MoonClient {
   private readonly clients: IClients;
 
-  constructor(links: ILink[]) {
-    this.clients = getClients(links);
+  constructor(links: ILink[], clientFactory: ClientFactory = DEFAULT_CLIENT_FACTORY) {
+    this.clients = getClients(links, clientFactory);
   }
 
-  public query<Data = any, DeserializedData = any, Variables = any>(
+  public query<Variables = any, Config = any, Response = any>(
     source: string,
     endPoint: string,
     variables: Variables,
-    deserialize?: (data: Data) => DeserializedData,
-    options: AxiosRequestConfig = {}
-  ): Promise<AxiosResponse<Data | DeserializedData>> {
+    options?: Config
+  ): Promise<Response> {
     const client = this.clients[source];
     if (client) {
-      return client.get<Data>(endPoint, {
+      return client.get(endPoint, {
         ...options,
-        params: { ...variables },
-        transformResponse: deserialize
+        params: { ...variables }
       });
     }
     return new Promise(resolve => resolve(undefined));
   }
 
-  public mutate<MutationResponse = any, Variables = any>(
+  public mutate<Variables = any, Config = any, Response = any>(
     source: string,
     endPoint: string,
     type: MutateType = MutateType.Post,
     variables: Variables,
-    options: AxiosRequestConfig = {}
-  ): Promise<AxiosResponse<MutationResponse>> {
+    options?: Config
+  ): Promise<Response> {
     const client = this.clients[source];
     if (client) {
       switch (type) {
         case MutateType.Delete: {
-          const mutationOptions: AxiosRequestConfig = { ...options, params: { ...variables } };
+          const mutationOptions: Config = { ...options, params: { ...variables } } as Config;
           return client.delete(endPoint, mutationOptions);
         }
         case MutateType.Put:

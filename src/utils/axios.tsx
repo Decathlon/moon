@@ -1,18 +1,19 @@
+/* eslint-disable import/prefer-default-export */
 import * as qs from "qs";
-import axios, { AxiosInstance } from "axios";
-import { IInterceptors, ILink } from "../moon-client";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
-export interface IClients {
-  [id: string]: AxiosInstance;
-}
+import { IInterceptors } from "./client";
 
 const paramsSerializer = (params: any) => qs.stringify(params, { arrayFormat: "repeat" });
 
-export function createHttpClient(baseURL: string, interceptors: IInterceptors = {}): AxiosInstance {
+export function createAxiosClient(
+  config?: AxiosRequestConfig,
+  interceptors?: IInterceptors<AxiosRequestConfig, AxiosResponse>
+): AxiosInstance {
   // create Axios client with custom params serializer
   const client = axios.create({
-    baseURL,
-    paramsSerializer
+    ...config,
+    paramsSerializer: config?.paramsSerializer || paramsSerializer
   });
 
   // create interceptors
@@ -28,9 +29,4 @@ export function createHttpClient(baseURL: string, interceptors: IInterceptors = 
   return client;
 }
 
-export function getClients(links: ILink[]): IClients {
-  return links.reduce((clients, link) => {
-    clients[link.id] = createHttpClient(link.baseUrl, link.interceptors);
-    return clients;
-  }, {});
-}
+export const DEFAULT_CLIENT_FACTORY = createAxiosClient;

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, wait } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 
 import MoonProvider, { withMoon, IMoonContextValue } from "../../src/moon-provider";
 
@@ -23,8 +23,8 @@ describe("Custom component withMoon HOC", () => {
   test("should render the query response", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve({ status: true }));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -36,7 +36,7 @@ describe("Custom component withMoon HOC", () => {
       </MoonProvider>
     );
     expect(getByText(/Loading/)).toBeTruthy();
-    await wait(() => getByText(/Success/));
+    await waitFor(() => getByText(/Success/));
     expect(get).toHaveBeenCalledTimes(1);
   });
 });

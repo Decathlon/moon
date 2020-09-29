@@ -157,8 +157,8 @@ export function usePrevValue<Value = any>(value: Value): { value: Value; prevVal
 
 export function useMoon(): RquiredMoonContextValue {
   const moonContext = React.useContext(MoonContext);
-  const { client } = moonContext;
-  if (!client) {
+  const { client, store } = moonContext;
+  if (!client || !store) {
     throw new Error("Invariant Violation: Please wrap the root component in a <MoonProvider>");
   }
   return moonContext as RquiredMoonContextValue;

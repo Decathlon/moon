@@ -5,7 +5,7 @@ import * as React from "react";
 import { renderHook } from "@testing-library/react-hooks";
 import { render } from "@testing-library/react";
 import { QueryState } from "react-query/types/core/query";
-import { AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
 import useQuery from "../../src/query-hook";
@@ -42,8 +42,8 @@ describe("Hooks", () => {
   test("should render the query result with withQueryResult HOC", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -53,7 +53,13 @@ describe("Hooks", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
-      () => useQuery<QueryData, QueryVariables>({ id: "queryId", source: "FOO", endPoint: "/users", variables }),
+      () =>
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+          id: "queryId",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
       { wrapper }
     );
     await waitForNextUpdate();
@@ -64,8 +70,8 @@ describe("Hooks", () => {
   test("should render the query result with withQueriesResults HOC", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -75,7 +81,13 @@ describe("Hooks", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
-      () => useQuery<QueryData, QueryVariables>({ id: "queryId", source: "FOO", endPoint: "/users", variables }),
+      () =>
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+          id: "queryId",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
       { wrapper }
     );
     await waitForNextUpdate();
@@ -86,8 +98,8 @@ describe("Hooks", () => {
   test("should render the query result with useQueryResult", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -97,7 +109,13 @@ describe("Hooks", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
-      () => useQuery<QueryData, QueryVariables>({ id: "myQuery", source: "FOO", endPoint: "/users", variables }),
+      () =>
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+          id: "myQuery",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
       { wrapper }
     );
     await waitForNextUpdate();
@@ -111,8 +129,8 @@ describe("Hooks", () => {
   test("should render the query result with useQueriesResults ", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -122,7 +140,13 @@ describe("Hooks", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
-      () => useQuery<QueryData, QueryVariables>({ id: "myQuery1", source: "FOO", endPoint: "/users", variables }),
+      () =>
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+          id: "myQuery1",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
       { wrapper }
     );
     await waitForNextUpdate();
@@ -136,8 +160,8 @@ describe("Hooks", () => {
   test("should render the query result with useQueryState", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -147,7 +171,13 @@ describe("Hooks", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
-      () => useQuery<QueryData, QueryVariables>({ id: "myQuery2", source: "FOO", endPoint: "/users", variables }),
+      () =>
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+          id: "myQuery2",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
       { wrapper }
     );
     await waitForNextUpdate();
@@ -161,8 +191,8 @@ describe("Hooks", () => {
   test("should render the query result with useQueriesStates ", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -172,7 +202,13 @@ describe("Hooks", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
-      () => useQuery<QueryData, QueryVariables>({ id: "myQuery3", source: "FOO", endPoint: "/users", variables }),
+      () =>
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+          id: "myQuery3",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
       { wrapper }
     );
     await waitForNextUpdate();

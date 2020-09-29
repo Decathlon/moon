@@ -1,38 +1,35 @@
 import * as React from "react";
 import { QueryResult } from "react-query";
-import { AxiosResponse } from "axios";
 
 import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { FetchPolicy, IQueryProps } from "./query-hook";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
 
-export interface IQueryChildrenProps<QueryData, DeserializedData = QueryData>
-  extends Omit<QueryResult<AxiosResponse<QueryData | DeserializedData>>, "clear" | "fetchMore" | "refetch" | "remove"> {
-  actions: Pick<QueryResult<AxiosResponse<QueryData | DeserializedData>>, "clear" | "fetchMore" | "refetch" | "remove">;
+export interface IQueryChildrenProps<QueryResponse>
+  extends Omit<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove"> {
+  actions: Pick<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove">;
 }
 
-export type QueryChildren<QueryData, DeserializedData = QueryData> = (
-  props: IQueryChildrenProps<QueryData, DeserializedData>
+export type QueryChildren<QueryResponse> = (
+  props: IQueryChildrenProps<QueryResponse>
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IQueryComponentProps<QueryData, QueryVariables, DeserializedData = QueryData>
-  extends IQueryProps<QueryData, QueryVariables, DeserializedData> {
-  children?: QueryChildren<QueryData, DeserializedData>;
+export interface IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse>
+  extends IQueryProps<QueryVariables, QueryConfig, QueryResponse> {
+  children?: QueryChildren<QueryResponse>;
 }
 
-function Query<QueryData = any, QueryVariables = any, DeserializedData = QueryData>(
-  props: IQueryComponentProps<QueryData, QueryVariables, DeserializedData>
+function Query<QueryVariables = any, QueryConfig = any, QueryResponse = any>(
+  props: IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...queryProps } = props;
-  const [actions, state] = useQuery<QueryData, QueryVariables, DeserializedData>(queryProps);
+  const [actions, state] = useQuery<QueryVariables, QueryConfig, QueryResponse>(queryProps);
   return children ? children({ ...state, actions }) : null;
 }
 
 Query.defaultProps = {
-  fetchOnMount: true,
-  autoRefetchOnUpdate: true,
   fetchPolicy: FetchPolicy.CacheAndNetwork
 };
 

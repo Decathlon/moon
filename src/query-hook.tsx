@@ -1,6 +1,5 @@
 import * as React from "react";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { useQuery as useReactQuery, QueryResult, QueryConfig, useQueryCache } from "react-query";
+import { useQuery as useReactQuery, QueryResult, QueryConfig as ReactQueryConfig } from "react-query";
 
 import { useMoon } from "./hooks";
 import { getQueryId } from "./utils";
@@ -14,43 +13,41 @@ export enum FetchPolicy {
   NetworkOnly = "network-only"
 }
 
-export type IQueryResultProps<QueryData, DeserializedData = QueryData> = [
-  Pick<QueryResult<AxiosResponse<QueryData | DeserializedData>>, "clear" | "fetchMore" | "refetch" | "remove">,
-  Omit<QueryResult<AxiosResponse<QueryData | DeserializedData>>, "clear" | "fetchMore" | "refetch" | "remove">
+export type IQueryResultProps<QueryResponse> = [
+  Pick<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove">,
+  Omit<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove">
 ];
 
-export interface IQueryProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData> {
+export interface IQueryProps<QueryVariables = any, QueryConfig = any, QueryResponse = any> {
   id?: string;
   source: string;
   endPoint: string;
   variables: QueryVariables;
   fetchPolicy?: FetchPolicy;
-  options?: AxiosRequestConfig;
-  deserialize?: (data: QueryData) => DeserializedData;
-  queryConfig?: QueryConfig<AxiosResponse<QueryData | DeserializedData>>;
+  options?: QueryConfig;
+  queryConfig?: ReactQueryConfig<QueryResponse>;
 }
 
-export default function useQuery<QueryData = any, QueryVariables = any, DeserializedData = QueryData>({
+export default function useQuery<QueryVariables = any, QueryConfig = any, QueryResponse = any>({
   id,
   source,
   endPoint,
   variables,
   options,
-  deserialize,
   fetchPolicy = FetchPolicy.CacheAndNetwork,
   queryConfig
-}: IQueryProps<QueryData, QueryVariables, DeserializedData>): IQueryResultProps<QueryData, DeserializedData> {
+}: IQueryProps<QueryVariables, QueryConfig, QueryResponse>): IQueryResultProps<QueryResponse> {
   const { client } = useMoon();
-  const queryKey = getQueryId(id, source, endPoint, variables);
   const isInitialMount = React.useRef<boolean>(true);
-  const cache = useQueryCache();
-  const cachedResult = cache.getQueryData<AxiosResponse<QueryData | DeserializedData>>(queryKey);
+  const { store } = useMoon();
+  const queryKey = getQueryId(id, source, endPoint, variables);
+  const cachedResult = store.getQueryData<QueryResponse>(queryKey);
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
   const useCache = fetchPolicy === FetchPolicy.CacheAndNetwork || cacheOnly;
 
   if (isInitialMount.current && networkOnly) {
-    cache.getQuery(queryKey)?.remove();
+    store.getQuery(queryKey)?.remove();
   }
 
   React.useEffect(() => {
@@ -60,15 +57,14 @@ export default function useQuery<QueryData = any, QueryVariables = any, Deserial
   function fetch() {
     return cacheOnly && cachedResult
       ? cachedResult
-      : client.query<QueryData, DeserializedData, QueryVariables>(source, endPoint, variables, deserialize, {
-          ...options
-        });
+      : client.query<QueryVariables, QueryConfig, QueryResponse>(source, endPoint, variables, options);
   }
 
-  const queryResult = useReactQuery<AxiosResponse<QueryData | DeserializedData>>(queryKey, fetch, {
+  const queryResult = useReactQuery<QueryResponse>(queryKey, fetch, {
     ...queryConfig,
     initialData: useCache ? cachedResult || queryConfig?.initialData : queryConfig?.initialData,
-    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime
+    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
+    retryDelay: networkOnly ? 0 : queryConfig?.retryDelay
   });
 
   const { clear, fetchMore, refetch, remove, ...others } = queryResult;

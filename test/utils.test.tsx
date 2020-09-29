@@ -2,8 +2,8 @@
 /// <reference path="./typings/tests-entry.d.ts" />
 import hash from "object-hash";
 
-import { createHttpClient, getClients, getQueryId } from "../src/utils";
-import { ILink } from "../src/moon-client";
+import { createAxiosClient, DEFAULT_CLIENT_FACTORY, getQueryId } from "../src/utils";
+import { getClients, ILink } from "../src/utils/client";
 
 const interceptor = {
   onFulfilled: jest.fn(),
@@ -11,19 +11,19 @@ const interceptor = {
 };
 
 const links: ILink[] = [
-  { id: "FOO", baseUrl: "http://foo.com", interceptors: { request: [interceptor] } },
-  { id: "BAR", baseUrl: "http://bar.com", interceptors: { response: [interceptor] } }
+  { id: "FOO", config: { baseURL: "http://foo.com" }, interceptors: { request: [interceptor] } },
+  { id: "BAR", config: { baseURL: "http://bar.com" }, interceptors: { response: [interceptor] } }
 ];
 
 describe("Utils", () => {
   it("should create an axios client", () => {
-    const myClient = createHttpClient("https://my.url");
+    const myClient = createAxiosClient({ baseURL: "https://my.url" });
     expect(myClient).toBeDefined();
     expect(myClient.defaults.baseURL).toEqual("https://my.url");
   });
 
   it("should create BAR and FOO sources", () => {
-    const clients = getClients(links);
+    const clients = getClients(links, DEFAULT_CLIENT_FACTORY);
     const clientsIds = Object.keys(clients);
     expect(clientsIds).toEqual(["FOO", "BAR"]);
   });

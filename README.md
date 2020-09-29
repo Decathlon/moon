@@ -17,7 +17,7 @@ npm install @decathlon/moon --save
 
 ## Usage
 
-You get started by create REST links. A link is an object which need an id and a baseUrl of your REST server (for more information about the REST link config please see the **Moon config** section).
+You get started by create REST links. A link is an object which need an id and a baseURL of your REST server (for more information about the REST link config please see the **Moon config** section).
 
 To connect Moon to your React app, you will need to use the MoonProvider component exported from `@decathlon/moon`. The MoonProvider is a React's Context.Provider. It wraps your React app and places the client on the context, which allows you to access it from anywhere in your component tree.
 
@@ -27,7 +27,7 @@ import { MoonProvider } from "@decathlon/moon";
 const links = [
   {
     id: "FOO",
-    baseUrl: "http://foo.com"
+    baseURL: "http://foo.com"
   }
 ];
 
@@ -308,12 +308,12 @@ const responseInterceptors = [{ onFulfilled: successHandler }];
 const links = [
   {
     id: "FOO",
-    baseUrl: "http://foo.com",
+    baseURL: "http://foo.com",
     interceptors: { request: requestInterceptors, response: responseInterceptors }
   },
   {
     id: "BAR",
-    baseUrl: "http://bar.com"
+    baseURL: "http://bar.com"
   }
 ];
 

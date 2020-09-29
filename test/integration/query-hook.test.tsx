@@ -1,5 +1,7 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
@@ -24,8 +26,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -36,7 +38,7 @@ describe("Query component with MoonProvider", () => {
     const onResponse = jest.fn();
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryData, QueryVariables>({
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
           source: "FOO",
           endPoint: "/users",
           variables,
@@ -60,8 +62,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users (controlled fetch with cache)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -79,7 +81,7 @@ describe("Query component with MoonProvider", () => {
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryData, QueryVariables>({
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",
@@ -106,8 +108,8 @@ describe("Query component with MoonProvider", () => {
     const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -118,12 +120,12 @@ describe("Query component with MoonProvider", () => {
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryData, QueryVariables>({
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
           id: "queryId2",
           source: "FOO",
           endPoint: "/users",
           variables,
-          queryConfig: { onError, retry: 0 }
+          queryConfig: { onError, retry: false }
         }),
       { wrapper }
     );

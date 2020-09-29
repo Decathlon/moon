@@ -1,6 +1,8 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { renderHook, act } from "@testing-library/react-hooks";
 
 import MoonProvider from "../../src/moon-provider";
@@ -23,8 +25,8 @@ describe("Mutation hook with MoonProvider", () => {
     };
     const post = jest.fn().mockImplementation(() => Promise.resolve(data));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.post = post;
       }
     }
@@ -35,7 +37,7 @@ describe("Mutation hook with MoonProvider", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useMutation<MutationResponse, MutationVariables>({
+        useMutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>>({
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },
@@ -64,11 +66,11 @@ describe("Mutation hook with MoonProvider", () => {
   });
 
   test("should render an error", async () => {
-    const error = new Error("Bimm!");
+    const error = "Bimm!";
     const post = jest.fn().mockImplementation(() => Promise.reject(error));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.post = post;
       }
     }
@@ -78,7 +80,7 @@ describe("Mutation hook with MoonProvider", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useMutation<MutationResponse, MutationVariables>({
+        useMutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>>({
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },

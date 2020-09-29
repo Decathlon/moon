@@ -1,11 +1,14 @@
+/* eslint-disable max-classes-per-file */
 /// <reference path="./typings/tests-entry.d.ts" />
 
 import { getMockedMoonClient, AxiosClient } from "./testUtils";
 import { MutateType } from "../src/moon-client";
+import { ILink } from "../src/utils/client";
 
-export const links = [
-  { id: "FOO", baseUrl: "http://foo.com", interceptors: {} },
-  { id: "BAR", baseUrl: "http://bar.com", interceptors: {} }
+// eslint-disable-next-line import/prefer-default-export
+export const links: ILink[] = [
+  { id: "FOO", config: { baseURL: "http://foo.com" }, interceptors: {} },
+  { id: "BAR", config: { baseURL: "http://bar.com" }, interceptors: {} }
 ];
 
 describe("MoonClient class", () => {
@@ -34,8 +37,8 @@ describe("MoonClient class", () => {
       users: [{ id: 1, name: "John Smith" }]
     };
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = jest.fn().mockImplementation(() => Promise.resolve(response));
       }
     }
@@ -55,7 +58,7 @@ describe("MoonClient class", () => {
       {
         foo: "bar"
       },
-      {}
+      undefined
     );
     await moonClient.mutate("FOO", "/users", MutateType.Post, { foo: "bar" });
     // @ts-ignore
@@ -64,7 +67,7 @@ describe("MoonClient class", () => {
       {
         foo: "bar"
       },
-      {}
+      undefined
     );
     await moonClient.mutate("FOO", "/users", MutateType.Delete, { foo: "bar" });
     // @ts-ignore
@@ -78,15 +81,15 @@ describe("MoonClient class", () => {
       {
         foo: "bar"
       },
-      {}
+      undefined
     );
   });
 
   it("should throw Bimm Error on query", async () => {
-    const error = new Error("Bimm!");
+    const error = "Bimm!";
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = jest.fn().mockImplementation(() => Promise.reject(error));
       }
     }
@@ -98,10 +101,10 @@ describe("MoonClient class", () => {
   });
 
   it("should throw Boomm Error on query", async () => {
-    const error = new Error("Boomm!");
+    const error = "Boomm!";
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.post = jest.fn().mockImplementation(() => Promise.reject(error));
       }
     }

@@ -1,6 +1,8 @@
+/* eslint-disable max-classes-per-file */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { render, fireEvent, wait } from "@testing-library/react";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { render, fireEvent, waitFor } from "@testing-library/react";
 
 import MoonProvider from "../../src/moon-provider";
 import { FetchPolicy } from "../../src/query-hook";
@@ -28,8 +30,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -37,7 +39,12 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links}>
-        <Query<QueryData, QueryVariables> id="query1" source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+          id="query1"
+          source="FOO"
+          endPoint="/users"
+          variables={{ foo: "bar" }}
+        >
           {({ data }) => {
             return (
               <div>
@@ -52,7 +59,7 @@ describe("Query component with MoonProvider", () => {
         </Query>
       </MoonProvider>
     );
-    await wait(() => container.querySelector("span"));
+    await waitFor(() => container.querySelector("span"));
     expect(get).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/John Smith/)).toBeTruthy();
@@ -61,8 +68,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users (controlled fetch)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -70,7 +77,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links}>
-        <Query<QueryData, QueryVariables>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
           id="query2"
           source="FOO"
           endPoint="/users"
@@ -99,7 +106,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await wait(() => container.querySelector("span"));
+    await waitFor(() => container.querySelector("span"));
     expect(get).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/John Smith/)).toBeTruthy();
@@ -110,8 +117,8 @@ describe("Query component with MoonProvider", () => {
     const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -119,13 +126,13 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links}>
-        <Query<QueryData, QueryVariables>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
           id="query3"
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
           queryConfig={{
-            retry: 0
+            retry: false
           }}
         >
           {({ data, error }) => {
@@ -139,7 +146,7 @@ describe("Query component with MoonProvider", () => {
         </Query>
       </MoonProvider>
     );
-    await wait(() => container.querySelector("span"));
+    await waitFor(() => container.querySelector("span"));
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/Bimm!/)).toBeTruthy();
   });
@@ -147,8 +154,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users (controlled fetch with cache)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -156,7 +163,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
-        <Query<QueryData, QueryVariables>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -185,7 +192,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await wait(() => container.querySelector("span"));
+    await waitFor(() => container.querySelector("span"));
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);
@@ -196,8 +203,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users (controlled fetch with network only)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -205,7 +212,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
-        <Query<QueryData, QueryVariables>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -235,7 +242,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await wait(() => container.querySelector("span"));
+    await waitFor(() => container.querySelector("span"));
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);
@@ -246,8 +253,8 @@ describe("Query component with MoonProvider", () => {
   test("should render the list of users (controlled fetch with network only)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     class CustomAxiosClient extends AxiosClient {
-      constructor(baseUrl: string) {
-        super(baseUrl);
+      constructor(baseURL: string) {
+        super(baseURL);
         this.get = get;
       }
     }
@@ -255,7 +262,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
-        <Query<QueryData, QueryVariables>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -285,7 +292,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await wait(() => container.querySelector("span"));
+    await waitFor(() => container.querySelector("span"));
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);

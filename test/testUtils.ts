@@ -2,7 +2,8 @@
 
 import Axios from "axios";
 
-import MoonClient, { ILink } from "../src/moon-client";
+import MoonClient from "../src/moon-client";
+import { ILink } from "../src/utils/client";
 
 jest.unmock("axios");
 
@@ -15,10 +16,10 @@ export class AxiosClient {
 
   public put: () => Promise<any>;
 
-  public baseUrl: string;
+  public baseURL: string;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  constructor(baseURL: string) {
+    this.baseURL = baseURL;
     this.get = jest.fn();
     this.post = jest.fn();
     this.delete = jest.fn();
@@ -31,8 +32,8 @@ export class AxiosClient {
 }
 
 export function mockAxiosClientConstructor(ClientFactory = AxiosClient) {
-  Axios.create = jest.fn().mockImplementation(({ baseUrl }) => {
-    return new ClientFactory(baseUrl);
+  Axios.create = jest.fn().mockImplementation(({ baseURL }) => {
+    return new ClientFactory(baseURL);
   });
 }
 
