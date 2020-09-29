@@ -120,7 +120,7 @@ describe("Query component with MoonProvider", () => {
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>, string>({
           id: "queryId2",
           source: "FOO",
           endPoint: "/users",

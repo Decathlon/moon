@@ -13,9 +13,9 @@ export enum FetchPolicy {
   NetworkOnly = "network-only"
 }
 
-export type IQueryResultProps<QueryResponse> = [
-  Pick<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove">,
-  Omit<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove">
+export type IQueryResultProps<QueryResponse, QueryError> = [
+  Pick<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">,
+  Omit<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">
 ];
 
 export interface IQueryProps<QueryVariables = any, QueryConfig = any, QueryResponse = any> {
@@ -28,7 +28,7 @@ export interface IQueryProps<QueryVariables = any, QueryConfig = any, QueryRespo
   queryConfig?: ReactQueryConfig<QueryResponse>;
 }
 
-export default function useQuery<QueryVariables = any, QueryConfig = any, QueryResponse = any>({
+export default function useQuery<QueryVariables = any, QueryConfig = any, QueryResponse = any, QueryError = any>({
   id,
   source,
   endPoint,
@@ -36,7 +36,7 @@ export default function useQuery<QueryVariables = any, QueryConfig = any, QueryR
   options,
   fetchPolicy = FetchPolicy.CacheAndNetwork,
   queryConfig
-}: IQueryProps<QueryVariables, QueryConfig, QueryResponse>): IQueryResultProps<QueryResponse> {
+}: IQueryProps<QueryVariables, QueryConfig, QueryResponse>): IQueryResultProps<QueryResponse, QueryError> {
   const { client } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
   const { store } = useMoon();
@@ -60,7 +60,7 @@ export default function useQuery<QueryVariables = any, QueryConfig = any, QueryR
       : client.query<QueryVariables, QueryConfig, QueryResponse>(source, endPoint, variables, options);
   }
 
-  const queryResult = useReactQuery<QueryResponse>(queryKey, fetch, {
+  const queryResult = useReactQuery<QueryResponse, QueryError>(queryKey, fetch, {
     ...queryConfig,
     initialData: useCache ? cachedResult || queryConfig?.initialData : queryConfig?.initialData,
     cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,

@@ -126,7 +126,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>, string>
           id="query3"
           source="FOO"
           endPoint="/users"
@@ -141,7 +141,7 @@ describe("Query component with MoonProvider", () => {
                   return <span key={user.name}>{user.name}</span>;
                 })
               : null;
-            return error ? <span>{error as string}</span> : <div>{users}</div>;
+            return error ? <span>{error}</span> : <div>{users}</div>;
           }}
         </Query>
       </MoonProvider>

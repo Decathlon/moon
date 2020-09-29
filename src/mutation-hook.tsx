@@ -12,7 +12,7 @@ export interface IMutationProps<MutationVariables = any, MutationConfg = any, Mu
   mutationConfig?: MutationConfig<MutationResponse, unknown, MutationVariables, unknown>;
 }
 
-export default function useMutation<MutationVariables = any, MutationConfg = any, MutationResponse = any>({
+export default function useMutation<MutationVariables = any, MutationConfg = any, MutationResponse = any, MutationError = any>({
   source,
   endPoint,
   type,
@@ -21,7 +21,7 @@ export default function useMutation<MutationVariables = any, MutationConfg = any
   mutationConfig
 }: IMutationProps<MutationVariables, MutationConfg, MutationResponse | undefined>): MutationResultPair<
   MutationResponse | undefined,
-  unknown,
+  MutationError,
   MutationVariables,
   unknown
 > {
@@ -30,5 +30,5 @@ export default function useMutation<MutationVariables = any, MutationConfg = any
     return client.mutate<MutationVariables, MutationConfg, MutationResponse>(source, endPoint, type, variables, options);
   }
 
-  return useReactMutation<MutationResponse | undefined, unknown, MutationVariables, unknown>(mutation, mutationConfig);
+  return useReactMutation<MutationResponse | undefined, MutationError, MutationVariables, unknown>(mutation, mutationConfig);
 }

@@ -80,7 +80,7 @@ describe("Mutation component with MoonProvider", () => {
     mockAxiosClientConstructor(CustomAxiosClient);
     const { container, getByText } = render(
       <MoonProvider links={links}>
-        <Mutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>>
+        <Mutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>, string>
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}

@@ -5,27 +5,27 @@ import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { FetchPolicy, IQueryProps } from "./query-hook";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
 
-export interface IQueryChildrenProps<QueryResponse>
-  extends Omit<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove"> {
-  actions: Pick<QueryResult<QueryResponse>, "clear" | "fetchMore" | "refetch" | "remove">;
+export interface IQueryChildrenProps<QueryResponse, QueryError>
+  extends Omit<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove"> {
+  actions: Pick<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">;
 }
 
-export type QueryChildren<QueryResponse> = (
-  props: IQueryChildrenProps<QueryResponse>
+export type QueryChildren<QueryResponse, QueryError> = (
+  props: IQueryChildrenProps<QueryResponse, QueryError>
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse>
+export interface IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse, QueryError>
   extends IQueryProps<QueryVariables, QueryConfig, QueryResponse> {
-  children?: QueryChildren<QueryResponse>;
+  children?: QueryChildren<QueryResponse, QueryError>;
 }
 
-function Query<QueryVariables = any, QueryConfig = any, QueryResponse = any>(
-  props: IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse>
+function Query<QueryVariables = any, QueryConfig = any, QueryResponse = any, QueryError = any>(
+  props: IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse, QueryError>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...queryProps } = props;
-  const [actions, state] = useQuery<QueryVariables, QueryConfig, QueryResponse>(queryProps);
+  const [actions, state] = useQuery<QueryVariables, QueryConfig, QueryResponse, QueryError>(queryProps);
   return children ? children({ ...state, actions }) : null;
 }
 

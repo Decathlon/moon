@@ -80,7 +80,7 @@ describe("Mutation hook with MoonProvider", () => {
     const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useMutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>>({
+        useMutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>, string>({
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },
