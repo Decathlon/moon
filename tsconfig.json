@@ -13,10 +13,9 @@
       "es2017"
     ],
     "jsx": "react" /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */,
+    "rootDir": "./src",
     "declaration": true /* Generates corresponding '.d.ts' file. */,
     "sourceMap": true,
-    /* Generates corresponding '.map' file. */
-    "outDir": "./dist/",
     /* Strict Type-Checking Options */
     "strict": true,
     /* Enable all strict type-checking options. */
@@ -35,5 +34,5 @@
     "esModuleInterop": true
   },
   "include": ["./src"],
-  "exclude": ["node_modules", "build"]
+  "exclude": ["**/build", "**/dist", "node_modules", "**/node_modules"]
 }

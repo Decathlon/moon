@@ -1,8 +1,7 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="./typings/tests-entry.d.ts" />
-import hash from "object-hash";
 
-import { createAxiosClient, DEFAULT_CLIENT_FACTORY, getQueryId } from "../src/utils";
+import { createAxiosClient, DEFAULT_CLIENT_FACTORY, getQueryId, stableStringify } from "../src/utils";
 import { getClients, ILink } from "../src/utils/client";
 
 const interceptor = {
@@ -33,7 +32,7 @@ describe("Utils", () => {
     expect(queryId).toEqual("myId");
     // null id
     queryId = getQueryId(undefined, "FOO", "/users", { foo: "bar" });
-    const expectedId = hash(["FOO", "/users", { foo: "bar" }]);
+    const expectedId = stableStringify(["FOO", "/users", { foo: "bar" }]);
     expect(queryId).toEqual(expectedId);
   });
 });
