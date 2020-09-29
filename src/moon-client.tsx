@@ -1,4 +1,3 @@
-import { DEFAULT_CLIENT_FACTORY } from "./utils";
 import { IClients, getClients, ClientFactory, ILink } from "./utils/client";
 
 export enum MutateType {
@@ -10,7 +9,7 @@ export enum MutateType {
 export default class MoonClient {
   private readonly clients: IClients;
 
-  constructor(links: ILink[], clientFactory: ClientFactory = DEFAULT_CLIENT_FACTORY) {
+  constructor(links: ILink[], clientFactory: ClientFactory) {
     this.clients = getClients(links, clientFactory);
   }
 

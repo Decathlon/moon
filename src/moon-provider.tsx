@@ -21,7 +21,7 @@ interface IMoonProviderProps {
   links: ILink[];
   // eslint-disable-next-line no-undef
   children: JSX.Element;
-  clientFactory?: ClientFactory;
+  clientFactory: ClientFactory;
   store?: QueryCache;
   config?: ReactQueryConfig;
   hydrate?: HydrateProps;

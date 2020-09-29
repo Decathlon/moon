@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import { getMockedMoonClient, AxiosClient } from "./testUtils";
 import { MutateType } from "../src/moon-client";
 import { ILink } from "../src/utils/client";
+import { createClientFactory, getMockedMoonClient, MockedClient, MockedClientConfig } from "./testUtils";
 
 // eslint-disable-next-line import/prefer-default-export
 export const links: ILink[] = [
@@ -16,7 +16,7 @@ describe("MoonClient class", () => {
     jest.clearAllMocks();
   });
 
-  it("should call the axios get function", async () => {
+  it("should call the client get function", async () => {
     const moonClient = getMockedMoonClient(links);
     await moonClient.query("FOO", "/users", { foo: "bar" });
     // @ts-ignore
@@ -36,13 +36,14 @@ describe("MoonClient class", () => {
     const response = {
       users: [{ id: 1, name: "John Smith" }]
     };
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = jest.fn().mockImplementation(() => Promise.resolve(response));
       }
     }
-    const moonClient = getMockedMoonClient(links, CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
+    const moonClient = getMockedMoonClient(links, clientFactory);
     const result = await moonClient.query("FOO", "/users", {
       foo: "bar"
     });
@@ -87,13 +88,15 @@ describe("MoonClient class", () => {
 
   it("should throw Bimm Error on query", async () => {
     const error = "Bimm!";
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = jest.fn().mockImplementation(() => Promise.reject(error));
       }
     }
-    const moonClient = getMockedMoonClient(links, CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
+    const moonClient = getMockedMoonClient(links, clientFactory);
+
     expect.assertions(1);
     moonClient.query("FOO", "/users", { foo: "bar" }).catch((err: Error) => {
       expect(err).toEqual(error);
@@ -102,13 +105,14 @@ describe("MoonClient class", () => {
 
   it("should throw Boomm Error on query", async () => {
     const error = "Boomm!";
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.post = jest.fn().mockImplementation(() => Promise.reject(error));
       }
     }
-    const moonClient = getMockedMoonClient(links, CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
+    const moonClient = getMockedMoonClient(links, clientFactory);
     expect.assertions(1);
     moonClient.mutate("FOO", "/users", undefined, { foo: "bar" }).catch((err: Error) => {
       expect(err).toEqual(error);

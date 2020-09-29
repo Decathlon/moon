@@ -1,6 +1,6 @@
 {
   "name": "@decathlon/moon",
-  "version": "2.0.6",
+  "version": "3.0.0",
   "description": "A featured, production ready caching REST client for every React UI",
   "author": "Decathlon",
   "license": "Apache-2.0",
@@ -20,7 +20,6 @@
     "dist"
   ],
   "peerDependencies": {
-    "axios": "~0.20.0",
     "qs": "~6.9.4",
     "react": "^16.12.0",
     "react-query": "^2.23.0"
@@ -42,7 +41,6 @@
     "@types/react-dom": "~16.9.8",
     "@typescript-eslint/eslint-plugin": "~4.3.0",
     "@typescript-eslint/parser": "~4.3.0",
-    "axios": "~0.20.0",
     "eslint": "~7.10.0",
     "eslint-config-airbnb": "~18.2.0",
     "eslint-config-prettier": "~6.12.0",
@@ -90,6 +88,7 @@
     "react",
     "typescript",
     "rest-client",
+    "rest-query",
     "queries",
     "mutations",
     "cache"

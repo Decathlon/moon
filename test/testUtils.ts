@@ -1,13 +1,12 @@
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import Axios from "axios";
-
 import MoonClient from "../src/moon-client";
-import { ILink } from "../src/utils/client";
+import { ClientInstance, ILink } from "../src/utils";
 
-jest.unmock("axios");
-
-export class AxiosClient {
+export interface MockedClientConfig {
+  baseURL: string;
+}
+export class MockedClient implements ClientInstance {
   public get: () => Promise<any>;
 
   public post: () => Promise<any>;
@@ -18,8 +17,8 @@ export class AxiosClient {
 
   public baseURL: string;
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  constructor(config: MockedClientConfig) {
+    this.baseURL = config.baseURL;
     this.get = jest.fn();
     this.post = jest.fn();
     this.delete = jest.fn();
@@ -27,17 +26,14 @@ export class AxiosClient {
   }
 
   interceptors = {
-    request: { use: () => undefined }
+    request: { use: () => 1, eject: () => undefined },
+    response: { use: () => 1, eject: () => undefined }
   };
 }
 
-export function mockAxiosClientConstructor(ClientFactory = AxiosClient) {
-  Axios.create = jest.fn().mockImplementation(({ baseURL }) => {
-    return new ClientFactory(baseURL);
-  });
-}
-
-export function getMockedMoonClient(links: ILink[], ClientFactory = AxiosClient) {
-  mockAxiosClientConstructor(ClientFactory);
-  return new MoonClient(links);
+export const createClientFactory = (Factory: typeof MockedClient) => (config: MockedClientConfig): MockedClient => {
+  return new Factory(config);
+};
+export function getMockedMoonClient(links: ILink[], clientFactory = createClientFactory(MockedClient)) {
+  return new MoonClient(links, clientFactory);
 }

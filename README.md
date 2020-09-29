@@ -12,7 +12,7 @@ Moon client can be used in any React app where you want to use data. It's:
 ## Installation
 
 ```bash
-npm install @decathlon/moon --save
+npm install @decathlon/moon @decathlon/moon-axios --save
 ```
 
 ## Usage
@@ -23,6 +23,7 @@ To connect Moon to your React app, you will need to use the MoonProvider compone
 
 ```js
 import { MoonProvider } from "@decathlon/moon";
+import axiosClientFactory from "@decathlon/moon-axios";
 
 const links = [
   {
@@ -33,7 +34,7 @@ const links = [
 
 const App = () => {
   return (
-    <MoonProvider links={links}>
+    <MoonProvider links={links} clientFactory={axiosClientFactory}>
       <MyComponent />
     </MoonProvider>
   );
@@ -50,9 +51,9 @@ import { Query } from '@decathlon/moon';
 
 const MyComponent = () => {
   return (
-    <Query<QueryData, QueryVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-      {({ loading, data, error }) => {
-        if (loading) return <span> Loading ...</span>;
+    <Query<QueryVariables, QueryData> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+      {({ isLoading, data, error }) => {
+        if (isLoading) return <span> Loading ...</span>;
         return <span>{error ? error.message : "success"}</span>;
       }}
     </Query>
@@ -70,9 +71,9 @@ import { useQuery } from '@decathlon/moon';
 
 const MyComponent = () => {
   const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
-  const [{ loading, error }, { refetch }] = useQuery<QueryData, QueryVariables>({ source: "FOO", endPoint: "/users", variables });
+  const [{ refetch }, { isLoading, error }] = useQuery<QueryVariables, QueryData>({ source: "FOO", endPoint: "/users", variables });
 
-  if (loading) return <span> Loading ...</span>;
+  if (isLoading) return <span> Loading ...</span>;
   return <span>{error ? error.message : "success"}</span>;
 };
 ```
@@ -86,9 +87,9 @@ import { Mutation } from '@decathlon/moon';
 
 const MyComponent = () => {
   return (
-    <Mutation<MutationResponse, MutationVariables> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
-      {({ response, error, actions: { mutate } }) => {
-        const result = response ? <span>{response.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
+    <Mutation<MutationVariables, MutationResponse> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+      {({ data, error, actions: { mutate } }) => {
+        const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
         return error ? <span>{error.message}</span> : result;
       }}
     </Mutation>
@@ -104,13 +105,13 @@ import { useQuery } from '@decathlon/moon';
 
 const MyComponent = () => {
   const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
-  const [{ loading, error, response }, { mutate }] = useMutation<MutationResponse, MutationVariables>({
+  const [{ mutate }, {  error, data }] = useMutation<MutationResponse, MutationVariables>({
     source: "FOO",
     endPoint: "/users",
     variables
   });
 
-  const result = response ? <span>{response.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
+  const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
   return error ? <span>{error.message}</span> : result;
 };
 ```
@@ -128,8 +129,8 @@ import { useQueryState } from '@decathlon/moon';
 
 const MyComponent = () => {
   const stateToProps = (queryState) => queryState
-  const { loading } = useQueryState("queryId", stateToProps);
-  return <span>{loading ? "Loading..." : "success"}</span>;
+  const { isFetching } = useQueryState("queryId", stateToProps);
+  return <span>{isFetching ? "Loading..." : "success"}</span>;
 };
 ```
 ### useQueriesStates
@@ -141,8 +142,8 @@ import { useQueriesStates } from '@decathlon/moon';
 
 const MyComponent = () => {
   const statesToProps = (queriesStates) => queriesStates
-  const { queryId: { loading } } = useQueriesStates(["queryId"], statesToProps);
-  return <span>{loading ? "Loading..." : "success"}</span>;
+  const { queryId: { isFetching } } = useQueriesStates(["queryId"], statesToProps);
+  return <span>{isFetching ? "Loading..." : "success"}</span>;
 };
 ```
 
@@ -181,11 +182,9 @@ You can use the moon client directly like this:
 import { useMoon } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const { client, store } = useMoon();
+  const { client, reactQueryCache } = useMoon();
   client.query(...);
   client.mutate(...);
-  store.readQuery(...);
-  store.writeQuery(...);
 };
 ```
 
@@ -243,13 +242,9 @@ interface IQueryProps<QueryData = any, QueryVariables = any, DeserializedData = 
   source: string;
   endPoint: string;
   variables?: QueryVariables;
-  fetchOnMount?: boolean;
-  autoRefetchOnUpdate?: boolean;
   fetchPolicy?: FetchPolicy;
-  options?: AxiosRequestConfig;
-  deserialize?: (response: QueryData) => DeserializedData;
-  onResponse?: (response: DeserializedData) => void;
-  onError?: (error: any) => void;
+  options?: ClientConfig;
+  config?: QueryConfig;
   children?: (props: IChildren<DeserializedData>) => Nullable<JSX.Element | JSX.Element[]>;
 }
 
@@ -276,9 +271,9 @@ export interface IMutationProps<MutationResponse = any, MutationVariables = any>
   endPoint: string;
   variables?: MutationVariables;
   type?: MutateType;
+  options?: ClientConfig;
+  config?: QueryConfig;
   children?: (props: IChildren<MutationResponse>) => React.ReactNode;
-  onResponse?: (response: MutationResponse) => void;
-  onError?: (error: any) => void;
 }
 
 ```
@@ -308,12 +303,12 @@ const responseInterceptors = [{ onFulfilled: successHandler }];
 const links = [
   {
     id: "FOO",
-    baseURL: "http://foo.com",
+    config: { baseURL: "http://foo.com" },
     interceptors: { request: requestInterceptors, response: responseInterceptors }
   },
   {
     id: "BAR",
-    baseURL: "http://bar.com"
+    config: { baseURL: "http://bar.com" }
   }
 ];
 

@@ -1,18 +1,13 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { render, fireEvent, waitFor } from "@testing-library/react";
 
 import MoonProvider from "../../src/moon-provider";
 import { FetchPolicy } from "../../src/query-hook";
 import Query from "../../src/query";
 import { links } from "../moon-client.test";
-import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
-
-interface QueryData {
-  users: { id: number; name: string }[];
-}
+import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
 
 interface QueryVariables {
   foo: string;
@@ -29,17 +24,17 @@ const response = {
 describe("Query component with MoonProvider", () => {
   test("should render the list of users", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const { container, getByText } = render(
-      <MoonProvider links={links}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        <Query<QueryVariables, MockedClientConfig, typeof response>
           id="query1"
           source="FOO"
           endPoint="/users"
@@ -67,17 +62,17 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const { container, getByText } = render(
-      <MoonProvider links={links}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        <Query<QueryVariables, MockedClientConfig, typeof response>
           id="query2"
           source="FOO"
           endPoint="/users"
@@ -116,17 +111,17 @@ describe("Query component with MoonProvider", () => {
   test("should render an error", async () => {
     const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const { container, getByText } = render(
-      <MoonProvider links={links}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>, string>
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        <Query<QueryVariables, MockedClientConfig, typeof response, string>
           id="query3"
           source="FOO"
           endPoint="/users"
@@ -153,17 +148,21 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with cache)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const { container, getByText } = render(
-      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+      <MoonProvider
+        links={links}
+        clientFactory={clientFactory}
+        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+      >
+        <Query<QueryVariables, MockedClientConfig, typeof response>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -202,17 +201,21 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with network only)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const { container, getByText } = render(
-      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+      <MoonProvider
+        links={links}
+        clientFactory={clientFactory}
+        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+      >
+        <Query<QueryVariables, MockedClientConfig, typeof response>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -252,17 +255,21 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with network only)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const { container, getByText } = render(
-      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}>
-        <Query<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>
+      <MoonProvider
+        links={links}
+        clientFactory={clientFactory}
+        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+      >
+        <Query<QueryVariables, MockedClientConfig, typeof response>
           id="query4"
           source="FOO"
           endPoint="/users"

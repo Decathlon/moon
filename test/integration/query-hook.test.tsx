@@ -1,18 +1,13 @@
 /* eslint-disable max-classes-per-file */
 /* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
-import { AxiosRequestConfig, AxiosResponse } from "axios";
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
 import MoonProvider from "../../src/moon-provider";
 import useQuery from "../../src/query-hook";
 import { links } from "../moon-client.test";
-import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
-
-interface QueryData {
-  users: { id: number; name: string }[];
-}
+import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
 
 interface QueryVariables {
   foo: string;
@@ -25,20 +20,24 @@ const response = {
 describe("Query component with MoonProvider", () => {
   test("should render the list of users", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider clientFactory={clientFactory} links={links}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const onResponse = jest.fn();
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           source: "FOO",
           endPoint: "/users",
           variables,
@@ -61,27 +60,31 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with cache)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const cache = {
       users: [{ id: 1, name: "Alice Smith" }]
     };
 
     const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} hydrate={{ state: { queries: [{ queryKey: "queryId", data: cache }] } }}>
+      <MoonProvider
+        links={links}
+        clientFactory={clientFactory}
+        hydrate={{ state: { queries: [{ queryKey: "queryId", data: cache }] } }}
+      >
         {children}
       </MoonProvider>
     );
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",
@@ -107,20 +110,24 @@ describe("Query component with MoonProvider", () => {
   test("should return an error", async () => {
     const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const onError = jest.fn();
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>, string>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response, string>({
           id: "queryId2",
           source: "FOO",
           endPoint: "/users",

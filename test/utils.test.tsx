@@ -1,8 +1,9 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import { createAxiosClient, DEFAULT_CLIENT_FACTORY, getQueryId, stableStringify } from "../src/utils";
+import { getQueryId, stableStringify } from "../src/utils";
 import { getClients, ILink } from "../src/utils/client";
+import { createClientFactory, MockedClient } from "./testUtils";
 
 const interceptor = {
   onFulfilled: jest.fn(),
@@ -15,14 +16,8 @@ const links: ILink[] = [
 ];
 
 describe("Utils", () => {
-  it("should create an axios client", () => {
-    const myClient = createAxiosClient({ baseURL: "https://my.url" });
-    expect(myClient).toBeDefined();
-    expect(myClient.defaults.baseURL).toEqual("https://my.url");
-  });
-
   it("should create BAR and FOO sources", () => {
-    const clients = getClients(links, DEFAULT_CLIENT_FACTORY);
+    const clients = getClients(links, createClientFactory(MockedClient));
     const clientsIds = Object.keys(clients);
     expect(clientsIds).toEqual(["FOO", "BAR"]);
   });

@@ -2,17 +2,12 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { renderHook, act } from "@testing-library/react-hooks";
 
 import MoonProvider from "../../src/moon-provider";
 import useMutation from "../../src/mutation-hook";
 import { links } from "../moon-client.test";
-import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
-
-interface MutationResponse {
-  status: boolean;
-}
+import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
 
 interface MutationVariables {
   foo: string;
@@ -24,20 +19,23 @@ describe("Mutation hook with MoonProvider", () => {
       data: { status: true }
     };
     const post = jest.fn().mockImplementation(() => Promise.resolve(data));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.post = post;
       }
     }
-
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const onResponse = jest.fn();
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useMutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>>({
+        useMutation<MutationVariables, MockedClientConfig, typeof data>({
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },
@@ -68,19 +66,23 @@ describe("Mutation hook with MoonProvider", () => {
   test("should render an error", async () => {
     const error = "Bimm!";
     const post = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.post = post;
       }
     }
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
 
     const onError = jest.fn();
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useMutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>, string>({
+        useMutation<MutationVariables, MockedClientConfig, any, string>({
           source: "FOO",
           endPoint: "/users",
           variables: { foo: "bar" },

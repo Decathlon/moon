@@ -5,14 +5,13 @@ import * as React from "react";
 import { renderHook } from "@testing-library/react-hooks";
 import { render } from "@testing-library/react";
 import { QueryState } from "react-query/types/core/query";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
 import useQuery from "../../src/query-hook";
-import { AxiosClient, mockAxiosClientConstructor } from "../testUtils";
 import MoonProvider from "../../src/moon-provider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";
+import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
 
 interface QueryData {
   users: { id: number; name: string }[];
@@ -41,20 +40,23 @@ const WithQueriesResultsComponent = withQueriesResults<Props, Omit<Props, "query
 describe("Hooks", () => {
   test("should render the query result with withQueryResult HOC", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",
@@ -69,20 +71,23 @@ describe("Hooks", () => {
 
   test("should render the query result with withQueriesResults HOC", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",
@@ -97,20 +102,23 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueryResult", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "myQuery",
           source: "FOO",
           endPoint: "/users",
@@ -128,20 +136,23 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueriesResults ", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "myQuery1",
           source: "FOO",
           endPoint: "/users",
@@ -151,7 +162,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     const { result } = renderHook(
-      () => useQueriesResults<QueryData, { myQuery1: QueryState<AxiosResponse<QueryData>, unknown> }>(["myQuery1"]),
+      () => useQueriesResults<QueryData, { myQuery1: QueryState<typeof response, unknown> }>(["myQuery1"]),
       { wrapper }
     );
     expect(result.current.myQuery1).toEqual(response);
@@ -159,20 +170,23 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueryState", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "myQuery2",
           source: "FOO",
           endPoint: "/users",
@@ -190,20 +204,23 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueriesStates ", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.get = get;
       }
     }
+    const clientFactory = createClientFactory(CustomClient);
 
-    mockAxiosClientConstructor(CustomAxiosClient);
-
-    const wrapper = ({ children }: { children?: any }) => <MoonProvider links={links}>{children}</MoonProvider>;
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, AxiosRequestConfig, AxiosResponse<QueryData>>({
+        useQuery<QueryVariables, MockedClientConfig, typeof response>({
           id: "myQuery3",
           source: "FOO",
           endPoint: "/users",

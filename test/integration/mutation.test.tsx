@@ -1,17 +1,12 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { cleanup, render, fireEvent, waitFor } from "@testing-library/react";
 
 import MoonProvider from "../../src/moon-provider";
 import Mutation from "../../src/mutation";
 import { links } from "../moon-client.test";
-import { mockAxiosClientConstructor, AxiosClient } from "../testUtils";
-
-interface MutationResponse {
-  status: boolean;
-}
+import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
 
 interface MutationVariables {
   foo: string;
@@ -23,17 +18,16 @@ describe("Mutation component with MoonProvider", () => {
       status: true
     };
     const post = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.post = post;
       }
     }
-
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
     const { container, getByText } = render(
-      <MoonProvider links={links}>
-        <Mutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>>
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        <Mutation<MutationVariables, MockedClientConfig, typeof response>
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
@@ -70,21 +64,16 @@ describe("Mutation component with MoonProvider", () => {
     const error = "Bimm!";
 
     const post = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomAxiosClient extends AxiosClient {
-      constructor(baseURL: string) {
-        super(baseURL);
+    class CustomClient extends MockedClient {
+      constructor(config: MockedClientConfig) {
+        super(config);
         this.post = post;
       }
     }
-
-    mockAxiosClientConstructor(CustomAxiosClient);
+    const clientFactory = createClientFactory(CustomClient);
     const { container, getByText } = render(
-      <MoonProvider links={links}>
-        <Mutation<MutationVariables, AxiosRequestConfig, AxiosResponse<MutationResponse>, string>
-          source="FOO"
-          endPoint="/users"
-          variables={{ foo: "bar" }}
-        >
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        <Mutation<MutationVariables, MockedClientConfig, any, string> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
           {({ data, error, actions: { mutate } }) => {
             const result = data ? (
               <span id="response">{data.status && "Success"}</span>
