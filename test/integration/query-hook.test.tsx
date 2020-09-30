@@ -7,7 +7,7 @@ import { renderHook, act } from "@testing-library/react-hooks";
 import MoonProvider from "../../src/moon-provider";
 import useQuery from "../../src/query-hook";
 import { links } from "../moon-client.test";
-import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
+import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 
 interface QueryVariables {
   foo: string;
@@ -20,13 +20,7 @@ const response = {
 describe("Query component with MoonProvider", () => {
   test("should render the list of users", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider clientFactory={clientFactory} links={links}>
@@ -60,13 +54,7 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with cache)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const cache = {
       users: [{ id: 1, name: "Alice Smith" }]
@@ -110,13 +98,7 @@ describe("Query component with MoonProvider", () => {
   test("should return an error", async () => {
     const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const onError = jest.fn();
     const wrapper = ({ children }: { children?: any }) => (

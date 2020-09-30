@@ -7,7 +7,7 @@ import MoonProvider from "../../src/moon-provider";
 import { FetchPolicy } from "../../src/query-hook";
 import Query from "../../src/query";
 import { links } from "../moon-client.test";
-import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
+import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 
 interface QueryVariables {
   foo: string;
@@ -24,13 +24,7 @@ const response = {
 describe("Query component with MoonProvider", () => {
   test("should render the list of users", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -62,13 +56,7 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -111,13 +99,7 @@ describe("Query component with MoonProvider", () => {
   test("should render an error", async () => {
     const error = "Bimm!";
     const get = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -148,13 +130,7 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with cache)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const { container, getByText } = render(
       <MoonProvider
@@ -201,13 +177,7 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with network only)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const { container, getByText } = render(
       <MoonProvider
@@ -255,13 +225,7 @@ describe("Query component with MoonProvider", () => {
 
   test("should render the list of users (controlled fetch with network only)", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const { container, getByText } = render(
       <MoonProvider

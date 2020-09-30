@@ -1,4 +1,4 @@
-import { IClients, getClients, ClientFactory, ILink } from "./utils/client";
+import { IClients, getClients, ClientFactory, ILink, ClientConfig } from "./utils/client";
 
 export enum MutateType {
   Delete = "DELETE",
@@ -13,40 +13,41 @@ export default class MoonClient {
     this.clients = getClients(links, clientFactory);
   }
 
-  public query<Variables = any, Config = any, Response = any>(
+  public query<Variables = any, Config extends ClientConfig = any, Response = any>(
     source: string,
-    endPoint: string,
-    variables: Variables,
+    endPoint?: string,
+    variables?: Variables,
     options?: Config
   ): Promise<Response> {
     const client = this.clients[source];
     if (client) {
-      return client.get(endPoint, {
+      return client.get(endPoint || "", {
         ...options,
-        params: { ...variables }
+        params: { ...options?.params, ...variables }
       });
     }
     return new Promise(resolve => resolve(undefined));
   }
 
-  public mutate<Variables = any, Config = any, Response = any>(
+  public mutate<Variables = any, Config extends ClientConfig = any, Response = any>(
     source: string,
-    endPoint: string,
+    endPoint?: string,
     type: MutateType = MutateType.Post,
-    variables: Variables,
+    variables?: Variables,
     options?: Config
   ): Promise<Response> {
     const client = this.clients[source];
+    const clientEndPoint = endPoint || "";
     if (client) {
       switch (type) {
         case MutateType.Delete: {
-          const mutationOptions: Config = { ...options, params: { ...variables } } as Config;
-          return client.delete(endPoint, mutationOptions);
+          const mutationOptions: Config = { ...options, params: { ...options?.params, ...variables } } as Config;
+          return client.delete(clientEndPoint, mutationOptions);
         }
         case MutateType.Put:
-          return client.put(endPoint, variables, options);
+          return client.put(clientEndPoint, variables, options);
         default:
-          return client.post(endPoint, variables, options);
+          return client.post(clientEndPoint, variables, options);
       }
     }
 

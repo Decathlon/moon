@@ -26,6 +26,7 @@ export interface ILink<I = ClientInstance, C = ClientConfig, R = ClientResponse>
 }
 
 export type DataTransformer = (data: any) => any;
+
 export interface ClientConfig {
   baseURL?: string;
   params?: any;
@@ -42,9 +43,9 @@ export interface ClientInterceptorManager<V> {
 }
 
 export interface ClientInstance {
-  interceptors: {
-    request: ClientInterceptorManager<ClientConfig>;
-    response: ClientInterceptorManager<ClientResponse>;
+  interceptors?: {
+    request?: ClientInterceptorManager<ClientConfig>;
+    response?: ClientInterceptorManager<ClientResponse>;
   };
   get<T = any, R = ClientResponse<T>>(url: string, config?: ClientConfig): Promise<R>;
   delete<T = any, R = ClientResponse<T>>(url: string, config?: ClientConfig): Promise<R>;

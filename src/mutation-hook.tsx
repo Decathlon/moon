@@ -5,8 +5,8 @@ import { useMoon } from "./hooks";
 
 export interface IMutationProps<MutationVariables = any, MutationConfg = any, MutationResponse = any> {
   source: string;
-  endPoint: string;
-  variables: MutationVariables;
+  endPoint?: string;
+  variables?: MutationVariables;
   type?: MutateType;
   options?: MutationConfg;
   mutationConfig?: MutationConfig<MutationResponse, unknown, MutationVariables, unknown>;

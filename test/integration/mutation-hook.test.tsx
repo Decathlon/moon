@@ -7,7 +7,7 @@ import { renderHook, act } from "@testing-library/react-hooks";
 import MoonProvider from "../../src/moon-provider";
 import useMutation from "../../src/mutation-hook";
 import { links } from "../moon-client.test";
-import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
+import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 
 interface MutationVariables {
   foo: string;
@@ -19,13 +19,7 @@ describe("Mutation hook with MoonProvider", () => {
       data: { status: true }
     };
     const post = jest.fn().mockImplementation(() => Promise.resolve(data));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.post = post;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ post });
 
     const onResponse = jest.fn();
     const wrapper = ({ children }: { children?: any }) => (
@@ -66,13 +60,7 @@ describe("Mutation hook with MoonProvider", () => {
   test("should render an error", async () => {
     const error = "Bimm!";
     const post = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.post = post;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ post });
 
     const onError = jest.fn();
     const wrapper = ({ children }: { children?: any }) => (

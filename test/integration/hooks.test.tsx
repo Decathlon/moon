@@ -11,7 +11,7 @@ import useQuery from "../../src/query-hook";
 import MoonProvider from "../../src/moon-provider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";
-import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
+import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 
 interface QueryData {
   users: { id: number; name: string }[];
@@ -40,13 +40,7 @@ const WithQueriesResultsComponent = withQueriesResults<Props, Omit<Props, "query
 describe("Hooks", () => {
   test("should render the query result with withQueryResult HOC", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -71,13 +65,7 @@ describe("Hooks", () => {
 
   test("should render the query result with withQueriesResults HOC", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -102,13 +90,7 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueryResult", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -136,13 +118,7 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueriesResults ", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -170,13 +146,7 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueryState", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider links={links} clientFactory={clientFactory}>
@@ -204,13 +174,7 @@ describe("Hooks", () => {
 
   test("should render the query result with useQueriesStates ", async () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = get;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ get });
 
     const wrapper = ({ children }: { children?: any }) => (
       <MoonProvider links={links} clientFactory={clientFactory}>

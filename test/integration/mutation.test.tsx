@@ -6,7 +6,7 @@ import { cleanup, render, fireEvent, waitFor } from "@testing-library/react";
 import MoonProvider from "../../src/moon-provider";
 import Mutation from "../../src/mutation";
 import { links } from "../moon-client.test";
-import { createClientFactory, MockedClient, MockedClientConfig } from "../testUtils";
+import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 
 interface MutationVariables {
   foo: string;
@@ -18,13 +18,7 @@ describe("Mutation component with MoonProvider", () => {
       status: true
     };
     const post = jest.fn().mockImplementation(() => Promise.resolve(response));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.post = post;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ post });
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
         <Mutation<MutationVariables, MockedClientConfig, typeof response>
@@ -64,13 +58,7 @@ describe("Mutation component with MoonProvider", () => {
     const error = "Bimm!";
 
     const post = jest.fn().mockImplementation(() => Promise.reject(error));
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.post = post;
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const clientFactory = getMockedClientFactory({ post });
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
         <Mutation<MutationVariables, MockedClientConfig, any, string> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>

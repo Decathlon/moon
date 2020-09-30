@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 /// <reference path="./typings/tests-entry.d.ts" />
 
 import MoonClient from "../src/moon-client";
@@ -34,6 +35,18 @@ export class MockedClient implements ClientInstance {
 export const createClientFactory = (Factory: typeof MockedClient) => (config: MockedClientConfig): MockedClient => {
   return new Factory(config);
 };
+
 export function getMockedMoonClient(links: ILink[], clientFactory = createClientFactory(MockedClient)) {
   return new MoonClient(links, clientFactory);
+}
+
+export function getMockedClientFactory({ get = jest.fn(), post = jest.fn() }) {
+  class CustomClient extends MockedClient {
+    constructor(config: MockedClientConfig) {
+      super(config);
+      this.get = get;
+      this.post = post;
+    }
+  }
+  return createClientFactory(CustomClient);
 }

@@ -3,12 +3,12 @@
 
 import { MutateType } from "../src/moon-client";
 import { ILink } from "../src/utils/client";
-import { createClientFactory, getMockedMoonClient, MockedClient, MockedClientConfig } from "./testUtils";
+import { getMockedClientFactory, getMockedMoonClient } from "./testUtils";
 
 // eslint-disable-next-line import/prefer-default-export
 export const links: ILink[] = [
-  { id: "FOO", config: { baseURL: "http://foo.com" }, interceptors: {} },
-  { id: "BAR", config: { baseURL: "http://bar.com" }, interceptors: {} }
+  { id: "FOO", config: { baseURL: "http://foo.com" } },
+  { id: "BAR", config: { baseURL: "http://bar.com" } }
 ];
 
 describe("MoonClient class", () => {
@@ -36,13 +36,8 @@ describe("MoonClient class", () => {
     const response = {
       users: [{ id: 1, name: "John Smith" }]
     };
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = jest.fn().mockImplementation(() => Promise.resolve(response));
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const get = jest.fn().mockImplementation(() => Promise.resolve(response));
+    const clientFactory = getMockedClientFactory({ get });
     const moonClient = getMockedMoonClient(links, clientFactory);
     const result = await moonClient.query("FOO", "/users", {
       foo: "bar"
@@ -88,13 +83,8 @@ describe("MoonClient class", () => {
 
   it("should throw Bimm Error on query", async () => {
     const error = "Bimm!";
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.get = jest.fn().mockImplementation(() => Promise.reject(error));
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const get = jest.fn().mockImplementation(() => Promise.reject(error));
+    const clientFactory = getMockedClientFactory({ get });
     const moonClient = getMockedMoonClient(links, clientFactory);
 
     expect.assertions(1);
@@ -105,13 +95,8 @@ describe("MoonClient class", () => {
 
   it("should throw Boomm Error on query", async () => {
     const error = "Boomm!";
-    class CustomClient extends MockedClient {
-      constructor(config: MockedClientConfig) {
-        super(config);
-        this.post = jest.fn().mockImplementation(() => Promise.reject(error));
-      }
-    }
-    const clientFactory = createClientFactory(CustomClient);
+    const post = jest.fn().mockImplementation(() => Promise.reject(error));
+    const clientFactory = getMockedClientFactory({ post });
     const moonClient = getMockedMoonClient(links, clientFactory);
     expect.assertions(1);
     moonClient.mutate("FOO", "/users", undefined, { foo: "bar" }).catch((err: Error) => {

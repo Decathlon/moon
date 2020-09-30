@@ -21,8 +21,8 @@ export type IQueryResultProps<QueryResponse, QueryError> = [
 export interface IQueryProps<QueryVariables = any, QueryConfig = any, QueryResponse = any> {
   id?: string;
   source: string;
-  endPoint: string;
-  variables: QueryVariables;
+  endPoint?: string;
+  variables?: QueryVariables;
   fetchPolicy?: FetchPolicy;
   options?: QueryConfig;
   queryConfig?: ReactQueryConfig<QueryResponse>;
