@@ -13,7 +13,7 @@ export default class MoonClient {
     this.clients = getClients(links, clientFactory);
   }
 
-  public query<Variables = any, Config extends ClientConfig = any, Response = any>(
+  public query<Variables = any, Response = any, Config extends ClientConfig = any>(
     source: string,
     endPoint?: string,
     variables?: Variables,
@@ -29,7 +29,7 @@ export default class MoonClient {
     return new Promise(resolve => resolve(undefined));
   }
 
-  public mutate<Variables = any, Config extends ClientConfig = any, Response = any>(
+  public mutate<Variables = any, Response = any, Config extends ClientConfig = any>(
     source: string,
     endPoint?: string,
     type: MutateType = MutateType.Post,

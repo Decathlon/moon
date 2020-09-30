@@ -28,7 +28,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Query<QueryVariables, MockedClientConfig, typeof response>
+        <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query1"
           source="FOO"
           endPoint="/users"
@@ -60,7 +60,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Query<QueryVariables, MockedClientConfig, typeof response>
+        <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query2"
           source="FOO"
           endPoint="/users"
@@ -103,7 +103,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Query<QueryVariables, MockedClientConfig, typeof response, string>
+        <Query<QueryVariables, typeof response, string, MockedClientConfig>
           id="query3"
           source="FOO"
           endPoint="/users"
@@ -138,7 +138,7 @@ describe("Query component with MoonProvider", () => {
         clientFactory={clientFactory}
         hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
       >
-        <Query<QueryVariables, MockedClientConfig, typeof response>
+        <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -185,7 +185,7 @@ describe("Query component with MoonProvider", () => {
         clientFactory={clientFactory}
         hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
       >
-        <Query<QueryVariables, MockedClientConfig, typeof response>
+        <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -233,7 +233,7 @@ describe("Query component with MoonProvider", () => {
         clientFactory={clientFactory}
         hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
       >
-        <Query<QueryVariables, MockedClientConfig, typeof response>
+        <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query4"
           source="FOO"
           endPoint="/users"

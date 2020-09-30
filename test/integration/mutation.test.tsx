@@ -21,7 +21,7 @@ describe("Mutation component with MoonProvider", () => {
     const clientFactory = getMockedClientFactory({ post });
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Mutation<MutationVariables, MockedClientConfig, typeof response>
+        <Mutation<MutationVariables, typeof response, any, MockedClientConfig>
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
@@ -61,7 +61,7 @@ describe("Mutation component with MoonProvider", () => {
     const clientFactory = getMockedClientFactory({ post });
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Mutation<MutationVariables, MockedClientConfig, any, string> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+        <Mutation<MutationVariables, any, string, MockedClientConfig> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
           {({ data, error, actions: { mutate } }) => {
             const result = data ? (
               <span id="response">{data.status && "Success"}</span>

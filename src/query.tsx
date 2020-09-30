@@ -15,17 +15,17 @@ export type QueryChildren<QueryResponse, QueryError> = (
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse, QueryError>
-  extends IQueryProps<QueryVariables, QueryConfig, QueryResponse> {
+export interface IQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
+  extends IQueryProps<QueryVariables, QueryResponse, QueryConfig> {
   children?: QueryChildren<QueryResponse, QueryError>;
 }
 
-function Query<QueryVariables = any, QueryConfig = any, QueryResponse = any, QueryError = any>(
-  props: IQueryComponentProps<QueryVariables, QueryConfig, QueryResponse, QueryError>
+function Query<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any>(
+  props: IQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...queryProps } = props;
-  const [actions, state] = useQuery<QueryVariables, QueryConfig, QueryResponse, QueryError>(queryProps);
+  const [actions, state] = useQuery<QueryVariables, QueryResponse, QueryError, QueryConfig>(queryProps);
   return children ? children({ ...state, actions }) : null;
 }
 

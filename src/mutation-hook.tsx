@@ -3,7 +3,7 @@ import { useMutation as useReactMutation, MutationResultPair, MutationConfig } f
 import { MutateType } from "./moon-client";
 import { useMoon } from "./hooks";
 
-export interface IMutationProps<MutationVariables = any, MutationConfg = any, MutationResponse = any> {
+export interface IMutationProps<MutationVariables = any, MutationResponse = any, MutationConfg = any> {
   source: string;
   endPoint?: string;
   variables?: MutationVariables;
@@ -12,14 +12,14 @@ export interface IMutationProps<MutationVariables = any, MutationConfg = any, Mu
   mutationConfig?: MutationConfig<MutationResponse, unknown, MutationVariables, unknown>;
 }
 
-export default function useMutation<MutationVariables = any, MutationConfg = any, MutationResponse = any, MutationError = any>({
+export default function useMutation<MutationVariables = any, MutationResponse = any, MutationError = any, MutationConfg = any>({
   source,
   endPoint,
   type,
   variables,
   options,
   mutationConfig
-}: IMutationProps<MutationVariables, MutationConfg, MutationResponse | undefined>): MutationResultPair<
+}: IMutationProps<MutationVariables, MutationResponse | undefined, MutationConfg>): MutationResultPair<
   MutationResponse | undefined,
   MutationError,
   MutationVariables,
@@ -27,7 +27,7 @@ export default function useMutation<MutationVariables = any, MutationConfg = any
 > {
   const { client } = useMoon();
   function mutation() {
-    return client.mutate<MutationVariables, MutationConfg, MutationResponse>(source, endPoint, type, variables, options);
+    return client.mutate<MutationVariables, MutationResponse, MutationConfg>(source, endPoint, type, variables, options);
   }
 
   return useReactMutation<MutationResponse | undefined, MutationError, MutationVariables, unknown>(mutation, mutationConfig);

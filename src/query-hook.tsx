@@ -18,7 +18,7 @@ export type IQueryResultProps<QueryResponse, QueryError> = [
   Omit<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">
 ];
 
-export interface IQueryProps<QueryVariables = any, QueryConfig = any, QueryResponse = any> {
+export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryConfig = any> {
   id?: string;
   source: string;
   endPoint?: string;
@@ -28,7 +28,7 @@ export interface IQueryProps<QueryVariables = any, QueryConfig = any, QueryRespo
   queryConfig?: ReactQueryConfig<QueryResponse>;
 }
 
-export default function useQuery<QueryVariables = any, QueryConfig = any, QueryResponse = any, QueryError = any>({
+export default function useQuery<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any>({
   id,
   source,
   endPoint,
@@ -36,7 +36,7 @@ export default function useQuery<QueryVariables = any, QueryConfig = any, QueryR
   options,
   fetchPolicy = FetchPolicy.CacheAndNetwork,
   queryConfig
-}: IQueryProps<QueryVariables, QueryConfig, QueryResponse>): IQueryResultProps<QueryResponse, QueryError> {
+}: IQueryProps<QueryVariables, QueryResponse, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
   const { client } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
   const { store } = useMoon();
@@ -57,7 +57,7 @@ export default function useQuery<QueryVariables = any, QueryConfig = any, QueryR
   function fetch() {
     return cacheOnly && cachedResult
       ? cachedResult
-      : client.query<QueryVariables, QueryConfig, QueryResponse>(source, endPoint, variables, options);
+      : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
   }
 
   const queryResult = useReactQuery<QueryResponse, QueryError>(queryKey, fetch, {

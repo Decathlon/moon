@@ -14,17 +14,17 @@ export type MutationChildren<MutationVariables, MutationResponse, MutationError>
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IMutationComponentProps<MutationVariables, MutationConfig, MutationResponse, MutationError>
-  extends IMutationProps<MutationVariables, MutationConfig, MutationResponse> {
+export interface IMutationComponentProps<MutationVariables, MutationResponse, MutationError, MutationConfig>
+  extends IMutationProps<MutationVariables, MutationResponse, MutationConfig> {
   children?: MutationChildren<MutationVariables, MutationResponse, MutationError>;
 }
 
-function Mutation<MutationVariables = any, MutationConfig = any, MutationResponse = any, MutationError = any>(
-  props: IMutationComponentProps<MutationVariables, MutationConfig, MutationResponse | undefined, MutationError>
+function Mutation<MutationVariables = any, MutationResponse = any, MutationError = any, MutationConfig = any>(
+  props: IMutationComponentProps<MutationVariables, MutationResponse | undefined, MutationError, MutationConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...mutationProps } = props;
-  const [mutate, state] = useMutation<MutationVariables, MutationConfig, MutationResponse, MutationError>(mutationProps);
+  const [mutate, state] = useMutation<MutationVariables, MutationResponse, MutationError, MutationConfig>(mutationProps);
   return children ? children({ ...state, actions: { mutate } }) : null;
 }
 
