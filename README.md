@@ -1,6 +1,8 @@
 # <img src='images/moon-title.png' height='50' alt='Moon Logo'/>
 
-**Moon** is a featured, production ready caching **REST** client for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via Axios.
+_**The power of react-query with your favorite HTTP Client**_
+
+**Moon** is a featured, production ready caching **REST** client based on **react-query** for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via a HTTP client (Axios, fetch... ).
 The only thing you have to do is transmit the configuration. **Moon does the rest !** 🚀
 
 Moon client can be used in any React app where you want to use data. It's:
@@ -9,17 +11,18 @@ Moon client can be used in any React app where you want to use data. It's:
 2. **Universally compatible**, so that Moon works with any build setup, any REST server, and any REST schema.
 3. **Simple to get started with**, so you can start loading data right away and learn about advanced features later.
 
-## Installation
+## Installation for Axios client
 
 ```bash
-npm install @decathlon/moon @decathlon/moon-axios --save
+npm install @decathlon/moon @decathlon/moon-axios react-query axios qs --save
 ```
 
 ## Usage
 
-You get started by create REST links. A link is an object which need an id and a baseURL of your REST server (for more information about the REST link config please see the **Moon config** section).
+You get started by create REST links. A link is an object which need an id and an HTTP client config like the AxiosConfig (that extends the MoonClientConfig) of your REST server (for more information about the REST link config please see the **Moon config** section).
 
-To connect Moon to your React app, you will need to use the MoonProvider component exported from `@decathlon/moon`. The MoonProvider is a React's Context.Provider. It wraps your React app and places the client on the context, which allows you to access it from anywhere in your component tree.
+To connect Moon to your React app, you will need to use the MoonProvider component exported from `@decathlon/moon`. The MoonProvider is a React's Context.Provider. It wraps your React app and places the client and the store (the query cache of the **react-query**) on the context, which allows you to access it from anywhere in your component tree. You also need to add the HTTP client factory. Here we have added the Axios factory to create an axios client for each link.
+
 
 ```js
 import { MoonProvider } from "@decathlon/moon";
@@ -28,7 +31,8 @@ import axiosClientFactory from "@decathlon/moon-axios";
 const links = [
   {
     id: "FOO",
-    baseURL: "http://foo.com"
+    config: { baseURL: "http://foo.com" }, // the Client config,
+    // clientFactory?: ClientFactory<C, R, I>
   }
 ];
 
@@ -47,11 +51,17 @@ Once your **MoonProvider** is hooked up, you're ready to start requesting data w
 #### Query Component
 
 ```js
-import { Query } from '@decathlon/moon';
+import { Query } from "@decathlon/moon";
 
 const MyComponent = () => {
   return (
-    <Query<QueryVariables, QueryData> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+    <Query<QueryVariables, QueryResponse, QueryError>
+      id="queryId"
+      source="FOO"
+      endPoint="/users"
+      variables={{ foo: "bar" }}
+      fetchPolicy={FetchPolicy.CacheFirst} // please see the fetchPolicy
+    >
       {({ isLoading, data, error }) => {
         if (isLoading) return <span> Loading ...</span>;
         return <span>{error ? error.message : "success"}</span>;
@@ -60,23 +70,31 @@ const MyComponent = () => {
   );
 };
 ```
-Congrats 🎉, you just made your first query with the **Query** component!
+Congrats 🎉, you just made your first query with the **Query** component! 
 
 #### useQuery hook
 
 The same query with the **useQuery** hook
 
 ```js
-import { useQuery } from '@decathlon/moon';
+import { useQuery } from "@decathlon/moon";
 
 const MyComponent = () => {
-  const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
-  const [{ refetch }, { isLoading, error }] = useQuery<QueryVariables, QueryData>({ source: "FOO", endPoint: "/users", variables });
+  const [{ refetch }, { isLoading, error }] = useQuery<QueryVariables, QueryData, QueryError>({
+    id: "queryId",
+    source: "FOO",
+    endPoint: "/users",
+    variables: { foo: "bar" },
+    fetchPolicy: FetchPolicy.CacheFirst // please see the fetchPolicy
+    // options: {...} // the http client config
+    // queryConfig: {...} // the react-query config
+  });
 
   if (isLoading) return <span> Loading ...</span>;
   return <span>{error ? error.message : "success"}</span>;
 };
 ```
+Internaly useQuery use the **react-query**'s useQuery connected to your HTTP client with a configuration allowing better cache management and better referencing of requests for REST clients.
 
 #### Mutation / useMutation
 
@@ -87,7 +105,7 @@ import { Mutation } from '@decathlon/moon';
 
 const MyComponent = () => {
   return (
-    <Mutation<MutationVariables, MutationResponse> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
+    <Mutation<MutationVariables, MutationResponse, MutationError> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
       {({ data, error, actions: { mutate } }) => {
         const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
         return error ? <span>{error.message}</span> : result;
@@ -95,7 +113,6 @@ const MyComponent = () => {
     </Mutation>
   );
 };
-
 ```
 
 The same mutation with **useMutation**:
@@ -108,15 +125,19 @@ const MyComponent = () => {
   const [{ mutate }, {  error, data }] = useMutation<MutationResponse, MutationVariables>({
     source: "FOO",
     endPoint: "/users",
-    variables
+    variables: { foo: "bar" },
+    // type: ..., // the mutation type (POST, PUT...)
+    // options: {...} // the http client config
+    // mutationConfig: {...} // the react-query config
   });
 
   const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
   return error ? <span>{error.message}</span> : result;
 };
 ```
+Internaly useMutation use the **react-query**'s useMutation connected to your HTTP client.
 
-## Other Hooks
+## Other useful Hooks
 
 Sometimes we need to retrieve the state/result of a query in another component. useQueryResult/useQueriesResult/useQueryState/useQueriesStates allows you to do this. For that, it is enough to give him the id/ids of the query/queries:
 
@@ -128,7 +149,7 @@ Updated when the query state is changed. The optional **stateToProps** function 
 import { useQueryState } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const stateToProps = (queryState) => queryState
+  const stateToProps = (queryState) => queryState // optional
   const { isFetching } = useQueryState("queryId", stateToProps);
   return <span>{isFetching ? "Loading..." : "success"}</span>;
 };
@@ -182,9 +203,10 @@ You can use the moon client directly like this:
 import { useMoon } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const { client, reactQueryCache } = useMoon();
+  const { client, store } = useMoon();
   client.query(...);
   client.mutate(...);
+  // store is the queryCache of the react-query API
 };
 ```
 
@@ -237,17 +259,17 @@ export withQueriesResults([queryId, queryId2], resultsToProps)(MyComponent);
 This the Typescript interface of the Query/useQuery component/hook.
 
 ```js
-interface IQueryProps<QueryData = any, QueryVariables = any, DeserializedData = QueryData> {
+interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryConfig = any> {
   id?: string;
   source: string;
-  endPoint: string;
+  endPoint?: string;
   variables?: QueryVariables;
   fetchPolicy?: FetchPolicy;
-  options?: ClientConfig;
-  config?: QueryConfig;
-  children?: (props: IChildren<DeserializedData>) => Nullable<JSX.Element | JSX.Element[]>;
+  // http client config
+  options?: QueryConfig;
+  // react-query query config
+  queryConfig?: ReactQueryConfig<QueryResponse>;
 }
-
 ```
 
 ### fetchPolicy
@@ -266,16 +288,22 @@ Valid fetchPolicy values are:
 This the Typescript interface of the Mutation/useMutation component/hook.
 
 ```js
-export interface IMutationProps<MutationResponse = any, MutationVariables = any> {
+
+interface IMutationProps<
+  MutationVariables = any,
+  MutationResponse = any,
+  MutationError = any,
+  MutationClientConfig = any
+> {
   source: string;
-  endPoint: string;
+  endPoint?: string;
   variables?: MutationVariables;
   type?: MutateType;
-  options?: ClientConfig;
-  config?: QueryConfig;
-  children?: (props: IChildren<MutationResponse>) => React.ReactNode;
+  // http client config
+  options?: MutationClientConfig;
+  // react-query mutation config
+  mutationConfig?: MutationConfig<MutationResponse, MutationError, MutationVariables, unknown>;
 }
-
 ```
 ## Moon config
 
@@ -283,6 +311,7 @@ For each Moon link we can add interceptors (middleware: language, api token, suc
 
 ```js
 import { AxiosRequestConfig } from "axios";
+import axiosClientFactory from "@decathlon/moon-axios";
 
 function successHandler(response: AxiosResponse){...};
 
@@ -304,11 +333,13 @@ const links = [
   {
     id: "FOO",
     config: { baseURL: "http://foo.com" },
-    interceptors: { request: requestInterceptors, response: responseInterceptors }
+    interceptors: { request: requestInterceptors, response: responseInterceptors },
+    clientFactory: axiosClientFactory
   },
   {
     id: "BAR",
     config: { baseURL: "http://bar.com" }
+    clientFactory: yourClientFactory // must extends the Moon ClientInstace
   }
 ];
 
