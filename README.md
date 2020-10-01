@@ -2,7 +2,7 @@
 
 _**The power of react-query with your favorite HTTP Client**_
 
-**Moon** is a featured, production ready caching **REST** client based on **react-query** for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via a HTTP client (Axios, fetch... ).
+**Moon** is a featured, production ready caching **REST** client based on [**react-query**](https://github.com/tannerlinsley/react-query) for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via a HTTP client (Axios, fetch... ).
 The only thing you have to do is transmit the configuration. **Moon does the rest !** 🚀
 
 Moon client can be used in any React app where you want to use data. It's:
@@ -14,7 +14,7 @@ Moon client can be used in any React app where you want to use data. It's:
 ## Installation for Axios client
 
 ```bash
-npm install @decathlon/moon @decathlon/moon-axios react-query axios qs --save
+npm install @decathlon/moon @decathlon/moon-axios react-query axios --save
 ```
 
 ## Usage
@@ -60,7 +60,7 @@ const MyComponent = () => {
       source="FOO"
       endPoint="/users"
       variables={{ foo: "bar" }}
-      fetchPolicy={FetchPolicy.CacheFirst} // please see the fetchPolicy
+      fetchPolicy={FetchPolicy.CacheFirst} // please see the fetchPolicy query prop
     >
       {({ isLoading, data, error }) => {
         if (isLoading) return <span> Loading ...</span>;
@@ -85,7 +85,7 @@ const MyComponent = () => {
     source: "FOO",
     endPoint: "/users",
     variables: { foo: "bar" },
-    fetchPolicy: FetchPolicy.CacheFirst // please see the fetchPolicy
+    fetchPolicy: FetchPolicy.CacheFirst // please see the fetchPolicy query prop
     // options: {...} // the http client config
     // queryConfig: {...} // the react-query config
   });
@@ -94,7 +94,7 @@ const MyComponent = () => {
   return <span>{error ? error.message : "success"}</span>;
 };
 ```
-Internaly useQuery use the **react-query**'s useQuery connected to your HTTP client with a configuration allowing better cache management and better referencing of requests for REST clients.
+Internaly useQuery use the **react-query**'s useQuery connected to your HTTP client with a configuration allowing better cache management (fetch policy) and better referencing (management of query identifiers adapted to the use of HTTP clients, useQueryState/useQueryResult...) of requests for REST clients.
 
 #### Mutation / useMutation
 
@@ -252,6 +252,23 @@ const MyComponent = ({ queryId, queryId2 }) => {
 };
 
 export withQueriesResults([queryId, queryId2], resultsToProps)(MyComponent);
+```
+
+## Moon provider props
+
+```js
+interface IMoonProviderProps {
+  // The links ( HTTP clients config)
+  links: ILink[];
+  // The global Moon client factory (like the moon-axios Axios client for moon https://github.com/dktunited/moon-axios)
+  clientFactory: ClientFactory;
+  // The react-query cache object
+  store?: QueryCache;
+  // The react-query cache config (please see https://react-query.tanstack.com/docs/api/#reactqueryconfigprovider for more details)
+  config?: ReactQueryConfig;
+  // the react-query initial cache state (please see https://react-query.tanstack.com/docs/api#hydrationdehydrate for more details)
+  hydrate?: HydrateProps;
+}
 ```
 
 ## Query options
