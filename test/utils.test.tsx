@@ -1,7 +1,7 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import { getQueryId, stableStringify } from "../src/utils";
+import { getQueryId, stableStringify, equal } from "../src/utils";
 import { getClients, ILink } from "../src/utils/client";
 import { createClientFactory, MockedClient } from "./testUtils";
 
@@ -23,11 +23,26 @@ describe("Utils", () => {
   });
 
   it("should return the query id", () => {
-    let queryId = getQueryId("myId", "FOO", "/users", { foo: "bar" });
+    let queryId = getQueryId({ id: "myId", source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
     expect(queryId).toEqual("myId");
     // null id
-    queryId = getQueryId(undefined, "FOO", "/users", { foo: "bar" });
-    const expectedId = stableStringify(["FOO", "/users", { foo: "bar" }]);
+    queryId = getQueryId({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
+    const expectedId = stableStringify({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
     expect(queryId).toEqual(expectedId);
+  });
+
+  it("deep equal should return true", () => {
+    expect(equal({}, {}, true)).toBeTruthy();
+    expect(equal({ a: "1" }, { a: "1" }, true)).toBeTruthy();
+    const a = { id: undefined, source: "FOO", endPoint: "/users", variables: { option: { a: "b" } } };
+    const b = { id: undefined, source: "FOO", endPoint: "/users", variables: { option: { a: "b" } } };
+    expect(equal(a, b, true)).toBeTruthy();
+  });
+
+  it("deep equal should return false", () => {
+    expect(equal({ a: "1" }, { a: "2" }, true)).toBeFalsy();
+    const a = { id: undefined, source: "FOO", endPoint: "/users", variables: { option: { a: "b" } } };
+    const b = { id: undefined, source: "FOO", endPoint: "/users", variables: { option: { a: "a" } } };
+    expect(equal(a, b, true)).toBeFalsy();
   });
 });

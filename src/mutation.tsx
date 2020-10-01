@@ -15,7 +15,7 @@ export type MutationChildren<MutationVariables, MutationResponse, MutationError>
 ) => Nullable<JSX.Element>;
 
 export interface IMutationComponentProps<MutationVariables, MutationResponse, MutationError, MutationConfig>
-  extends IMutationProps<MutationVariables, MutationResponse, MutationConfig> {
+  extends IMutationProps<MutationVariables, MutationResponse, MutationError, MutationConfig> {
   children?: MutationChildren<MutationVariables, MutationResponse, MutationError>;
 }
 

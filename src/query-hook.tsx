@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useQuery as useReactQuery, QueryResult, QueryConfig as ReactQueryConfig } from "react-query";
 
-import { useMoon } from "./hooks";
-import { getQueryId } from "./utils";
+import { useMoon, usePrevValue } from "./hooks";
+import { ClientConfig, getQueryId } from "./utils";
 
 export enum FetchPolicy {
   // always try reading data from your cache first
@@ -28,7 +28,12 @@ export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryCon
   queryConfig?: ReactQueryConfig<QueryResponse>;
 }
 
-export default function useQuery<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any>({
+export default function useQuery<
+  QueryVariables = any,
+  QueryResponse = any,
+  QueryError = any,
+  QueryConfig extends ClientConfig = any
+>({
   id,
   source,
   endPoint,
@@ -37,22 +42,21 @@ export default function useQuery<QueryVariables = any, QueryResponse = any, Quer
   fetchPolicy = FetchPolicy.CacheAndNetwork,
   queryConfig
 }: IQueryProps<QueryVariables, QueryResponse, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
-  const { client } = useMoon();
+  const { client, store } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
-  const { store } = useMoon();
-  const queryKey = getQueryId(id, source, endPoint, variables);
-  const cachedResult = store.getQueryData<QueryResponse>(queryKey);
+  const clientProps = { source, endPoint, variables, options };
+  const queryId = getQueryId({ id, ...clientProps });
+  const { value, prevValue } = usePrevValue({ queryId, clientProps });
+
+  const cachedResult = store.getQueryData<QueryResponse>(queryId);
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
   const useCache = fetchPolicy === FetchPolicy.CacheAndNetwork || cacheOnly;
 
   if (isInitialMount.current && networkOnly) {
-    store.getQuery(queryKey)?.remove();
+    // remove cache if networkOnly
+    store.getQuery(queryId)?.remove();
   }
-
-  React.useEffect(() => {
-    isInitialMount.current = false;
-  }, []);
 
   function fetch() {
     return cacheOnly && cachedResult
@@ -60,13 +64,24 @@ export default function useQuery<QueryVariables = any, QueryResponse = any, Quer
       : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
   }
 
-  const queryResult = useReactQuery<QueryResponse, QueryError>(queryKey, fetch, {
+  const queryResult = useReactQuery<QueryResponse, QueryError>(queryId, fetch, {
     ...queryConfig,
     initialData: useCache ? cachedResult || queryConfig?.initialData : queryConfig?.initialData,
-    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
-    retryDelay: networkOnly ? 0 : queryConfig?.retryDelay
+    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime
   });
 
   const { clear, fetchMore, refetch, remove, ...others } = queryResult;
+
+  React.useEffect(() => {
+    if (prevValue.queryId === value.queryId && !isInitialMount.current) {
+      // refetch on update and when only client options have been changed
+      refetch();
+    }
+  }, [value.clientProps]);
+
+  React.useEffect(() => {
+    isInitialMount.current = false;
+  }, []);
+
   return [{ clear, fetchMore, refetch, remove }, others];
 }

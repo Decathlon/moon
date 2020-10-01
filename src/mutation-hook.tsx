@@ -3,13 +3,13 @@ import { useMutation as useReactMutation, MutationResultPair, MutationConfig } f
 import { MutateType } from "./moon-client";
 import { useMoon } from "./hooks";
 
-export interface IMutationProps<MutationVariables = any, MutationResponse = any, MutationConfg = any> {
+export interface IMutationProps<MutationVariables = any, MutationResponse = any, MutationError = any, MutationConfg = any> {
   source: string;
   endPoint?: string;
   variables?: MutationVariables;
   type?: MutateType;
   options?: MutationConfg;
-  mutationConfig?: MutationConfig<MutationResponse, unknown, MutationVariables, unknown>;
+  mutationConfig?: MutationConfig<MutationResponse, MutationError, MutationVariables, unknown>;
 }
 
 export default function useMutation<MutationVariables = any, MutationResponse = any, MutationError = any, MutationConfg = any>({
@@ -19,7 +19,7 @@ export default function useMutation<MutationVariables = any, MutationResponse = 
   variables,
   options,
   mutationConfig
-}: IMutationProps<MutationVariables, MutationResponse | undefined, MutationConfg>): MutationResultPair<
+}: IMutationProps<MutationVariables, MutationResponse | undefined, MutationError, MutationConfg>): MutationResultPair<
   MutationResponse | undefined,
   MutationError,
   MutationVariables,

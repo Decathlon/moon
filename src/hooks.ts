@@ -2,8 +2,8 @@ import * as React from "react";
 import { useQueryCache, QueryCache, Query } from "react-query";
 import { QueryState } from "react-query/types/core/query";
 
-import shallowEqual from "./utils/shallow-equal";
 import { MoonContext, RquiredMoonContextValue } from "./moon-provider";
+import { equal } from "./utils";
 
 export interface QueriesStates {
   [queryId: string]: QueryState<unknown, unknown> | undefined;
@@ -29,7 +29,7 @@ export function useQueryResult<Data = any, Props = ResultProps>(
     (cache: QueryCache, query?: Query<unknown, unknown>) => {
       if ((query?.queryKey || []).includes(queryId)) {
         const queryData = cache.getQueryData<Data>(queryId);
-        if (!shallowEqual(state || null, queryData || null)) {
+        if (!equal(state || null, queryData || null)) {
           setState(queryData);
         }
       }
@@ -65,7 +65,7 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
       if (queryKeys.some(queryId => typeof queryId === "string" && currentQueriesIds.includes(queryId))) {
         const queryId = queryKeys[0] as string;
         const queryData = cache.getQueryData<Data>(queryId);
-        if (!shallowEqual(states[queryId] || null, queryData || null)) {
+        if (!equal(states[queryId] || null, queryData || null)) {
           setStates({ [queryId]: queryData });
         }
       }
@@ -93,7 +93,7 @@ export function useQueryState<Data = any, Props = ResultProps>(
     (cache: QueryCache, query?: Query<unknown, unknown>) => {
       if ((query?.queryKey || []).includes(queryId)) {
         const query = cache.getQuery<Data>(queryId);
-        if (!shallowEqual(state || null, query?.state || null)) {
+        if (!equal(state || null, query?.state || null)) {
           setState(query?.state);
         }
       }
@@ -129,7 +129,7 @@ export function useQueriesStates<Props = ResultProps>(
       if (queryKeys.some(queryId => typeof queryId === "string" && currentQueriesIds.includes(queryId))) {
         const queryId = queryKeys[0] as string;
         const queryState = cache.getQuery(queryId)?.state;
-        if (!shallowEqual(states[queryId] || null, queryState || null)) {
+        if (!equal(states[queryId] || null, queryState || null)) {
           setStates({ [queryId]: queryState });
         }
       }
@@ -149,7 +149,7 @@ export function usePrevValue<Value = any>(value: Value): { value: Value; prevVal
   const valueRef = React.useRef<Value>(value);
   const prevValue = valueRef.current;
   //@ts-ignore prevValue is an object
-  if (typeof prevValue === "object" && typeof value === "object" && !shallowEqual(prevValue, value)) {
+  if (typeof prevValue === "object" && typeof value === "object" && !equal(prevValue, value, true)) {
     valueRef.current = value;
   }
   return { value: valueRef.current, prevValue };

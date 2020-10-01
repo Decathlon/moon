@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable max-classes-per-file */
 /// <reference path="./typings/tests-entry.d.ts" />
 
@@ -7,6 +8,7 @@ import { ClientInstance, ILink } from "../src/utils";
 export interface MockedClientConfig {
   baseURL: string;
 }
+
 export class MockedClient implements ClientInstance {
   public get: () => Promise<any>;
 
@@ -16,20 +18,15 @@ export class MockedClient implements ClientInstance {
 
   public put: () => Promise<any>;
 
-  public baseURL: string;
+  public config: MockedClientConfig;
 
   constructor(config: MockedClientConfig) {
-    this.baseURL = config.baseURL;
+    this.config = config;
     this.get = jest.fn();
     this.post = jest.fn();
     this.delete = jest.fn();
     this.put = jest.fn();
   }
-
-  interceptors = {
-    request: { use: () => 1, eject: () => undefined },
-    response: { use: () => 1, eject: () => undefined }
-  };
 }
 
 export const createClientFactory = (Factory: typeof MockedClient) => (config: MockedClientConfig): MockedClient => {

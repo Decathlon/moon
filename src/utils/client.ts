@@ -16,9 +16,12 @@ export interface IClients<I = ClientInstance> {
   [id: string]: I;
 }
 
-export type ClientFactory<C = any, R = any, I = any> = (config?: C, interceptors?: IInterceptors<C, R>) => I;
+export type ClientFactory<C extends ClientConfig = any, R = any, I extends ClientInstance = any> = (
+  config?: C,
+  interceptors?: IInterceptors<C, R>
+) => I;
 
-export interface ILink<I = ClientInstance, C = ClientConfig, R = ClientResponse> {
+export interface ILink<I extends ClientInstance = any, C extends ClientConfig = any, R = any> {
   id: string;
   config?: C;
   interceptors?: IInterceptors<C, R>;
@@ -30,11 +33,6 @@ export type DataTransformer = (data: any) => any;
 export interface ClientConfig {
   baseURL?: string;
   params?: any;
-  transformResponse?: DataTransformer | DataTransformer[];
-}
-
-export interface ClientResponse<Data = any> {
-  data: Data;
 }
 
 export interface ClientInterceptorManager<V> {
@@ -45,13 +43,15 @@ export interface ClientInterceptorManager<V> {
 export interface ClientInstance {
   interceptors?: {
     request?: ClientInterceptorManager<ClientConfig>;
-    response?: ClientInterceptorManager<ClientResponse>;
+    response?: ClientInterceptorManager<any>;
   };
-  get<T = any, R = ClientResponse<T>>(url: string, config?: ClientConfig): Promise<R>;
-  delete<T = any, R = ClientResponse<T>>(url: string, config?: ClientConfig): Promise<R>;
-  post<T = any, R = ClientResponse<T>>(url: string, data?: any, config?: ClientConfig): Promise<R>;
-  put<T = any, R = ClientResponse<T>>(url: string, data?: any, config?: ClientConfig): Promise<R>;
+  get<R = any>(url: string, config?: ClientConfig): Promise<R>;
+  delete<R = any>(url: string, config?: ClientConfig): Promise<R>;
+  post<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
+  put<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
 }
+
+let queryCache: QueryCache;
 
 export function getClients(links: ILink[], clientFactory?: ClientFactory): IClients {
   return links.reduce((clients, link) => {
@@ -63,8 +63,6 @@ export function getClients(links: ILink[], clientFactory?: ClientFactory): IClie
     return clients;
   }, {});
 }
-
-let queryCache: QueryCache;
 
 export function getMoonStore(store?: QueryCache): QueryCache {
   if (store) {

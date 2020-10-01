@@ -109,7 +109,7 @@ describe("Query component with MoonProvider", () => {
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, MockedClientConfig, typeof response, string>({
+        useQuery<QueryVariables, typeof response, string, MockedClientConfig>({
           id: "queryId2",
           source: "FOO",
           endPoint: "/users",
