@@ -55,7 +55,7 @@ export default function useQuery<
 
   if (isInitialMount.current && networkOnly) {
     // remove cache if networkOnly
-    store.getQuery(queryId)?.remove();
+    store.setQueryData(queryId, undefined);
   }
 
   function cancel() {
