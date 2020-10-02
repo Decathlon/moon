@@ -14,7 +14,7 @@ export enum FetchPolicy {
 }
 
 export type IQueryResultProps<QueryResponse, QueryError> = [
-  Pick<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">,
+  Pick<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove"> & { cancel: () => void },
   Omit<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">
 ];
 
@@ -58,6 +58,10 @@ export default function useQuery<
     store.getQuery(queryId)?.remove();
   }
 
+  function cancel() {
+    store.cancelQueries(queryId, { exact: true });
+  }
+
   function fetch() {
     return cacheOnly && cachedResult
       ? cachedResult
@@ -83,5 +87,5 @@ export default function useQuery<
     isInitialMount.current = false;
   }, []);
 
-  return [{ clear, fetchMore, refetch, remove }, others];
+  return [{ clear, fetchMore, refetch, remove, cancel }, others];
 }
