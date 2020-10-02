@@ -71,7 +71,10 @@ export default function useQuery<
   const queryResult = useReactQuery<QueryResponse, QueryError>(queryId, fetch, {
     ...queryConfig,
     initialData: useCache ? cachedResult || queryConfig?.initialData : queryConfig?.initialData,
-    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime
+    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
+    // default values to false
+    refetchOnReconnect: queryConfig?.refetchOnReconnect || false,
+    refetchOnWindowFocus: queryConfig?.refetchOnWindowFocus || false
   });
 
   const { clear, fetchMore, refetch, remove, ...others } = queryResult;
