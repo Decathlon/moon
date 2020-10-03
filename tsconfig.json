@@ -13,7 +13,6 @@
       "es2017"
     ],
     "jsx": "react" /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */,
-    "rootDir": "./src",
     "declaration": true /* Generates corresponding '.d.ts' file. */,
     "sourceMap": true,
     /* Strict Type-Checking Options */
@@ -31,8 +30,14 @@
     "noUnusedParameters": true,
     /* Module Resolution Options */
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": "./packages",
+    "paths": {
+      "@decathlon/moon": ["moon/src"],
+      "@decathlon/moon-axios": ["moon-axios/src"],
+      "@decathlon/*": ["*/src"]
+    }
   },
-  "include": ["./src"],
-  "exclude": ["**/build", "**/dist", "node_modules", "**/node_modules"]
+  "include": ["packages/**/*.ts"],
+  "exclude": ["node_modules", "**/dist/**/*"]
 }
