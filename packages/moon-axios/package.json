@@ -54,6 +54,7 @@
     "mutations",
     "react-query",
     "axios",
-    "moon"
+    "moon",
+    "test"
   ]
 }
