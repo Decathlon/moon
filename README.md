@@ -368,13 +368,13 @@ const links = [
 ```bash
 git clone ...
 cd moon
-npm ci
+lerna bootstrap
 ```
 
 ## Running the tests
 
 ```bash
-npm run test
+lerna run test
 ```
 
 ## Contributing

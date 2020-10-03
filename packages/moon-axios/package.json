@@ -1,0 +1,59 @@
+{
+  "name": "test2-amen",
+  "version": "1.0.0",
+  "description": "Axios for moon",
+  "author": "Decathlon",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "types": "dist/moon-axios/src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Decathlon/moon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Decathlon/moon/issues"
+  },
+  "homepage": "https://github.com/Decathlon/moon/blob/master/README.md",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "qs": "~6.9.4"
+  },
+  "peerDependencies": {
+    "@decathlon/moon": "~3.0.0",
+    "axios": "~0.20.0"
+  },
+  "devDependencies": {
+    "@decathlon/moon": "^3.0.0"
+  },
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "pack": "npm pack",
+    "prepublish": "npm run build",
+    "test": "npm run test:unit",
+    "test:unit": "jest",
+    "test:watch": "npm run test:unit -- --watch",
+    "test:generate-output": "jest --json --outputFile=jest-test-results.json",
+    "precoverage": "npm run pretest && rimraf coverage/",
+    "coverage": "npm run test:unit -- --coverage",
+    "pretest": "rimraf tests.entry.js.map test/results.xml",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "lint:eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx -c ../../.eslintrc.js --ignore-path ../../.eslintignore --format=pretty ./",
+    "lint:prettier": "prettier-check \"src/**/*.{html,js,json,md,mdx,ts,tsx}\"",
+    "format": "npm run format:prettier && npm run format:eslint",
+    "format:eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx --fix -c ../../.eslintrc.js  --ignore-path ../../.eslintignore ./",
+    "format:prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --write \"./**/*.{html,js,json,md,mdx,ts,tsx}\""
+  },
+  "keywords": [
+    "typescript",
+    "moon-client",
+    "queries",
+    "mutations",
+    "react-query",
+    "axios",
+    "moon"
+  ]
+}

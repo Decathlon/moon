@@ -5,3 +5,10 @@ README.md
 stats.json
 jest-test-results.json
 .vscode/*
+
+packages/**/coverage/*
+packages/**/dist/*
+packages/**/node_modules/*
+packages/**/README.md
+packages/**/stats.json
+packages/**/jest-test-results.json

@@ -26,6 +26,7 @@ module.exports = {
   },
   plugins: ["react", "@typescript-eslint", "jest"],
   rules: {
+    "import/no-extraneous-dependencies": 0,
     "@typescript-eslint/interface-name-prefix": 0,
     "import/no-unresolved": 0,
     "react/jsx-props-no-spreading": 0,

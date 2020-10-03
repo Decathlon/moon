@@ -1,5 +1,3 @@
-/* eslint-disable max-classes-per-file */
-/* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
 import { renderHook } from "@testing-library/react-hooks";
