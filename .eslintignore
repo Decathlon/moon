@@ -7,4 +7,17 @@ node_modules/*
 README.md
 stats.json
 jest-test-results.json
+rollup.config.js
 .vscode/*
+
+
+packages/**/coverage/*
+packages/**/dist/*
+packages/**/test/polyfill/array.find.polyfill.js
+packages/**/test/tests.entry.js
+packages/**/test/global-test-setup
+packages/**/node_modules/*
+packages/**/README.md
+packages/**/stats.json
+packages/**/jest-test-results.json
+packages/**/rollup.config.js

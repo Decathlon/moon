@@ -1,93 +1,70 @@
 {
-  "name": "@decathlon/moon",
-  "version": "2.0.6",
-  "description": "A featured, production ready caching REST client for every React UI",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Decathlon/moon"
-  },
-  "bugs": {
-    "url": "https://github.com/Decathlon/moon/issues"
-  },
-  "homepage": "https://github.com/Decathlon/moon/blob/master/README.md",
-  "files": [
-    "dist"
-  ],
-  "dependencies": {
-    "axios": "~0.19.2",
-    "object-hash": "~2.0.3",
-    "qs": "~6.9.4"
-  },
-  "peerDependencies": {
-    "react": "^16.12.0"
+  "private": false,
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
+    "test": "lerna run tes",
+    "lint": "lerna run lint",
+    "publish": "lerna publish from-package --ignore-prepublish --no-git-reset --yes"
   },
   "devDependencies": {
-    "@testing-library/react": "~10.0.6",
-    "@testing-library/react-hooks": "~3.2.1",
-    "@types/enzyme": "~3.10.5",
-    "@types/jest": "~25.2.3",
-    "@types/node": "~14.0.9",
+    "@rollup/plugin-commonjs": "^15.1.0",
+    "@rollup/plugin-json": "~4.1.0",
+    "@rollup/plugin-node-resolve": "^9.0.0",
+    "@rollup/plugin-typescript": "^6.0.0",
+    "@rollup/plugin-url": "^5.0.1",
+    "@svgr/rollup": "^5.4.0",
+    "@testing-library/react": "~11.0.4",
+    "@testing-library/react-hooks": "~3.4.2",
+    "@types/jest": "~26.0.14",
+    "@types/node": "~14.11.2",
     "@types/object-hash": "~1.3.3",
-    "@types/qs": "~6.9.3",
-    "@types/react": "~16.9.35",
+    "@types/qs": "~6.9.5",
+    "@types/react": "~16.9.49",
     "@types/react-dom": "~16.9.8",
-    "@typescript-eslint/eslint-plugin": "~3.1.0",
-    "@typescript-eslint/parser": "~3.1.0",
-    "enzyme": "~3.11.0",
-    "enzyme-adapter-react-16": "~1.15.2",
-    "eslint": "~7.1.0",
-    "eslint-config-airbnb": "~18.1.0",
-    "eslint-config-prettier": "~6.11.0",
-    "eslint-formatter-pretty": "~3.0.1",
-    "eslint-plugin-import": "~2.20.2",
-    "eslint-plugin-jest": "~23.13.2",
-    "eslint-plugin-jsx-a11y": "~6.2.3",
-    "eslint-plugin-react": "~7.20.0",
-    "eslint-plugin-react-hooks": "~4.0.4",
-    "husky": "~4.2.5",
-    "isomorphic-fetch": "~2.2.1",
-    "jest": "~26.0.1",
-    "prettier": "~2.0.5",
+    "@typescript-eslint/eslint-plugin": "~4.3.0",
+    "@typescript-eslint/parser": "~4.3.0",
+    "axios": "~0.20.0",
+    "eslint": "~7.10.0",
+    "eslint-config-airbnb": "~18.2.0",
+    "eslint-config-prettier": "~6.12.0",
+    "eslint-formatter-pretty": "~4.0.0",
+    "eslint-plugin-import": "~2.22.1",
+    "eslint-plugin-jest": "~24.0.2",
+    "eslint-plugin-jsx-a11y": "~6.3.1",
+    "eslint-plugin-react": "~7.21.2",
+    "eslint-plugin-react-hooks": "~4.1.2",
+    "husky": "~4.3.0",
+    "isomorphic-fetch": "~3.0.0",
+    "jest": "~26.4.2",
+    "prettier": "~2.1.2",
     "prettier-check": "~2.0.0",
     "react": "~16.13.1",
     "react-dom": "~16.13.1",
+    "react-query": "^2.23.0",
+    "react-test-renderer": "~16.13.1",
     "rimraf": "~3.0.2",
-    "ts-jest": "~26.1.0",
-    "ts-loader": "~7.0.5",
-    "typescript": "~3.9.3"
+    "rollup": "^2.28.1",
+    "rollup-plugin-peer-deps-external": "^2.2.3",
+    "ts-jest": "~26.4.1",
+    "ts-loader": "~8.0.4",
+    "typescript": "~4.0.3",
+    "lerna": "^3.22.1"
   },
-  "scripts": {
-    "build": "rimraf dist && tsc",
-    "prepublish": "npm run build",
-    "test": "npm run test:unit",
-    "test:unit": "jest",
-    "test:watch": "npm run test:unit -- --watch",
-    "test:generate-output": "jest --json --outputFile=jest-test-results.json",
-    "precoverage": "npm run pretest && rimraf coverage/",
-    "coverage": "npm run test:unit -- --coverage",
-    "pretest": "rimraf tests.entry.js.map test/results.xml",
-    "lint": "npm run lint:eslint && npm run lint:prettier",
-    "lint:eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx --format=pretty ./",
-    "lint:prettier": "prettier-check \"src/**/*.{html,js,json,md,mdx,ts,tsx}\"",
-    "format": "npm run format:prettier && npm run format:eslint",
-    "format:eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx --fix ./",
-    "format:prettier": "prettier --write \"./**/*.{html,js,json,md,mdx,ts,tsx}\""
-  },
+  "workspaces": [
+    "packages/*"
+  ],
   "keywords": [
-    "react",
     "typescript",
-    "rest-client",
+    "moon-client",
     "queries",
     "mutations",
-    "cache"
+    "react-query",
+    "moon"
   ],
-  "author": "Decathlon",
-  "license": "Apache-2.0",
   "husky": {
     "hooks": {
-      "pre-commit": "npm test && npm run lint"
+      "pre-commit": "npm run test && npm run lint"
     }
   }
 }
