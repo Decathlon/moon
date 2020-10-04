@@ -10,6 +10,6 @@ jobs:
       - uses: actions/checkout@v1
       - name: Run tests
         run: |
-          lerna bootstrap
-          lerna run test
-          lerna run lint
+          npm run bootstrap
+          npm run test
+          npm run lint

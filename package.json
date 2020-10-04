@@ -1,5 +1,12 @@
 {
   "private": false,
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
+    "test": "lerna run tes",
+    "lint": "lerna run lint",
+    "publish": "lerna publish --ignore-prepublish --no-git-reset --yes"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-json": "~4.1.0",
