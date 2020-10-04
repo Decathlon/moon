@@ -1,5 +1,5 @@
 {
-  "name": "moon",
+  "name": "@decathlon/moon",
   "version": "3.0.0",
   "description": "A featured, production ready caching REST client for every React UI",
   "author": "Decathlon",

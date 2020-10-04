@@ -18,12 +18,17 @@ export interface RquiredMoonContextValue {
 }
 
 interface IMoonProviderProps {
+  // The links ( HTTP clients config)
   links: ILink[];
+  // The global Moon client factory (like the moon-axios Axios client for moon https://github.com/dktunited/moon-axios)
+  clientFactory: ClientFactory;
   // eslint-disable-next-line no-undef
   children: JSX.Element;
-  clientFactory: ClientFactory;
+  // The react-query cache object
   store?: QueryCache;
+  // The react-query cache config (please see https://react-query.tanstack.com/docs/api/#reactqueryconfigprovider for more details)
   config?: ReactQueryConfig;
+  // The react-query initial cache state (please see https://react-query.tanstack.com/docs/api#hydrationdehydrate for more details)
   hydrate?: HydrateProps;
 }
 

@@ -9,11 +9,17 @@ export interface IMutationProps<
   MutationError = any,
   MutationClientConfig = any
 > {
+  /** The link id of the http client */
   source: string;
+  /** The REST end point */
   endPoint?: string;
+  /** The variables of your mutation */
   variables?: MutationVariables;
+  /** The mutation method. Default value:  MutateType.Post */
   type?: MutateType;
+  /** The http client options of your mutation. */
   options?: MutationClientConfig;
+  /** The react-query config. Please see the react-query MutationConfig for more details. */
   mutationConfig?: MutationConfig<MutationResponse, MutationError, MutationVariables, unknown>;
 }
 

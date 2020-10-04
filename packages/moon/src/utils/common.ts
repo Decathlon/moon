@@ -2,7 +2,7 @@
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
-export const getQueryId = (params: Record<string, any>): string => {
+export const getId = (params: Record<string, any>): string => {
   return params.id !== undefined ? params.id : stableStringify(params);
 };
 

@@ -2,7 +2,7 @@ import * as React from "react";
 import { useQuery as useReactQuery, QueryResult, QueryConfig as ReactQueryConfig } from "react-query";
 
 import { useMoon, usePrevValue } from "./hooks";
-import { ClientConfig, getQueryId } from "./utils";
+import { ClientConfig, getId } from "./utils";
 
 export enum FetchPolicy {
   // always try reading data from your cache first
@@ -18,15 +18,28 @@ export type IQueryResultProps<QueryResponse, QueryError> = [
   Omit<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">
 ];
 
-export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryConfig = any> {
+export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
   id?: string;
+  /** The Link id of the http client. */
   source: string;
+  /** The REST end point. */
   endPoint?: string;
+  /** The variables of your query. */
   variables?: QueryVariables;
+  /**
+   * The fetch policy is an option which allows you to
+   * specify how you want your component to interact with
+   * the Moon data cache. Default value: FetchPolicy.CacheAndNetwork */
   fetchPolicy?: FetchPolicy;
+  /** The http client options of your query. */
   options?: QueryConfig;
-  queryConfig?: ReactQueryConfig<QueryResponse>;
+  /** The react-query config. Please see the react-query QueryConfig for more details. */
+  queryConfig?: ReactQueryConfig<QueryResponse, QueryError>;
 }
+
+export const getQueryId = (queryProps: Pick<IQueryProps, "id" | "source" | "endPoint" | "variables" | "options">): string => {
+  return getId(queryProps);
+};
 
 export default function useQuery<
   QueryVariables = any,
@@ -41,21 +54,24 @@ export default function useQuery<
   options,
   fetchPolicy = FetchPolicy.CacheAndNetwork,
   queryConfig
-}: IQueryProps<QueryVariables, QueryResponse, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
+}: IQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
   const { client, store } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
   const clientProps = { source, endPoint, variables, options };
   const queryId = getQueryId({ id, ...clientProps });
   const { value, prevValue } = usePrevValue({ queryId, clientProps });
+  const resolvedQueryConfig = React.useMemo(() => store.getResolvedQueryConfig(queryId, queryConfig), [
+    store,
+    queryId,
+    queryConfig
+  ]);
 
-  const cachedResult = store.getQueryData<QueryResponse>(queryId);
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
-  const useCache = fetchPolicy === FetchPolicy.CacheAndNetwork || cacheOnly;
 
   if (isInitialMount.current && networkOnly) {
     // remove cache if networkOnly
-    store.setQueryData(queryId, undefined);
+    store.setQueryData(queryId, queryConfig?.initialData);
   }
 
   function cancel() {
@@ -63,6 +79,7 @@ export default function useQuery<
   }
 
   function fetch() {
+    const cachedResult = store.getQueryData<QueryResponse>(queryId);
     return cacheOnly && cachedResult
       ? cachedResult
       : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
@@ -70,7 +87,6 @@ export default function useQuery<
 
   const queryResult = useReactQuery<QueryResponse, QueryError>(queryId, fetch, {
     ...queryConfig,
-    initialData: useCache ? cachedResult || queryConfig?.initialData : queryConfig?.initialData,
     cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
     // default values to false
     refetchOnReconnect: queryConfig?.refetchOnReconnect || false,
@@ -80,7 +96,7 @@ export default function useQuery<
   const { clear, fetchMore, refetch, remove, ...others } = queryResult;
 
   React.useEffect(() => {
-    if (prevValue.queryId === value.queryId && !isInitialMount.current) {
+    if (prevValue.queryId === value.queryId && !isInitialMount.current && resolvedQueryConfig?.enabled) {
       // refetch on update and when only client options have been changed
       refetch();
     }
@@ -89,6 +105,14 @@ export default function useQuery<
   React.useEffect(() => {
     isInitialMount.current = false;
   }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (networkOnly) {
+        store.setQueryData(queryId, queryConfig?.initialData);
+      }
+    };
+  }, [store, queryId, queryConfig]);
 
   return [{ clear, fetchMore, refetch, remove, cancel }, others];
 }

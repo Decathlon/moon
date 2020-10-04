@@ -1,5 +1,5 @@
 {
-  "name": "moon-axios",
+  "name": "@decathlon/moon-axios",
   "version": "1.0.0",
   "description": "Axios for moon",
   "author": "Decathlon",

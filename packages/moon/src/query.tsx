@@ -16,7 +16,7 @@ export type QueryChildren<QueryResponse, QueryError> = (
 ) => Nullable<JSX.Element>;
 
 export interface IQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
-  extends IQueryProps<QueryVariables, QueryResponse, QueryConfig> {
+  extends IQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig> {
   children?: QueryChildren<QueryResponse, QueryError>;
 }
 

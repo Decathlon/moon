@@ -1,7 +1,7 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import { getQueryId, stableStringify, equal } from "../src/utils";
+import { getId, stableStringify, equal } from "../src/utils";
 import { getClients, ILink } from "../src/utils/client";
 import { createClientFactory, MockedClient } from "./testUtils";
 
@@ -23,10 +23,10 @@ describe("Utils", () => {
   });
 
   it("should return the query id", () => {
-    let queryId = getQueryId({ id: "myId", source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
+    let queryId = getId({ id: "myId", source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
     expect(queryId).toEqual("myId");
     // null id
-    queryId = getQueryId({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
+    queryId = getId({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
     const expectedId = stableStringify({ source: "FOO", endPoint: "/users", variables: { foo: "bar" } });
     expect(queryId).toEqual(expectedId);
   });

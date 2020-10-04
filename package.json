@@ -3,7 +3,8 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
-    "test": "lerna run tes",
+    "pack": "lerna run pack",
+    "test": "lerna run test",
     "format": "lerna run format",
     "lint": "lerna run lint",
     "publish": "lerna publish from-package --ignore-prepublish --no-git-reset --yes"
