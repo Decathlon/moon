@@ -4,6 +4,7 @@
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
     "test": "lerna run tes",
+    "format": "lerna run format",
     "lint": "lerna run lint",
     "publish": "lerna publish from-package --ignore-prepublish --no-git-reset --yes"
   },
