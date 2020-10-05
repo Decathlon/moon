@@ -48,7 +48,6 @@
     "rest-query",
     "queries",
     "mutations",
-    "cache",
-    "test"
+    "cache"
   ]
 }
