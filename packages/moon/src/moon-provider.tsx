@@ -65,34 +65,28 @@ class MoonProvider extends React.Component<IMoonProviderProps> {
   }
 }
 
-export function withMoon<Props = any>(WrappedComponent: React.ComponentClass<Props> | React.FunctionComponent<Props>) {
-  // @ts-ignore Type 'ComponentClass| FunctionComponent' does not satisfy the constraint 'new (...args: any[]) => any' of  InstanceType.
-  type WrappedComponentInstance = InstanceType<typeof WrappedComponent>;
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function withMoon<Props extends Partial<IMoonContextValue> = any>(
+  WrappedComponent: React.ComponentClass<Props> | React.FunctionComponent<Props>
+) {
+  type WrappedComponentInstance = typeof WrappedComponent extends React.ComponentClass
+    ? InstanceType<React.ComponentClass<Props>>
+    : ReturnType<React.FunctionComponent<Props>>;
   type WrappedComponentPropsWithoutMoon = PropsWithoutMoon<Props>;
 
-  class WithMoonComponent extends React.Component<
-    PropsWithForwardRef<WrappedComponentPropsWithoutMoon, WrappedComponentInstance>
-  > {
-    render() {
-      const { forwardedRef, ...rest } = this.props;
-      return (
-        <MoonContext.Consumer>
-          {({ client, store }) => {
-            return (
-              // @ts-ignore I don't know how to implement this without breaking out of the types.
-              <WrappedComponent
-                ref={forwardedRef}
-                client={client}
-                store={store}
-                // @ts-ignore same
-                {...(rest as WrappedComponentPropsWithoutMoon)}
-              />
-            );
-          }}
-        </MoonContext.Consumer>
-      );
-    }
-  }
+  const WithMoonComponent: React.FunctionComponent<PropsWithForwardRef<
+    React.PropsWithChildren<WrappedComponentPropsWithoutMoon>,
+    WrappedComponentInstance
+  >> = ({ forwardedRef, ...rest }) => {
+    return (
+      <MoonContext.Consumer>
+        {({ client, store }) => {
+          const componentProps = { client, store, ...rest } as Props;
+          return <WrappedComponent ref={forwardedRef} {...componentProps} />;
+        }}
+      </MoonContext.Consumer>
+    );
+  };
 
   return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutMoon>((props, ref) => {
     // @ts-ignore I don't know how to implement this without breaking out of the types.

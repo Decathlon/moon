@@ -31,7 +31,7 @@ describe("Query component with MoonProvider", () => {
     const onResponse = jest.fn();
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, MockedClientConfig, typeof response>({
+        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
           source: "FOO",
           endPoint: "/users",
           variables,
@@ -72,7 +72,7 @@ describe("Query component with MoonProvider", () => {
     const variables = { foo: "bar" };
     const { result, waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, MockedClientConfig, typeof response>({
+        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",

@@ -233,11 +233,15 @@ Same as useMoon hook.
 ```js
 import { withMoon } from '@decathlon/moon';
 
-const MyComponent = ({ client, store }) => {
+interface Props extends IMoonContextValue {
+  prop: string;
+}
+
+const MyComponent: React.FunctionComponent<Props>= ({ client, store, prop }) => {
   ...
 };
 
-export withMoon(MyComponent);
+export withMoon<Props>(MyComponent);
 ```
 
 ### withQueryResult
@@ -247,11 +251,16 @@ Same as useQueryResult hook.
 ```js
 import { withQueryResult } from '@decathlon/moon';
 
-const MyComponent = ({ queryId }) => {
+interface Props {
+  queryResult: QueryState<QueryResponse, QueryError>;
+}
+
+
+const MyComponent: React.FunctionComponent<Props> = ({ queryResult }) => {
   ...
 };
 
-export withQueryResult(queryId, resultToProps)(MyComponent);
+export default withQueryResult<Props, QueryResponse, /* QueryResultProps */>(queryId, /* resultToProps */)(MyComponent);
 ```
 
 
@@ -261,11 +270,19 @@ Same as useQueriesResults hook.
 ```js
 import { withQueriesResults } from '@decathlon/moon';
 
-const MyComponent = ({ queryId, queryId2 }) => {
+interface Props {
+  queriesResults: {
+    queryId: QueryState<QueryResponse, QueryError>;
+    queryId2: QueryState<QueryResponse, QueryError>;
+  }
+}
+
+
+const MyComponent: React.FunctionComponent<Props> = ({ queriesResults: { queryId, queryId2 } }) => {
   ...
 };
 
-export withQueriesResults([queryId, queryId2], resultsToProps)(MyComponent);
+export default withQueriesResults<Props, QueryResponse, /* QueryResultProps */>([queryId, queryId2], /* resultToProps */)(MyComponent);
 ```
 
 ## Moon provider props

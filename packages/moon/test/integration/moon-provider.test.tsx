@@ -5,7 +5,11 @@ import MoonProvider, { withMoon, IMoonContextValue } from "../../src/moon-provid
 import { links } from "../moon-client.test";
 import { getMockedClientFactory } from "../testUtils";
 
-const MyComponent: React.FunctionComponent<IMoonContextValue> = ({ client }) => {
+interface IProps extends IMoonContextValue {
+  prop: string;
+}
+
+const MyComponent: React.FunctionComponent<IProps> = ({ client }) => {
   const [response, setResponse] = React.useState<any>(null);
   React.useEffect(() => {
     //@ts-ignore can't be null
@@ -16,7 +20,7 @@ const MyComponent: React.FunctionComponent<IMoonContextValue> = ({ client }) => 
   return <span>{!response ? "Loading" : "Success"}</span>;
 };
 
-const WithMoonComponent = withMoon(MyComponent);
+const WithMoonComponent = withMoon<IProps>(MyComponent);
 
 describe("Custom component withMoon HOC", () => {
   test("should render the query response", async () => {
@@ -25,7 +29,7 @@ describe("Custom component withMoon HOC", () => {
 
     const { getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <WithMoonComponent />
+        <WithMoonComponent prop="test" />
       </MoonProvider>
     );
     expect(getByText(/Loading/)).toBeTruthy();
