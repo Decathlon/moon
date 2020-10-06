@@ -1,6 +1,6 @@
 import * as React from "react";
-import { QueryResult } from "react-query";
-import { QueryState } from "react-query/types/core/query";
+import { QueryCache } from "react-query";
+import { Query, QueryState } from "react-query/types/core/query";
 
 import { MoonContext, RquiredMoonContextValue } from "./moon-provider";
 import { equal } from "./utils";
@@ -17,23 +17,35 @@ export interface QueriesResults<Data = any> {
   [queryId: string]: Data | undefined;
 }
 
+// cacheTime=0 not working
+export function getAdaptedQueryState<Data>(store: QueryCache, queryId: string): QueryState<Data, unknown> | undefined {
+  const query = store.getQuery<Data>(queryId);
+  if (!query) {
+    return undefined;
+  }
+  const networkOnly = query?.cacheTime === 0;
+  const { state } = (query as unknown) as Query<Data, unknown>;
+  const { isFetching, data } = state;
+  const queryData = isFetching && networkOnly ? undefined : data;
+  return { ...state, data: queryData };
+}
+
 export function useQueryResult<Data = any, Props = ResultProps>(
   queryId: string,
   resultToProps?: (state?: Data) => Props
 ): Data | Props | undefined {
   const { store } = useMoon();
-  const queryResult = store.getQueryData<Data>(queryId);
+  const queryState = getAdaptedQueryState<Data>(store, queryId);
+  const queryResult = queryState?.data;
   const [state, setState] = React.useState<Data | undefined>(queryResult);
 
-  const listener = React.useCallback(
-    (result: QueryResult<Data>) => {
-      const queryData = result.data;
-      if (!equal(state || null, queryData || null)) {
-        setState(queryData);
-      }
-    },
-    [queryId]
-  );
+  const listener = React.useCallback(() => {
+    const queryState = getAdaptedQueryState<Data>(store, queryId);
+    const queryData = queryState?.data;
+    if (!equal(state || null, queryData || null)) {
+      setState(queryData);
+    }
+  }, [queryId]);
   const unsubscribe = store.watchQuery<Data>(queryId).subscribe(listener);
 
   React.useEffect(() => {
@@ -51,15 +63,17 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
   const { store } = useMoon();
   const readQueriesResults = () => {
     return currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
-      result[queryId] = store.getQueryData<Data>(queryId);
+      const queryState = getAdaptedQueryState<Data>(store, queryId);
+      result[queryId] = queryState?.data;
       return result;
     }, {});
   };
   const [states, setStates] = React.useState<QueriesResults<Data>>(readQueriesResults());
 
   const getListener = React.useCallback(
-    (queryId: string) => (result: QueryResult<Data>) => {
-      const queryData = result.data;
+    (queryId: string) => () => {
+      const queryState = getAdaptedQueryState<Data>(store, queryId);
+      const queryData = queryState?.data;
       if (!equal(states[queryId] || null, queryData || null)) {
         setStates({ [queryId]: queryData });
       }
@@ -82,13 +96,13 @@ export function useQueryState<Data = any, Props = ResultProps>(
   stateToProps?: (state: QueryState<Data, unknown>) => Props
 ): QueryState<Data, unknown> | Props | undefined {
   const { store } = useMoon();
-  const query = store.getQuery<Data>(queryId);
-  const [state, setState] = React.useState<QueryState<Data, unknown> | undefined>(query?.state);
+  const initialSate = getAdaptedQueryState<Data>(store, queryId);
+  const [state, setState] = React.useState<QueryState<Data, unknown> | undefined>(initialSate);
 
   const listener = React.useCallback(() => {
-    const query = store.getQuery<Data>(queryId);
-    if (!equal(state || null, query?.state || null)) {
-      setState(query?.state);
+    const newState = getAdaptedQueryState<Data>(store, queryId);
+    if (!equal(state || null, newState || null)) {
+      setState(newState);
     }
   }, [queryId]);
   const unsubscribe = store.watchQuery(queryId).subscribe(listener);
@@ -108,7 +122,7 @@ export function useQueriesStates<Props = ResultProps>(
   const { store } = useMoon();
   const readQueriesStates = () => {
     return currentQueriesIds.reduce<QueriesStates>((result, queryId) => {
-      result[queryId] = store.getQuery(queryId)?.state;
+      result[queryId] = getAdaptedQueryState(store, queryId);
       return result;
     }, {});
   };
@@ -116,9 +130,9 @@ export function useQueriesStates<Props = ResultProps>(
 
   const getListener = React.useCallback(
     (queryId: string) => () => {
-      const queryState = store.getQuery(queryId)?.state;
-      if (!equal(states[queryId] || null, queryState || null)) {
-        setStates({ [queryId]: queryState });
+      const newState = getAdaptedQueryState(store, queryId);
+      if (!equal(states[queryId] || null, newState || null)) {
+        setStates({ [queryId]: newState });
       }
     },
     [currentQueriesIds]
