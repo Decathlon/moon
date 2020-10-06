@@ -106,13 +106,5 @@ export default function useQuery<
     isInitialMount.current = false;
   }, []);
 
-  React.useEffect(() => {
-    return () => {
-      if (networkOnly) {
-        store.setQueryData(queryId, queryConfig?.initialData);
-      }
-    };
-  }, [store, queryId, queryConfig]);
-
   return [{ clear, fetchMore, refetch, remove, cancel }, others];
 }
