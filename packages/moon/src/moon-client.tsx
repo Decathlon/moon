@@ -60,6 +60,6 @@ export default class MoonClient {
       }
     }
 
-    return new Promise(resolve => resolve(undefined));
+    return new Promise(reject => reject(undefined));
   }
 }
