@@ -1,6 +1,6 @@
 {
   "name": "@decathlon/moon",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A featured, production ready caching REST client for every React UI",
   "author": "Decathlon",
   "license": "Apache-2.0",
@@ -49,5 +49,8 @@
     "queries",
     "mutations",
     "cache"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
