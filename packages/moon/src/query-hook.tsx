@@ -34,7 +34,7 @@ export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryErr
   /** The http client options of your query. */
   options?: QueryConfig;
   /** The react-query config. Please see the react-query QueryConfig for more details. */
-  queryConfig?: ReactQueryConfig<QueryResponse, QueryError>;
+  queryConfig?: ReactQueryConfig<QueryResponse | undefined, QueryError>;
 }
 
 export const getQueryId = (queryProps: Pick<IQueryProps, "id" | "source" | "endPoint" | "variables" | "options">): string => {
@@ -69,9 +69,21 @@ export default function useQuery<
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
 
+  const adaptedQueryConfig: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
+    () => ({
+      ...queryConfig,
+      // to fix (react-query)
+      cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
+      // default values to false
+      refetchOnReconnect: queryConfig?.refetchOnReconnect || false,
+      refetchOnWindowFocus: queryConfig?.refetchOnWindowFocus || false
+    }),
+    [queryConfig, networkOnly]
+  );
+
   if (isInitialMount.current && networkOnly) {
     // remove cache if networkOnly
-    store.setQueryData(queryId, queryConfig?.initialData);
+    store.setQueryData<QueryResponse | undefined, QueryError>(queryId, queryConfig?.initialData, adaptedQueryConfig);
   }
 
   function cancel() {
@@ -85,13 +97,7 @@ export default function useQuery<
       : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
   }
 
-  const queryResult = useReactQuery<QueryResponse, QueryError>(queryId, fetch, {
-    ...queryConfig,
-    cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
-    // default values to false
-    refetchOnReconnect: queryConfig?.refetchOnReconnect || false,
-    refetchOnWindowFocus: queryConfig?.refetchOnWindowFocus || false
-  });
+  const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, adaptedQueryConfig);
 
   const { clear, fetchMore, refetch, remove, ...others } = queryResult;
 
@@ -106,5 +112,10 @@ export default function useQuery<
     isInitialMount.current = false;
   }, []);
 
-  return [{ clear, fetchMore, refetch, remove, cancel }, others];
+  // cacheTime=0 not working
+  const data = networkOnly && others.isFetching ? undefined : others.data;
+  return [
+    { clear, fetchMore, refetch, remove, cancel },
+    { ...others, data }
+  ];
 }
