@@ -55,5 +55,8 @@
     "react-query",
     "axios",
     "moon"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
