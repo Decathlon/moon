@@ -21,7 +21,7 @@ export type IQueryResultProps<QueryResponse, QueryError> = [
 export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
   id?: string;
   /** The Link id of the http client. */
-  source: string;
+  source?: string;
   /** The REST end point. */
   endPoint?: string;
   /** The variables of your query. */

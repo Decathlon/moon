@@ -13,30 +13,39 @@ export default class MoonClient {
     this.clients = getClients(links, clientFactory);
   }
 
+  private getClientInstance(source?: string) {
+    const clientsIds = Object.keys(this.clients);
+    if (clientsIds.length === 1) {
+      return this.clients[clientsIds[0]];
+    }
+
+    return source !== undefined ? this.clients[source] : undefined;
+  }
+
   public query<Variables = any, Response = any, Config extends ClientConfig = any>(
-    source: string,
+    source?: string,
     endPoint?: string,
     variables?: Variables,
     options?: Config
   ): Promise<Response> {
-    const client = this.clients[source];
+    const client = this.getClientInstance(source);
     if (client) {
       return client.get(endPoint || "", {
         ...options,
         params: { ...options?.params, ...variables }
       });
     }
-    return new Promise(resolve => resolve(undefined));
+    return new Promise(reject => reject(undefined));
   }
 
   public mutate<Variables = any, Response = any, Config extends ClientConfig = any>(
-    source: string,
+    source?: string,
     endPoint?: string,
     type: MutateType = MutateType.Post,
     variables?: Variables,
     options?: Config
   ): Promise<Response> {
-    const client = this.clients[source];
+    const client = this.getClientInstance(source);
     const clientEndPoint = endPoint || "";
     if (client) {
       switch (type) {

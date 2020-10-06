@@ -10,7 +10,7 @@ export interface IMutationProps<
   MutationClientConfig = any
 > {
   /** The link id of the http client */
-  source: string;
+  source?: string;
   /** The REST end point */
   endPoint?: string;
   /** The variables of your mutation */

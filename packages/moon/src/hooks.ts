@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQueryCache, QueryResult } from "react-query";
+import { QueryResult } from "react-query";
 import { QueryState } from "react-query/types/core/query";
 
 import { MoonContext, RquiredMoonContextValue } from "./moon-provider";
@@ -21,8 +21,8 @@ export function useQueryResult<Data = any, Props = ResultProps>(
   queryId: string,
   resultToProps?: (state?: Data) => Props
 ): Data | Props | undefined {
-  const queryCache = useQueryCache();
-  const queryResult = queryCache.getQueryData<Data>(queryId);
+  const { store } = useMoon();
+  const queryResult = store.getQueryData<Data>(queryId);
   const [state, setState] = React.useState<Data | undefined>(queryResult);
 
   const listener = React.useCallback(
@@ -34,7 +34,7 @@ export function useQueryResult<Data = any, Props = ResultProps>(
     },
     [queryId]
   );
-  const unsubscribe = queryCache.watchQuery<Data>(queryId).subscribe(listener);
+  const unsubscribe = store.watchQuery<Data>(queryId).subscribe(listener);
 
   React.useEffect(() => {
     return unsubscribe;
@@ -48,10 +48,10 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
   resultsToProps?: (results: QueriesResults<Data>) => Props
 ): QueriesResults<Data> | Props {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-  const queryCache = useQueryCache();
+  const { store } = useMoon();
   const readQueriesResults = () => {
     return currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
-      result[queryId] = queryCache.getQueryData<Data>(queryId);
+      result[queryId] = store.getQueryData<Data>(queryId);
       return result;
     }, {});
   };
@@ -66,7 +66,7 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
     },
     [currentQueriesIds]
   );
-  const unsubscribeList = queriesIds.map(queryId => queryCache.watchQuery<Data>(queryId).subscribe(getListener(queryId)));
+  const unsubscribeList = queriesIds.map(queryId => store.watchQuery<Data>(queryId).subscribe(getListener(queryId)));
 
   React.useEffect(() => {
     return () => {
@@ -81,17 +81,17 @@ export function useQueryState<Data = any, Props = ResultProps>(
   queryId: string,
   stateToProps?: (state: QueryState<Data, unknown>) => Props
 ): QueryState<Data, unknown> | Props | undefined {
-  const queryCache = useQueryCache();
-  const query = queryCache.getQuery<Data>(queryId);
+  const { store } = useMoon();
+  const query = store.getQuery<Data>(queryId);
   const [state, setState] = React.useState<QueryState<Data, unknown> | undefined>(query?.state);
 
   const listener = React.useCallback(() => {
-    const query = queryCache.getQuery<Data>(queryId);
+    const query = store.getQuery<Data>(queryId);
     if (!equal(state || null, query?.state || null)) {
       setState(query?.state);
     }
   }, [queryId]);
-  const unsubscribe = queryCache.watchQuery(queryId).subscribe(listener);
+  const unsubscribe = store.watchQuery(queryId).subscribe(listener);
 
   React.useEffect(() => {
     return unsubscribe;
@@ -105,10 +105,10 @@ export function useQueriesStates<Props = ResultProps>(
   statesToProps?: (states: QueriesStates) => Props
 ): QueriesStates | Props {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
-  const queryCache = useQueryCache();
+  const { store } = useMoon();
   const readQueriesStates = () => {
     return currentQueriesIds.reduce<QueriesStates>((result, queryId) => {
-      result[queryId] = queryCache.getQuery(queryId)?.state;
+      result[queryId] = store.getQuery(queryId)?.state;
       return result;
     }, {});
   };
@@ -116,14 +116,14 @@ export function useQueriesStates<Props = ResultProps>(
 
   const getListener = React.useCallback(
     (queryId: string) => () => {
-      const queryState = queryCache.getQuery(queryId)?.state;
+      const queryState = store.getQuery(queryId)?.state;
       if (!equal(states[queryId] || null, queryState || null)) {
         setStates({ [queryId]: queryState });
       }
     },
     [currentQueriesIds]
   );
-  const unsubscribeList = queriesIds.map(queryId => queryCache.watchQuery<unknown>(queryId).subscribe(getListener(queryId)));
+  const unsubscribeList = queriesIds.map(queryId => store.watchQuery<unknown>(queryId).subscribe(getListener(queryId)));
 
   React.useEffect(() => {
     return () => {
