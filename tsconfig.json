@@ -15,8 +15,6 @@
     "jsx": "react" /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */,
     "declaration": true /* Generates corresponding '.d.ts' file. */,
     "sourceMap": true,
-    /* Generates corresponding '.map' file. */
-    "outDir": "./dist/",
     /* Strict Type-Checking Options */
     "strict": true,
     /* Enable all strict type-checking options. */
@@ -31,8 +29,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     /* Module Resolution Options */
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "baseUrl": "./packages",
+    "paths": {
+      "@decathlon/moon": ["moon/src"],
+      "@decathlon/moon-axios": ["moon-axios/src"],
+      "@decathlon/*": ["*/src"]
+    }
   },
-  "include": ["./src"],
-  "exclude": ["node_modules", "build"]
+  "include": ["packages/**/*.ts"],
+  "exclude": ["node_modules", "**/dist/**/*"]
 }
