@@ -1,9 +1,9 @@
 import * as React from "react";
-import { QueryCache } from "react-query";
+import { QueryClient, QueryObserver, QueriesObserver, hashQueryKey } from "react-query";
 import { Query, QueryState } from "react-query/types/core/query";
 
 import { MoonContext, RquiredMoonContextValue } from "./moon-provider";
-import { equal } from "./utils";
+import { equal, isServer } from "./utils";
 
 export interface QueriesStates {
   [queryId: string]: QueryState<unknown, unknown> | undefined;
@@ -18,8 +18,8 @@ export interface QueriesResults<Data = any> {
 }
 
 // cacheTime=0 not working
-export function getAdaptedQueryState<Data>(store: QueryCache, queryId: string): QueryState<Data, unknown> | undefined {
-  const query = store.getQuery<Data>(queryId);
+export function getAdaptedQueryState<Data>(store: QueryClient, queryId: string): QueryState<Data, unknown> | undefined {
+  const query = store.getQueryCache().get<Data>(hashQueryKey(queryId));
   if (!query) {
     return undefined;
   }
@@ -35,21 +35,33 @@ export function useQueryResult<Data = any, Props = ResultProps>(
   resultToProps?: (state?: Data) => Props
 ): Data | Props | undefined {
   const { store } = useMoon();
+  const isMounted = useIsMounted();
   const queryState = getAdaptedQueryState<Data>(store, queryId);
   const queryResult = queryState?.data;
   const [state, setState] = React.useState<Data | undefined>(queryResult);
 
+  const observerRef = React.useRef<QueryObserver<Data>>();
+  const firstRender = !observerRef.current;
+  const defaultOptions = React.useMemo(() => store.defaultQueryObserverOptions({ queryKey: queryId }), [queryId]);
+  const observer = observerRef.current || new QueryObserver<Data>(store, defaultOptions);
+  observerRef.current = observer;
+
+  if (!firstRender) {
+    observer.setOptions(defaultOptions);
+  }
+
   const listener = React.useCallback(() => {
-    const queryState = getAdaptedQueryState<Data>(store, queryId);
-    const queryData = queryState?.data;
-    if (!equal(state || null, queryData || null)) {
-      setState(queryData);
+    if (isMounted()) {
+      const queryState = getAdaptedQueryState<Data>(store, queryId);
+      const queryData = queryState?.data;
+      if (!equal(state || null, queryData || null)) {
+        setState(queryData);
+      }
     }
   }, [queryId]);
-  const unsubscribe = store.watchQuery<Data>(queryId).subscribe(listener);
 
   React.useEffect(() => {
-    return unsubscribe;
+    return observer.subscribe(listener);
   }, [queryId]);
 
   return resultToProps ? resultToProps(state) : state;
@@ -61,31 +73,44 @@ export function useQueriesResults<Data = any, Props = ResultProps>(
 ): QueriesResults<Data> | Props {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
   const { store } = useMoon();
-  const readQueriesResults = () => {
+  const isMounted = useIsMounted();
+
+  const queriesResults = React.useMemo(() => {
     return currentQueriesIds.reduce<QueriesResults<Data>>((result, queryId) => {
       const queryState = getAdaptedQueryState<Data>(store, queryId);
       result[queryId] = queryState?.data;
       return result;
     }, {});
-  };
-  const [states, setStates] = React.useState<QueriesResults<Data>>(readQueriesResults());
+  }, [currentQueriesIds, store]);
 
-  const getListener = React.useCallback(
-    (queryId: string) => () => {
-      const queryState = getAdaptedQueryState<Data>(store, queryId);
-      const queryData = queryState?.data;
-      if (!equal(states[queryId] || null, queryData || null)) {
-        setStates({ [queryId]: queryData });
-      }
-    },
-    [currentQueriesIds]
-  );
-  const unsubscribeList = queriesIds.map(queryId => store.watchQuery<Data>(queryId).subscribe(getListener(queryId)));
+  const [states, setStates] = React.useState<QueriesResults<Data>>(queriesResults);
+
+  const queries = React.useMemo(() => {
+    return queriesIds.map(queryId => store.defaultQueryObserverOptions({ queryKey: queryId }));
+  }, [currentQueriesIds]);
+  const observerRef = React.useRef<QueriesObserver>();
+  const firstRender = !observerRef.current;
+  const observer = observerRef.current || new QueriesObserver(store, queries);
+  observerRef.current = observer;
+
+  if (!firstRender) {
+    observer.setQueries(queries);
+  }
+
+  const listener = React.useCallback(() => {
+    if (isMounted()) {
+      queriesIds.forEach(queryId => {
+        const queryState = getAdaptedQueryState<Data>(store, queryId);
+        const queryData = queryState?.data;
+        if (!equal(states[queryId] || null, queryData || null)) {
+          setStates({ [queryId]: queryData });
+        }
+      });
+    }
+  }, [currentQueriesIds]);
 
   React.useEffect(() => {
-    return () => {
-      unsubscribeList.forEach(unsubscribe => unsubscribe());
-    };
+    return observer.subscribe(listener);
   }, [currentQueriesIds]);
 
   return resultsToProps ? resultsToProps(states) : states;
@@ -96,19 +121,31 @@ export function useQueryState<Data = any, Props = ResultProps>(
   stateToProps?: (state: QueryState<Data, unknown>) => Props
 ): QueryState<Data, unknown> | Props | undefined {
   const { store } = useMoon();
+  const isMounted = useIsMounted();
   const initialSate = getAdaptedQueryState<Data>(store, queryId);
   const [state, setState] = React.useState<QueryState<Data, unknown> | undefined>(initialSate);
 
+  const observerRef = React.useRef<QueryObserver<Data>>();
+  const firstRender = !observerRef.current;
+  const defaultOptions = React.useMemo(() => store.defaultQueryObserverOptions({ queryKey: queryId }), [queryId]);
+  const observer = observerRef.current || new QueryObserver<Data>(store, defaultOptions);
+  observerRef.current = observer;
+
+  if (!firstRender) {
+    observer.setOptions(defaultOptions);
+  }
+
   const listener = React.useCallback(() => {
-    const newState = getAdaptedQueryState<Data>(store, queryId);
-    if (!equal(state || null, newState || null)) {
-      setState(newState);
+    if (isMounted()) {
+      const newState = getAdaptedQueryState<Data>(store, queryId);
+      if (!equal(state || null, newState || null)) {
+        setState(newState);
+      }
     }
   }, [queryId]);
-  const unsubscribe = store.watchQuery(queryId).subscribe(listener);
 
   React.useEffect(() => {
-    return unsubscribe;
+    return observer.subscribe(listener);
   }, [queryId]);
 
   return stateToProps && state ? stateToProps(state) : state;
@@ -120,29 +157,40 @@ export function useQueriesStates<Props = ResultProps>(
 ): QueriesStates | Props {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
   const { store } = useMoon();
-  const readQueriesStates = () => {
+  const isMounted = useIsMounted();
+  const queriesStates = React.useMemo(() => {
     return currentQueriesIds.reduce<QueriesStates>((result, queryId) => {
       result[queryId] = getAdaptedQueryState(store, queryId);
       return result;
     }, {});
-  };
-  const [states, setStates] = React.useState<QueriesStates>(readQueriesStates());
+  }, [currentQueriesIds, store]);
+  const [states, setStates] = React.useState<QueriesStates>(queriesStates);
 
-  const getListener = React.useCallback(
-    (queryId: string) => () => {
-      const newState = getAdaptedQueryState(store, queryId);
-      if (!equal(states[queryId] || null, newState || null)) {
-        setStates({ [queryId]: newState });
-      }
-    },
-    [currentQueriesIds]
-  );
-  const unsubscribeList = queriesIds.map(queryId => store.watchQuery<unknown>(queryId).subscribe(getListener(queryId)));
+  const queries = React.useMemo(() => {
+    return queriesIds.map(queryId => store.defaultQueryObserverOptions({ queryKey: queryId }));
+  }, [currentQueriesIds]);
+  const observerRef = React.useRef<QueriesObserver>();
+  const firstRender = !observerRef.current;
+  const observer = observerRef.current || new QueriesObserver(store, queries);
+  observerRef.current = observer;
+
+  if (!firstRender) {
+    observer.setQueries(queries);
+  }
+
+  const listener = React.useCallback(() => {
+    if (isMounted()) {
+      queriesIds.forEach(queryId => {
+        const newState = getAdaptedQueryState(store, queryId);
+        if (!equal(states[queryId] || null, newState || null)) {
+          setStates({ [queryId]: newState });
+        }
+      });
+    }
+  }, [currentQueriesIds]);
 
   React.useEffect(() => {
-    return () => {
-      unsubscribeList.forEach(unsubscribe => unsubscribe());
-    };
+    return observer.subscribe(listener);
   }, [currentQueriesIds]);
 
   return statesToProps ? statesToProps(states) : states;
@@ -165,4 +213,19 @@ export function useMoon(): RquiredMoonContextValue {
     throw new Error("Invariant Violation: Please wrap the root component in a <MoonProvider>");
   }
   return moonContext as RquiredMoonContextValue;
+}
+
+export function useIsMounted(): () => boolean {
+  const mountedRef = React.useRef(false);
+  const isMounted = React.useCallback(() => mountedRef.current, []);
+  const useEffect = isServer ? React.useEffect : React.useLayoutEffect;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  return isMounted;
 }

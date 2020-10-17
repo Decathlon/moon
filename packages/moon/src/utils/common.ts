@@ -1,5 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 
+export const isServer = typeof window === "undefined";
+
 const hasOwn = Object.prototype.hasOwnProperty;
 
 export const getId = (params: Record<string, any>): string => {

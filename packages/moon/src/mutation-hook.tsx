@@ -1,7 +1,16 @@
-import { useMutation as useReactMutation, MutationResultPair, MutationConfig } from "react-query";
+import * as React from "react";
+import { useMutation as useReactMutation, UseMutationResult, MutationOptions } from "react-query";
 
 import { MutateType } from "./moon-client";
 import { useMoon } from "./hooks";
+
+export type IMutationResultProps<MutationResponse, MutationError, MutationVariables> = [
+  Omit<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "mutate" | "mutateAsync" | "reset">,
+  Pick<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "reset"> & {
+    mutate: () => void;
+    mutateAsync: () => Promise<MutationResponse>;
+  }
+];
 
 export interface IMutationProps<
   MutationVariables = any,
@@ -20,7 +29,7 @@ export interface IMutationProps<
   /** The http client options of your mutation. */
   options?: MutationClientConfig;
   /** The react-query config. Please see the react-query MutationConfig for more details. */
-  mutationConfig?: MutationConfig<MutationResponse, MutationError, MutationVariables, unknown>;
+  mutationConfig?: MutationOptions<MutationResponse, MutationError, MutationVariables | undefined, unknown>;
 }
 
 export default function useMutation<
@@ -35,16 +44,30 @@ export default function useMutation<
   variables,
   options,
   mutationConfig
-}: IMutationProps<MutationVariables, MutationResponse | undefined, MutationError, MutationClientConfig>): MutationResultPair<
+}: IMutationProps<MutationVariables, MutationResponse | undefined, MutationError, MutationClientConfig>): IMutationResultProps<
   MutationResponse | undefined,
   MutationError,
-  MutationVariables,
-  unknown
+  MutationVariables | undefined
 > {
   const { client } = useMoon();
   function mutation() {
     return client.mutate<MutationVariables, MutationResponse, MutationClientConfig>(source, endPoint, type, variables, options);
   }
 
-  return useReactMutation<MutationResponse | undefined, MutationError, MutationVariables, unknown>(mutation, mutationConfig);
+  const { mutate: reactQueryMutate, mutateAsync: reactQueryMutateAsync, reset, ...others } = useReactMutation<
+    MutationResponse | undefined,
+    MutationError,
+    MutationVariables | undefined,
+    unknown
+  >(mutation, mutationConfig);
+
+  const mutate = React.useCallback(() => {
+    return reactQueryMutate(variables);
+  }, [variables]);
+
+  const mutateAsync = React.useCallback(() => {
+    return reactQueryMutateAsync(variables);
+  }, [variables]);
+
+  return [others, { mutate, mutateAsync, reset }];
 }

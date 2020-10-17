@@ -118,7 +118,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     //@ts-ignore response can't be undefined
-    const { result } = renderHook(() => useQueryResult<QueryData, number>("myQuery", response => response.users[0].id), {
+    const { result } = renderHook(() => useQueryResult<QueryData, number>("myQuery", response => response?.users[0].id), {
       wrapper
     });
     expect(result.current).toEqual(response.users[0].id);
@@ -174,7 +174,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     //@ts-ignore data can't be undefined
-    const { result } = renderHook(() => useQueryState<QueryData, number>("myQuery2", response => response.data.users[0].id), {
+    const { result } = renderHook(() => useQueryState<QueryData, number>("myQuery2", response => response?.data.users[0].id), {
       wrapper
     });
     expect(result.current).toEqual(response.users[0].id);

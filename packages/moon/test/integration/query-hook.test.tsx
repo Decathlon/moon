@@ -3,6 +3,7 @@
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
+import { hashQueryKey } from "react-query";
 
 import MoonProvider from "../../src/moon-provider";
 import useQuery from "../../src/query-hook";
@@ -39,15 +40,15 @@ describe("Query component with MoonProvider", () => {
         }),
       { wrapper }
     );
-    let state = result.current[1];
+    let state = result.current[0];
     expect(state.data).toBeUndefined();
     expect(state.isLoading).toBeTruthy();
-    expect(state.error).toBeNull();
+    expect(state.error).toBeFalsy();
     await waitForNextUpdate();
-    state = result.current[1];
+    state = result.current[0];
     expect(state.data).toBe(response);
     expect(state.isLoading).toBeFalsy();
-    expect(state.error).toBeNull();
+    expect(state.error).toBeFalsy();
     expect(onResponse).toBeCalledTimes(1);
     expect(onResponse).toBeCalledWith(response);
   });
@@ -64,7 +65,7 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider
         links={links}
         clientFactory={clientFactory}
-        hydrate={{ state: { queries: [{ queryKey: "queryId", data: cache }] } }}
+        hydrate={{ state: { queries: [{ queryKey: "queryId", queryHash: hashQueryKey("queryId"), state: { data: cache } }] } }}
       >
         {children}
       </MoonProvider>
@@ -81,18 +82,18 @@ describe("Query component with MoonProvider", () => {
         }),
       { wrapper }
     );
-    const [actions, { data, error, isLoading }] = result.current;
+    const [{ data, error, isLoading }, actions] = result.current;
     expect(data).toEqual(cache);
     expect(isLoading).toBeFalsy();
-    expect(error).toBeNull();
+    expect(error).toBeFalsy();
     // fetch
     //@ts-ignore
     act(() => actions.refetch());
     await waitForNextUpdate();
-    const state = result.current[1];
+    const state = result.current[0];
     expect(state.data).toEqual(response);
     expect(state.isLoading).toBeFalsy();
-    expect(state.error).toBeNull();
+    expect(state.error).toBeFalsy();
   });
 
   test("should return an error", async () => {
@@ -118,12 +119,12 @@ describe("Query component with MoonProvider", () => {
         }),
       { wrapper }
     );
-    let state = result.current[1];
+    let state = result.current[0];
     expect(state.data).toBeUndefined();
     expect(state.isLoading).toBeTruthy();
-    expect(state.error).toBeNull();
+    expect(state.error).toBeFalsy();
     await waitForNextUpdate();
-    state = result.current[1];
+    state = result.current[0];
     expect(state.data).toBeUndefined();
     expect(state.isLoading).toBeFalsy();
     expect(state.error).toBe(error);

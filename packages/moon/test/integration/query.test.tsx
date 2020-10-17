@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
+import { hashQueryKey } from "react-query";
 import { render, fireEvent, waitFor, queryByText } from "@testing-library/react";
 
 import MoonProvider from "../../src/moon-provider";
@@ -136,7 +137,9 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider
         links={links}
         clientFactory={clientFactory}
-        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+        hydrate={{
+          state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
+        }}
       >
         <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query4"
@@ -183,7 +186,9 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider
         links={links}
         clientFactory={clientFactory}
-        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+        hydrate={{
+          state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
+        }}
       >
         <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query4"
@@ -231,10 +236,12 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider
         links={links}
         clientFactory={clientFactory}
-        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+        hydrate={{
+          state: { queries: [{ queryKey: "query5", queryHash: hashQueryKey("query5"), state: { data: cachedResponse } }] }
+        }}
       >
         <Query<QueryVariables, typeof response, any, MockedClientConfig>
-          id="query4"
+          id="query5"
           source="FOO"
           endPoint="/users"
           variables={{ foo: "bar" }}
@@ -281,7 +288,9 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider
         links={links}
         clientFactory={clientFactory}
-        hydrate={{ state: { queries: [{ queryKey: "query4", data: cachedResponse }] } }}
+        hydrate={{
+          state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
+        }}
       >
         <Query<QueryVariables, typeof response, any, MockedClientConfig>
           id="query4"
