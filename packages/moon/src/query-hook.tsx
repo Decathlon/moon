@@ -14,8 +14,8 @@ export enum FetchPolicy {
 }
 
 export type IQueryResultProps<QueryResponse, QueryError> = [
-  Omit<UseQueryResult<QueryResponse, QueryError>, "fetchNextPage" | "fetchPreviousPage" | "refetch" | "remove">,
-  Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "fetchNextPage" | "fetchPreviousPage" | "refetch" | "remove"> & {
+  Omit<UseQueryResult<QueryResponse, QueryError>, "refetch" | "remove">,
+  Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove"> & {
     cancel: () => void;
   }
 ];
@@ -59,18 +59,15 @@ export default function useQuery<
 }: IQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
   const { client, store } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
+
   const clientProps = { source, endPoint, variables };
   const queryId = getQueryId({ id, ...clientProps });
   const { value, prevValue } = usePrevValue({ queryId, clientProps });
-  const resolvedQueryConfig: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
-    () => ({ ...queryConfig, ...store.getQueryDefaults(queryId) }),
-    [store, queryId, queryConfig]
-  );
 
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
 
-  const adaptedQueryConfig: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
+  const queryOptions: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
     () =>
       store.defaultQueryObserverOptions({
         ...queryConfig,
@@ -88,10 +85,6 @@ export default function useQuery<
     store.setQueryData<QueryResponse | undefined>(queryId, queryConfig?.initialData);
   }
 
-  function cancel() {
-    store.cancelQueries(queryId, { exact: true });
-  }
-
   function fetch(_key: string, nextPageProps?: any) {
     const cachedResult = store.getQueryData<QueryResponse>(queryId, { exact: true });
     const queryVariables = { ...variables, ...nextPageProps };
@@ -100,12 +93,12 @@ export default function useQuery<
       : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, queryVariables, options);
   }
 
-  const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, adaptedQueryConfig);
+  const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, queryOptions);
 
-  const { fetchPreviousPage, fetchNextPage, refetch, remove, ...others } = queryResult;
+  const { refetch, remove, ...others } = queryResult;
 
   React.useEffect(() => {
-    if (prevValue.queryId === value.queryId && !isInitialMount.current && resolvedQueryConfig?.enabled) {
+    if (prevValue.queryId === value.queryId && !isInitialMount.current && queryOptions?.enabled) {
       // refetch on update and when only client options have been changed
       refetch();
     }
@@ -115,10 +108,14 @@ export default function useQuery<
     isInitialMount.current = false;
   }, []);
 
-  // cacheTime=0 not working
+  function cancel() {
+    store.cancelQueries(queryId, { exact: true });
+  }
+
   const data = networkOnly && others.isFetching ? undefined : others.data;
+
   return [
     { ...others, data },
-    { fetchPreviousPage, fetchNextPage, refetch, remove, cancel }
+    { refetch, remove, cancel }
   ];
 }

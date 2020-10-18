@@ -6,14 +6,8 @@ import useQuery, { FetchPolicy, IQueryProps } from "./query-hook";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
 
 export interface IQueryChildrenProps<QueryResponse, QueryError>
-  extends Omit<
-    UseQueryResult<QueryResponse | undefined, QueryError>,
-    "fetchNextPage" | "fetchPreviousPage" | "refetch" | "remove"
-  > {
-  actions: Pick<
-    UseQueryResult<QueryResponse | undefined, QueryError>,
-    "fetchNextPage" | "fetchPreviousPage" | "refetch" | "remove"
-  >;
+  extends Omit<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove"> {
+  actions: Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove">;
 }
 
 export type QueryChildren<QueryResponse, QueryError> = (
