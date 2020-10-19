@@ -6,7 +6,7 @@ import { renderHook, act } from "@testing-library/react-hooks";
 import { hashQueryKey } from "react-query";
 
 import MoonProvider from "../../src/moon-provider";
-import useQuery from "../../src/query-hook";
+import useQuery from "../../src/useQuery";
 import { links } from "../moon-client.test";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 

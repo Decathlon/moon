@@ -2,7 +2,7 @@ import * as React from "react";
 import { UseQueryResult } from "react-query";
 
 import { PropsWithForwardRef, Nullable } from "./typing";
-import useQuery, { FetchPolicy, IQueryProps } from "./query-hook";
+import useQuery, { FetchPolicy, IQueryProps } from "./useQuery";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
 
 export interface IQueryChildrenProps<QueryResponse, QueryError>

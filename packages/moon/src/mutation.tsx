@@ -2,7 +2,7 @@ import { UseMutationResult } from "react-query";
 
 import { MutateType } from "./moon-client";
 import { Nullable } from "./typing";
-import useMutation, { IMutationProps } from "./mutation-hook";
+import useMutation, { IMutationProps } from "./useMutation";
 
 export interface IMutationChildrenProps<MutationVariables = any, MutationResponse = any, MutationError = any>
   extends Omit<

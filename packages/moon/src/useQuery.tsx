@@ -14,7 +14,7 @@ export enum FetchPolicy {
 }
 
 export type IQueryResultProps<QueryResponse, QueryError> = [
-  Omit<UseQueryResult<QueryResponse, QueryError>, "refetch" | "remove">,
+  Omit<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove">,
   Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove"> & {
     cancel: () => void;
   }
@@ -72,10 +72,7 @@ export default function useQuery<
       store.defaultQueryObserverOptions({
         ...queryConfig,
         // to fix (react-query)
-        cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
-        // default values to false
-        refetchOnReconnect: queryConfig?.refetchOnReconnect || false,
-        refetchOnWindowFocus: queryConfig?.refetchOnWindowFocus || false
+        cacheTime: networkOnly ? 0 : queryConfig?.cacheTime
       }),
     [queryConfig, networkOnly, store]
   );
@@ -85,12 +82,11 @@ export default function useQuery<
     store.setQueryData<QueryResponse | undefined>(queryId, queryConfig?.initialData);
   }
 
-  function fetch(_key: string, nextPageProps?: any) {
+  function fetch() {
     const cachedResult = store.getQueryData<QueryResponse>(queryId, { exact: true });
-    const queryVariables = { ...variables, ...nextPageProps };
     return cacheOnly && cachedResult
       ? cachedResult
-      : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, queryVariables, options);
+      : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
   }
 
   const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, queryOptions);

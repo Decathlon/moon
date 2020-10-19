@@ -7,14 +7,14 @@ export * from "./moon-provider";
 export { default as Query } from "./query";
 export * from "./query";
 
-export { default as useQuery } from "./query-hook";
-export * from "./query-hook";
+export { default as useQuery } from "./useQuery";
+export * from "./useQuery";
 
 export { default as Mutation } from "./mutation";
 export * from "./mutation";
 
-export { default as useMutation } from "./mutation-hook";
-export * from "./mutation-hook";
+export { default as useMutation } from "./useMutation";
+export * from "./useMutation";
 
 export * from "./utils";
 export * from "./hooks";

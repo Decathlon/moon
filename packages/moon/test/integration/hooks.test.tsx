@@ -5,7 +5,7 @@ import { render } from "@testing-library/react";
 import { QueryState } from "react-query/types/core/query";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
-import useQuery from "../../src/query-hook";
+import useQuery from "../../src/useQuery";
 import MoonProvider from "../../src/moon-provider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";

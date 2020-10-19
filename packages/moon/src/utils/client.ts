@@ -75,6 +75,12 @@ export function getMoonStore(store?: QueryClient): QueryClient {
 
   const queryCache = new QueryCache();
   const mutationCache = new MutationCache();
-  queryClient = new QueryClient({ queryCache, mutationCache });
+  queryClient = new QueryClient({
+    queryCache,
+    mutationCache,
+    defaultOptions: {
+      queries: { refetchOnWindowFocus: false }
+    }
+  });
   return queryClient;
 }
