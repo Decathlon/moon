@@ -21,7 +21,7 @@ Table of contents
       * [Query](#query-component)
       * [useQuery](#usequery)
       * [useInfiniteQuery](#useinfinitequery)
-      * [Mutation - useMutation](#mutation-usemutation)
+      * [Mutation / useMutation](#mutationusemutation)
 
    * [Other useful Hooks](#other-useful-hooks)
       * [useQueryState](#usequeryresult)
@@ -38,8 +38,8 @@ Table of contents
    * [Mutation props](#mutation-props)
    * [Moon config](#moon-config)
    * [Demo](#demo)
-   * [Getting Started - Devs](#gettingstarted-devs)
-      * [Running the tests](#unning-the-tests)
+   * [Getting Started / Devs](#gettingstarteddevs)
+      * [Running the tests](#running-the-tests)
       * [Contributing](#contributing)
 <!--te-->
 
@@ -174,7 +174,7 @@ const MyComponent = () => {
 
 Internally useInfiniteQuery use the **react-query**'s useInfiniteQuery hook connected to your HTTP like the moon useQuery.
 
-Mutation - useMutation
+Mutation / useMutation
 ---------------------
 
 Now that we've learned how to fetch data with the Query/useQuery component/hook, the next step is to learn how to mutate that data with mutations. For that we need to use the Mutation/useMutation component/hook.
@@ -517,7 +517,7 @@ Demo
 
 - [Infinite / Load more](https://codesandbox.io/s/moon-infinite-query-zqqw0)
 
-Getting Started - Devs
+Getting Started / Devs
 ======================
 
 ```bash
