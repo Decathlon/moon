@@ -96,6 +96,47 @@ const MyComponent = () => {
 ```
 Internally useQuery use the **react-query**'s useQuery hook connected to your HTTP client with a configuration allowing better cache management (fetch policy) and better referencing (management of query identifiers adapted to the use of HTTP clients, **useQueryState/useQueryResult**...) of requests for REST clients.
 
+#### useInfiniteQuery
+
+```js
+import { useInfiniteQuery } from "@decathlon/moon";
+
+interface QueryData {
+    comments: any;
+    nextId: string | null
+}
+
+interface PageVariables {
+  cursor: string
+}
+
+const MyComponent = () => {
+  const [, { isLoading, error, data }] = useInfiniteQuery<QueryVariables, PageVariables, QueryData, QueryError>({
+    source: "FOO",
+    endPoint: "/comments",
+    variables: { user: "bar" },
+    queryConfig: {
+      getNextPageParam: lastPage => {
+        return lastPage.nextId ? { cursor: lastPage.nextId } : undefined;
+      }
+    }
+  });
+
+  if (isLoading) return <span>Loading ...</span>;
+  if (error) return <span>{error.message}</span>;
+
+  return data.pages.map((page, i) => (
+    <React.Fragment key={i}>
+      {page.comments.map(comment => (
+        <Comment {...comment} />
+      ))}
+    </React.Fragment>
+  ));
+};
+```
+
+Internally useInfiniteQuery use the **react-query**'s useInfiniteQuery hook connected to your HTTP like the moon useQuery.
+
 #### Mutation / useMutation
 
 Now that we've learned how to fetch data with the Query/useQuery component/hook, the next step is to learn how to mutate that data with mutations. For that we need to use the Mutation/useMutation component/hook.
@@ -107,7 +148,7 @@ const MyComponent = () => {
   return (
     <Mutation<MutationVariables, MutationResponse, MutationError> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
       {({ data, error, actions: { mutate } }) => {
-        const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
+        const result = data ? <span>{data.status && "Success"}</span> : <div onClick={()=>mutate()}>Go</div>;
         return error ? <span>{error.message}</span> : result;
       }}
     </Mutation>
@@ -122,7 +163,7 @@ import { useQuery } from '@decathlon/moon';
 
 const MyComponent = () => {
   const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
-  const [{ mutate }, {  error, data }] = useMutation<MutationResponse, MutationVariables>({
+  const [{  error, data }, { mutate }] = useMutation<MutationResponse, MutationVariables>({
     source: "FOO",
     endPoint: "/users",
     variables: { foo: "bar" },
@@ -131,7 +172,7 @@ const MyComponent = () => {
     // mutationConfig: {...} // the react-query config
   });
 
-  const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
+  const result = data ? <span>{data.status && "Success"}</span> : <div onClick={()=>mutate()}>Go</div>;
   return error ? <span>{error.message}</span> : result;
 };
 ```
@@ -289,14 +330,12 @@ export default withQueriesResults<Props, QueryResponse, /* QueryResultProps */>(
 
 ```js
 interface IMoonProviderProps {
-  // The links ( HTTP clients config)
+    // The links ( HTTP clients config)
   links: ILink[];
   // The global Moon client factory (like the moon-axios Axios client for moon https://github.com/dktunited/moon-axios)
   clientFactory: ClientFactory;
-  // The react-query cache object
-  store?: QueryCache;
-  // The react-query cache config (please see https://react-query.tanstack.com/docs/api/#reactqueryconfigprovider for more details)
-  config?: ReactQueryConfig;
+  // The react-query QueryClient object
+  store?: QueryClient;
   // The react-query initial cache state (please see https://react-query.tanstack.com/docs/api#hydrationdehydrate for more details)
   hydrate?: HydrateProps;
 }
@@ -337,6 +376,23 @@ Valid fetchPolicy values are:
 - **cache-and-network:** This is the default value. This fetch policy will have Moon first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this fetchPolicy will always execute query with the network interface unlike cache-first which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
 - **network-only:** This fetch policy will never return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
 
+## InfiniteQuery options
+
+```js
+export interface IInfiniteQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
+  id?: string;
+  /** The Link id of the http client. */
+  source?: string;
+  /** The REST end point. */
+  endPoint?: string;
+  /** The variables of your query. */
+  variables?: QueryVariables;
+  /** The http client options of your query. */
+  options?: QueryConfig;
+  /** The react-query config. Please see the react-query QueryConfig for more details. */
+  queryConfig?: ReactQueryConfig<QueryResponse | undefined, QueryError>;
+}
+```
 
 ## Mutation options
 
