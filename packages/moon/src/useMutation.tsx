@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation as useReactMutation, UseMutationResult, MutationOptions } from "react-query";
 
-import { MutateType } from "./moon-client";
+import { MutateType } from "./moonClient";
 import { useMoon } from "./hooks";
 
 export type IMutationResultProps<MutationResponse, MutationError, MutationVariables> = [

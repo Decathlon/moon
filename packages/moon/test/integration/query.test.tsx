@@ -4,7 +4,7 @@ import * as React from "react";
 import { hashQueryKey } from "react-query";
 import { render, fireEvent, waitFor, queryByText } from "@testing-library/react";
 
-import MoonProvider from "../../src/moon-provider";
+import MoonProvider from "../../src/moonProvider";
 import { FetchPolicy } from "../../src/useQuery";
 import Query from "../../src/query";
 import { links } from "../moon-client.test";

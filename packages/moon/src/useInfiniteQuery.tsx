@@ -6,7 +6,8 @@ import {
 } from "react-query";
 
 import { useMoon, usePrevValue } from "./hooks";
-import { ClientConfig, getId } from "./utils";
+import { getQueryId } from "./useQuery";
+import { ClientConfig } from "./utils";
 
 export type IInfiniteQueryResultProps<QueryResponse, QueryError> = [
   Omit<
@@ -35,14 +36,9 @@ export interface IInfiniteQueryProps<QueryVariables = any, QueryResponse = any, 
   queryConfig?: ReactQueryConfig<QueryResponse | undefined, QueryError>;
 }
 
-export const getQueryId = (
-  queryProps: Pick<IInfiniteQueryProps, "id" | "source" | "endPoint" | "variables" | "options">
-): string => {
-  return getId(queryProps);
-};
-
-export default function useQuery<
+export default function useInfiniteQuery<
   QueryVariables = any,
+  QueryPageVariables = any,
   QueryResponse = any,
   QueryError = any,
   QueryConfig extends ClientConfig = any
@@ -53,7 +49,7 @@ export default function useQuery<
   variables,
   options,
   queryConfig
-}: IInfiniteQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig>): IInfiniteQueryResultProps<
+}: IInfiniteQueryProps<QueryVariables & QueryPageVariables, QueryResponse, QueryError, QueryConfig>): IInfiniteQueryResultProps<
   QueryResponse,
   QueryError
 > {
@@ -69,9 +65,14 @@ export default function useQuery<
     [queryConfig, store]
   );
 
-  function fetch(_key: string, newPageProps: any) {
+  function fetch(_key: string, newPageProps: QueryPageVariables) {
     const queryVariables = { ...variables, ...newPageProps };
-    return client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, queryVariables, options);
+    return client.query<QueryPageVariables | (QueryVariables & QueryPageVariables), QueryResponse, QueryConfig>(
+      source,
+      endPoint,
+      queryVariables,
+      options
+    );
   }
 
   const queryResult = useInfiniteReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, queryOptions);

@@ -1,6 +1,6 @@
 import { UseMutationResult } from "react-query";
 
-import { MutateType } from "./moon-client";
+import { MutateType } from "./moonClient";
 import { Nullable } from "./typing";
 import useMutation, { IMutationProps } from "./useMutation";
 

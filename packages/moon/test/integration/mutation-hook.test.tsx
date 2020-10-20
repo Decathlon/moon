@@ -4,7 +4,7 @@
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
-import MoonProvider from "../../src/moon-provider";
+import MoonProvider from "../../src/moonProvider";
 import useMutation from "../../src/useMutation";
 import { links } from "../moon-client.test";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";

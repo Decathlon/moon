@@ -81,7 +81,7 @@ export function withQueriesResults<Props = any, Data = any, QueryResultProps = R
       WrappedComponentInstance
     >> = props => {
       const { forwardedRef, ...rest } = props;
-      const queriesResults = useQueriesResults<Data, QueryResultProps>(queriesIds, resultsToProps);
+      const queriesResults = useQueriesResults<QueryResultProps>(queriesIds, resultsToProps);
       const componentProps = ({
         queriesResults,
         ...((rest as unknown) as WrappedComponentPropsWithoutQuery)

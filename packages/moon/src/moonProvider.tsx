@@ -3,7 +3,7 @@ import * as React from "react";
 import { Hydrate, HydrateProps } from "react-query/hydration";
 import { QueryClientProvider, QueryClient } from "react-query";
 
-import MoonClient from "./moon-client";
+import MoonClient from "./moonClient";
 import { Nullable, PropsWithForwardRef } from "./typing";
 import { ClientFactory, getMoonStore, ILink } from "./utils/client";
 

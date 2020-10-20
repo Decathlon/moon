@@ -6,7 +6,7 @@ import { QueryState } from "react-query/types/core/query";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
 import useQuery from "../../src/useQuery";
-import MoonProvider from "../../src/moon-provider";
+import MoonProvider from "../../src/moonProvider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
@@ -146,7 +146,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     const { result } = renderHook(
-      () => useQueriesResults<typeof response, { myQuery1: QueryState<typeof response, unknown> }>(["myQuery1"]),
+      () => useQueriesResults<{ myQuery1: QueryState<typeof response, unknown> }>(["myQuery1"]),
       { wrapper }
     );
     expect(result.current.myQuery1).toEqual(response);

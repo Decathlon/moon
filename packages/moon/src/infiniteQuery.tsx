@@ -14,22 +14,24 @@ export interface IInfiniteQueryChildrenProps<QueryResponse, QueryError>
   >;
 }
 
-export type QueryChildren<QueryResponse, QueryError> = (
+export type InfiniteQueryChildren<QueryResponse, QueryError> = (
   props: IInfiniteQueryChildrenProps<QueryResponse, QueryError>
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IInfiniteQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
-  extends IInfiniteQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig> {
-  children?: QueryChildren<QueryResponse, QueryError>;
+export interface IInfiniteQueryComponentProps<QueryVariables, QueryPageVariables, QueryResponse, QueryError, QueryConfig>
+  extends IInfiniteQueryProps<QueryVariables & QueryPageVariables, QueryResponse, QueryError, QueryConfig> {
+  children?: InfiniteQueryChildren<QueryResponse, QueryError>;
 }
 
-function InfiniteQuery<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any>(
-  props: IInfiniteQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
+function InfiniteQuery<QueryVariables = any, QueryPageVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any>(
+  props: IInfiniteQueryComponentProps<QueryVariables, QueryPageVariables, QueryResponse, QueryError, QueryConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...queryProps } = props;
-  const [state, actions] = useInfiniteQuery<QueryVariables, QueryResponse, QueryError, QueryConfig>(queryProps);
+  const [state, actions] = useInfiniteQuery<QueryVariables, QueryPageVariables, QueryResponse, QueryError, QueryConfig>(
+    queryProps
+  );
   return children ? children({ ...state, actions }) : null;
 }
 

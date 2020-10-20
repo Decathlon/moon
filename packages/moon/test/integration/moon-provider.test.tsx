@@ -1,7 +1,7 @@
 import * as React from "react";
 import { render, waitFor } from "@testing-library/react";
 
-import MoonProvider, { withMoon, IMoonContextValue } from "../../src/moon-provider";
+import MoonProvider, { withMoon, IMoonContextValue } from "../../src/moonProvider";
 import { links } from "../moon-client.test";
 import { getMockedClientFactory } from "../testUtils";
 
