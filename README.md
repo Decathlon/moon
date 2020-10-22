@@ -22,14 +22,12 @@ Table of contents
       * [useQuery](#usequery)
       * [useInfiniteQuery](#useinfinitequery)
       * [Mutation / useMutation](#mutationusemutation)
-
    * [Other useful Hooks](#other-useful-hooks)
       * [useQueryState](#usequeryresult)
       * [useQueriesStates](#usequeriesstates)
       * [useQueryResult](#usequeryresult)
       * [useQueriesResults](#usequeriesresults)
       * [useMoon](#usemoon)
-
    * [HOCs](#hocs)
       * [withQueryResult](#withqueryresult)
       * [withQueriesResults](#withqueriesresults)
@@ -38,7 +36,7 @@ Table of contents
    * [Mutation props](#mutation-props)
    * [Moon config](#moon-config)
    * [Demo](#demo)
-   * [Getting Started / Devs](#gettingstarteddevs)
+   * [Getting Started (Devs)](#gettingstarteddevs)
       * [Running the tests](#running-the-tests)
       * [Contributing](#contributing)
 <!--te-->
@@ -174,7 +172,7 @@ const MyComponent = () => {
 
 Internally useInfiniteQuery use the **react-query**'s useInfiniteQuery hook connected to your HTTP like the moon useQuery.
 
-Mutation/useMutation
+Mutation useMutation
 ---------------------
 
 Now that we've learned how to fetch data with the Query/useQuery component/hook, the next step is to learn how to mutate that data with mutations. For that we need to use the Mutation/useMutation component/hook.
@@ -230,7 +228,8 @@ import { useQueryState } from '@decathlon/moon';
 
 const MyComponent = () => {
   const stateToProps = (queryState) => queryState // optional
-  const { isFetching } = useQueryState("queryId", stateToProps);
+  const isInfinite = true // optional - true if the it's an infinite query (default value === false)
+  const { isFetching } = useQueryState("queryId", stateToProps, isInfinite);
   return <span>{isFetching ? "Loading..." : "success"}</span>;
 };
 ```
@@ -272,8 +271,9 @@ Updated only when the query result is changed. .The optional **resultToProps** f
 import { useQueryResult } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const resultToProps = (queryResult) => queryResult
-  const result = useQueryResult("queryId", resultToProps);
+  const resultToProps = (queryResult) => queryResult // optional
+  const isInfinite = true // optional - true if the it's an infinite query (default value === false)
+  const result = useQueryResult("queryId", resultToProps, isInfinite);
   return <span>{...result...}</span>;
 };
 ```
@@ -517,7 +517,7 @@ Demo
 
 - [Infinite / Load more](https://codesandbox.io/s/moon-infinite-query-zqqw0)
 
-Getting Started/Devs
+Getting Started Devs
 ======================
 
 ```bash
