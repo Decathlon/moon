@@ -1,5 +1,5 @@
 import * as React from "react";
-import { QueryObserver, QueriesObserver, hashQueryKey, InfiniteQueryObserver } from "react-query";
+import { QueryObserver, QueriesObserver, hashQueryKey, InfiniteQueryObserver, notifyManager } from "react-query";
 import { Query, QueryState } from "react-query/types/core/query";
 
 import { MoonContext, RquiredMoonContextValue } from "./moonProvider";
@@ -61,7 +61,7 @@ export function useQueryObserver<State = any, Data = any>(
   }, [queryId]);
 
   React.useEffect(() => {
-    return observer.subscribe(listener);
+    return observer.subscribe(notifyManager.batchCalls(listener));
   }, [queryId]);
 
   return state;
@@ -110,7 +110,7 @@ export function useQueriesObserver<State = any>(
   }, [currentQueriesIds]);
 
   React.useEffect(() => {
-    return observer.subscribe(listener);
+    return observer.subscribe(notifyManager.batchCalls(listener));
   }, [currentQueriesIds]);
 
   return states;
