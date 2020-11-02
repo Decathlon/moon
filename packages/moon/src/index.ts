@@ -1,3 +1,5 @@
+export * from "react-query";
+
 export { default as MoonClient } from "./moonClient";
 export * from "./moonClient";
 
