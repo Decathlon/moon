@@ -2,7 +2,8 @@ import * as React from "react";
 import {
   useInfiniteQuery as useInfiniteReactQuery,
   UseInfiniteQueryResult,
-  UseInfiniteQueryOptions as ReactQueryConfig
+  UseInfiniteQueryOptions as ReactQueryConfig,
+  QueryFunctionContext
 } from "react-query";
 
 import { useMoon, usePrevValue } from "./hooks";
@@ -65,9 +66,9 @@ export default function useInfiniteQuery<
     [queryConfig, store]
   );
 
-  function fetch(_key: string, newPageProps: QueryPageVariables) {
-    const queryVariables = { ...variables, ...newPageProps };
-    return client.query<QueryPageVariables | (QueryVariables & QueryPageVariables), QueryResponse, QueryConfig>(
+  function fetch({ pageParam }: QueryFunctionContext<QueryPageVariables>) {
+    const queryVariables = { ...variables, ...pageParam } as QueryVariables & QueryPageVariables;
+    return client.query<QueryVariables & QueryPageVariables, QueryResponse, QueryConfig>(
       source,
       endPoint,
       queryVariables,
