@@ -515,7 +515,7 @@ Demo
 
 - [Basic](https://codesandbox.io/s/moon-basic-u8042)
 
-- [Infinite / Load more](https://codesandbox.io/s/moon-infinite-query-zqqw0)
+- [Infinite / Load more](https://codesandbox.io/s/moon-infinite-query-ckerm)
 
 Getting Started Devs
 ======================
