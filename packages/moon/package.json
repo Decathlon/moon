@@ -1,6 +1,6 @@
 {
   "name": "@decathlon/moon",
-  "version": "4.0.0-beta.11",
+  "version": "4.0.0-beta.12",
   "description": "A featured, production ready caching REST client for every React UI",
   "author": "Decathlon",
   "license": "Apache-2.0",
@@ -21,7 +21,7 @@
   ],
   "peerDependencies": {
     "react": "^17.0.1",
-    "react-query": "3.2.0-beta.21"
+    "react-query": "3.2.0-beta.22"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c",
