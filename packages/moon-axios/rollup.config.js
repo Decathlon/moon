@@ -7,13 +7,14 @@ import json from "@rollup/plugin-json";
 import pkg from "./package.json";
 
 const TARGETS = [
-  { format: "cjs", dir: "./dist", tsconfig: "./tsconfig.cjs.json" },
+  { format: "umd", name: "MoonAxios", dir: "./dist", tsconfig: "./tsconfig.umd.json" },
   { format: "es", file: pkg.module, tsconfig: "./tsconfig.es.json" }
 ];
 
 export default TARGETS.map(target => ({
   input: "src/index.ts",
   output: {
+    name: target.name,
     file: target.file,
     format: target.format,
     exports: "named",

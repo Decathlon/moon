@@ -1,10 +1,10 @@
 {
   "name": "@decathlon/moon",
-  "version": "4.0.0-beta.13",
+  "version": "4.0.0-beta.14",
   "description": "A featured, production ready caching REST client for every React UI",
   "author": "Decathlon",
   "license": "Apache-2.0",
-  "main": "dist/index.js",
+  "main": "lib/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "types": "dist/index.d.ts",
@@ -17,14 +17,16 @@
   },
   "homepage": "https://github.com/Decathlon/moon/blob/master/README.md",
   "files": [
-    "dist"
+    "dist",
+    "lib"
   ],
   "peerDependencies": {
     "react": "^17.0.1",
     "react-query": "3.2.0-beta.24"
   },
   "scripts": {
-    "build": "rimraf dist && rollup -c",
+    "build": "rimraf dist && rollup -c && npm run build:lib",
+    "build:lib": "rimraf ./lib && tsc --project tsconfig.es.json --module 'CommonJS' --outDir ./lib",
     "pack": "npm pack",
     "prepublish": "npm run build",
     "test": "npm run test:unit",
