@@ -198,7 +198,6 @@ The same mutation with **useMutation**:
 import { useQuery } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
   const [{  error, data }, { mutate }] = useMutation<MutationResponse, MutationVariables>({
     source: "FOO",
     endPoint: "/users",
