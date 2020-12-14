@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useQuery as useReactQuery, QueryResult, QueryConfig as ReactQueryConfig } from "react-query";
+import { useQuery as useReactQuery, UseQueryResult, UseQueryOptions as ReactQueryConfig } from "react-query";
 
 import { useMoon, usePrevValue } from "./hooks";
 import { ClientConfig, getId } from "./utils";
@@ -14,8 +14,10 @@ export enum FetchPolicy {
 }
 
 export type IQueryResultProps<QueryResponse, QueryError> = [
-  Pick<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove"> & { cancel: () => void },
-  Omit<QueryResult<QueryResponse, QueryError>, "clear" | "fetchMore" | "refetch" | "remove">
+  Omit<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove">,
+  Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove"> & {
+    cancel: () => void;
+  }
 ];
 
 export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
@@ -57,52 +59,42 @@ export default function useQuery<
 }: IQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
   const { client, store } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
-  const clientProps = { source, endPoint, variables, options };
+
+  const clientProps = { source, endPoint, variables };
   const queryId = getQueryId({ id, ...clientProps });
   const { value, prevValue } = usePrevValue({ queryId, clientProps });
-  const resolvedQueryConfig = React.useMemo(() => store.getResolvedQueryConfig(queryId, queryConfig), [
-    store,
-    queryId,
-    queryConfig
-  ]);
 
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
 
-  const adaptedQueryConfig: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
-    () => ({
-      ...queryConfig,
-      // to fix (react-query)
-      cacheTime: networkOnly ? 0 : queryConfig?.cacheTime,
-      // default values to false
-      refetchOnReconnect: queryConfig?.refetchOnReconnect || false,
-      refetchOnWindowFocus: queryConfig?.refetchOnWindowFocus || false
-    }),
-    [queryConfig, networkOnly]
+  const queryOptions: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
+    () =>
+      store.defaultQueryObserverOptions({
+        ...queryConfig,
+        // to fix (react-query)
+        cacheTime: networkOnly ? 0 : queryConfig?.cacheTime
+      }),
+    [queryConfig, networkOnly, store]
   );
 
   if (isInitialMount.current && networkOnly) {
     // remove cache if networkOnly
-    store.setQueryData<QueryResponse | undefined, QueryError>(queryId, queryConfig?.initialData, adaptedQueryConfig);
-  }
-
-  function cancel() {
-    store.cancelQueries(queryId, { exact: true });
+    store.setQueryData<QueryResponse | undefined>(queryId, queryConfig?.initialData);
   }
 
   function fetch() {
-    const cachedResult = store.getQueryData<QueryResponse>(queryId);
+    const cachedResult = store.getQueryData<QueryResponse>(queryId, { exact: true });
     return cacheOnly && cachedResult
       ? cachedResult
       : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
   }
 
-  const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, adaptedQueryConfig);
+  const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, queryOptions);
 
-  const { clear, fetchMore, refetch, remove, ...others } = queryResult;
+  const { refetch, remove, ...others } = queryResult;
 
   React.useEffect(() => {
-    if (prevValue.queryId === value.queryId && !isInitialMount.current && resolvedQueryConfig?.enabled) {
+    if (prevValue.queryId === value.queryId && !isInitialMount.current && queryOptions?.enabled) {
       // refetch on update and when only client options have been changed
       refetch();
     }
@@ -112,10 +104,14 @@ export default function useQuery<
     isInitialMount.current = false;
   }, []);
 
-  // cacheTime=0 not working
+  function cancel() {
+    store.cancelQueries(queryId, { exact: true });
+  }
+
   const data = networkOnly && others.isFetching ? undefined : others.data;
+
   return [
-    { clear, fetchMore, refetch, remove, cancel },
-    { ...others, data }
+    { ...others, data },
+    { refetch, remove, cancel }
   ];
 }

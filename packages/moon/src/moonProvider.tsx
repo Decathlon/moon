@@ -1,20 +1,20 @@
 /* eslint-disable max-classes-per-file */
 import * as React from "react";
 import { Hydrate, HydrateProps } from "react-query/hydration";
-import { ReactQueryCacheProvider, QueryCache, ReactQueryConfigProvider, ReactQueryConfig } from "react-query";
+import { QueryClientProvider, QueryClient } from "react-query";
 
-import MoonClient from "./moon-client";
+import MoonClient from "./moonClient";
 import { Nullable, PropsWithForwardRef } from "./typing";
 import { ClientFactory, getMoonStore, ILink } from "./utils/client";
 
 export interface IMoonContextValue {
   client: Nullable<MoonClient>;
-  store: Nullable<QueryCache>;
+  store: Nullable<QueryClient>;
 }
 
 export interface RquiredMoonContextValue {
   client: MoonClient;
-  store: QueryCache;
+  store: QueryClient;
 }
 
 interface IMoonProviderProps {
@@ -25,9 +25,7 @@ interface IMoonProviderProps {
   // eslint-disable-next-line no-undef
   children: JSX.Element;
   // The react-query cache object
-  store?: QueryCache;
-  // The react-query cache config (please see https://react-query.tanstack.com/docs/api/#reactqueryconfigprovider for more details)
-  config?: ReactQueryConfig;
+  store?: QueryClient;
   // The react-query initial cache state (please see https://react-query.tanstack.com/docs/api#hydrationdehydrate for more details)
   hydrate?: HydrateProps;
 }
@@ -51,16 +49,14 @@ class MoonProvider extends React.Component<IMoonProviderProps> {
   }
 
   render() {
-    const { children, hydrate, store, config } = this.props;
-    const queryCache = getMoonStore(store);
+    const { children, hydrate, store } = this.props;
+    const queryClient = getMoonStore(store);
     return (
-      <ReactQueryCacheProvider queryCache={queryCache}>
-        <ReactQueryConfigProvider config={config || {}}>
-          <Hydrate {...hydrate}>
-            <MoonContext.Provider value={{ client: this.client, store: queryCache }}>{children}</MoonContext.Provider>
-          </Hydrate>
-        </ReactQueryConfigProvider>
-      </ReactQueryCacheProvider>
+      <QueryClientProvider client={queryClient}>
+        <Hydrate {...hydrate}>
+          <MoonContext.Provider value={{ client: this.client, store: queryClient }}>{children}</MoonContext.Provider>
+        </Hydrate>
+      </QueryClientProvider>
     );
   }
 }

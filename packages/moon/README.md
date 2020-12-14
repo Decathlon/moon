@@ -1,4 +1,4 @@
-# <img src='images/moon-title.png' height='50' alt='Moon Logo'/>
+# <img src='../../images/moon-title.png' height='50' alt='Moon Logo'/>
 
 _**The power of react-query with your favorite HTTP Client**_
 
@@ -11,13 +11,45 @@ Moon client can be used in any React app where you want to use data. It's:
 2. **Universally compatible**, so that Moon works with any build setup, any REST server, and any REST schema.
 3. **Simple to get started with**, so you can start loading data right away and learn about advanced features later.
 
-## Installation for Axios client
 
+Table of contents
+=================
+
+<!--ts-->
+   * [Installation](#installation)
+   * [Usage](#usage)
+      * [Query](#query-component)
+      * [useQuery](#usequery)
+      * [useInfiniteQuery](#useinfinitequery)
+      * [Mutation / useMutation](#mutationusemutation)
+   * [Other useful Hooks](#other-useful-hooks)
+      * [useQueryState](#usequeryresult)
+      * [useQueriesStates](#usequeriesstates)
+      * [useQueryResult](#usequeryresult)
+      * [useQueriesResults](#usequeriesresults)
+      * [useMoon](#usemoon)
+   * [HOCs](#hocs)
+      * [withQueryResult](#withqueryresult)
+      * [withQueriesResults](#withqueriesresults)
+   * [Query props](#query-props)
+   * [InfiniteQuery props](#infinitequery-props)
+   * [Mutation props](#mutation-props)
+   * [Moon config](#moon-config)
+   * [Demo](#demo)
+   * [Getting Started (Devs)](#gettingstarteddevs)
+      * [Running the tests](#running-the-tests)
+      * [Contributing](#contributing)
+<!--te-->
+
+Installation for Axios client
+============================
 ```bash
 npm install @decathlon/moon @decathlon/moon-axios react-query axios --save
 ```
 
-## Usage
+
+Usage
+=====
 
 You get started by create REST links. A link is an object which need an id and an HTTP client config like the AxiosConfig (that extends the Moon's ClientConfig) of your REST server (for more information about the REST link config please see the **Moon config** section).
 
@@ -48,7 +80,8 @@ const App = () => {
 
 Once your **MoonProvider** is hooked up, you're ready to start requesting data with the Query component or with  the useQuery hook!
 
-#### Query Component
+Query
+-----
 
 ```js
 import { Query } from "@decathlon/moon";
@@ -72,7 +105,8 @@ const MyComponent = () => {
 ```
 Congrats 🎉, you just made your first query with the **Query** component! 
 
-#### useQuery hook
+useQuery
+--------
 
 The same query with the **useQuery** hook
 
@@ -80,7 +114,7 @@ The same query with the **useQuery** hook
 import { useQuery } from "@decathlon/moon";
 
 const MyComponent = () => {
-  const [{ refetch }, { isLoading, error }] = useQuery<QueryVariables, QueryData, QueryError>({
+  const [{ isLoading, error }, { refetch }] = useQuery<QueryVariables, QueryData, QueryError>({
     id: "queryId",
     source: "FOO",
     endPoint: "/users",
@@ -96,7 +130,50 @@ const MyComponent = () => {
 ```
 Internally useQuery use the **react-query**'s useQuery hook connected to your HTTP client with a configuration allowing better cache management (fetch policy) and better referencing (management of query identifiers adapted to the use of HTTP clients, **useQueryState/useQueryResult**...) of requests for REST clients.
 
-#### Mutation / useMutation
+useInfiniteQuery
+---------------
+
+```js
+import { useInfiniteQuery } from "@decathlon/moon";
+
+interface QueryData {
+    comments: any;
+    nextId: string | null
+}
+
+interface PageVariables {
+  cursor: string
+}
+
+const MyComponent = () => {
+  const [{ isLoading, error, data }] = useInfiniteQuery<QueryVariables, PageVariables, QueryData, QueryError>({
+    source: "FOO",
+    endPoint: "/comments",
+    variables: { user: "bar" },
+    queryConfig: {
+      getNextPageParam: lastPage => {
+        return lastPage.nextId ? { cursor: lastPage.nextId } : undefined;
+      }
+    }
+  });
+
+  if (isLoading) return <span>Loading ...</span>;
+  if (error) return <span>{error.message}</span>;
+
+  return data.pages.map((page, i) => (
+    <React.Fragment key={i}>
+      {page.comments.map(comment => (
+        <Comment {...comment} />
+      ))}
+    </React.Fragment>
+  ));
+};
+```
+
+Internally useInfiniteQuery use the **react-query**'s useInfiniteQuery hook connected to your HTTP like the moon useQuery.
+
+Mutation useMutation
+---------------------
 
 Now that we've learned how to fetch data with the Query/useQuery component/hook, the next step is to learn how to mutate that data with mutations. For that we need to use the Mutation/useMutation component/hook.
 
@@ -107,7 +184,7 @@ const MyComponent = () => {
   return (
     <Mutation<MutationVariables, MutationResponse, MutationError> source="FOO" endPoint="/users" variables={{ foo: "bar" }}>
       {({ data, error, actions: { mutate } }) => {
-        const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
+        const result = data ? <span>{data.status && "Success"}</span> : <div onClick={()=>mutate()}>Go</div>;
         return error ? <span>{error.message}</span> : result;
       }}
     </Mutation>
@@ -121,8 +198,7 @@ The same mutation with **useMutation**:
 import { useQuery } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const variables = React.useMemo(() => ({ foo: "bar" }), [...]);
-  const [{ mutate }, {  error, data }] = useMutation<MutationResponse, MutationVariables>({
+  const [{  error, data }, { mutate }] = useMutation<MutationResponse, MutationVariables>({
     source: "FOO",
     endPoint: "/users",
     variables: { foo: "bar" },
@@ -131,18 +207,19 @@ const MyComponent = () => {
     // mutationConfig: {...} // the react-query config
   });
 
-  const result = data ? <span>{data.status && "Success"}</span> : <div onClick={mutate}>Go</div>;
+  const result = data ? <span>{data.status && "Success"}</span> : <div onClick={()=>mutate()}>Go</div>;
   return error ? <span>{error.message}</span> : result;
 };
 ```
 Internally useMutation use the **react-query**'s useMutation connected to your HTTP client.
 
-## Other useful Hooks
+Other useful Hooks
+==================
 
 Sometimes we need to retrieve the state/result of a query in another component. useQueryResult/useQueriesResult/useQueryState/useQueriesStates allows you to do this. For that, it is enough to give him the id/ids of the query/queries:
 
-### useQueryState
-
+useQueryState
+-------------
 Updated when the query state is changed. The optional **stateToProps** function is used for selecting the part of the data from the query state that the connected component needs. 
 
 ```js
@@ -150,12 +227,13 @@ import { useQueryState } from '@decathlon/moon';
 
 const MyComponent = () => {
   const stateToProps = (queryState) => queryState // optional
-  const { isFetching } = useQueryState("queryId", stateToProps);
+  const isInfinite = true // optional - true if the it's an infinite query (default value === false)
+  const { isFetching } = useQueryState("queryId", stateToProps, isInfinite);
   return <span>{isFetching ? "Loading..." : "success"}</span>;
 };
 ```
 
-The first prop is the query id used by the query. If the query is defined without an id then the id generated by default must be used. To generate an identifier, you must use the **getQueryId** utility. The default id is generated from the source, the endPoint, the variables and the options props.
+The first prop is the query id used by the query. If the query is defined without an id then the id generated by default must be used. To generate an identifier, you must use the **getQueryId** utility. The default id is generated from the source, the endPoint and the variables props of the query.
 
 ```js
 import { useQueryState, getQueryId } from "@decathlon/moon";
@@ -168,7 +246,8 @@ const MyComponent = () => {
 
 ```
 
-### useQueriesStates
+useQueriesStates
+----------------
 
 Updated when one of the query states is changed.The optional **statesToProps** function is used for selecting the part of the data from the query state that the connected component needs.
 
@@ -182,7 +261,8 @@ const MyComponent = () => {
 };
 ```
 
-### useQueryResult
+useQueryResult
+--------------
 
 Updated only when the query result is changed. .The optional **resultToProps** function is used for selecting the part of the data from the query result that the connected component needs.
 
@@ -190,13 +270,15 @@ Updated only when the query result is changed. .The optional **resultToProps** f
 import { useQueryResult } from '@decathlon/moon';
 
 const MyComponent = () => {
-  const resultToProps = (queryResult) => queryResult
-  const result = useQueryResult("queryId", resultToProps);
+  const resultToProps = (queryResult) => queryResult // optional
+  const isInfinite = true // optional - true if the it's an infinite query (default value === false)
+  const result = useQueryResult("queryId", resultToProps, isInfinite);
   return <span>{...result...}</span>;
 };
 ```
 
-### useQueriesResults
+useQueriesResults
+-----------------
 
 Updated only when one of the query results is changed. The optional **statesToProps** function is used for selecting the part of the data from the queries results that the connected component needs.
 
@@ -209,7 +291,8 @@ const MyComponent = () => {
   return <span>{...queryIdResult...}</span>;
 };
 ```
-### useMoon
+useMoon
+-------
 
 You can use the moon client directly like this:
 
@@ -220,13 +303,15 @@ const MyComponent = () => {
   const { client, store } = useMoon();
   client.query(...);
   client.mutate(...);
-  // the store is the queryCache of the react-query API
+  // the store is the queryClient of the react-query API
 };
 ```
 
-## HOCs
+HOCs
+======
 
-### withMoon
+withMoon
+--------
 
 Same as useMoon hook.
 
@@ -244,7 +329,8 @@ const MyComponent: React.FunctionComponent<Props>= ({ client, store, prop }) => 
 export withMoon<Props>(MyComponent);
 ```
 
-### withQueryResult
+withQueryResult
+--------------
 
 Same as useQueryResult hook.
 
@@ -264,7 +350,8 @@ export default withQueryResult<Props, QueryResponse, /* QueryResultProps */>(que
 ```
 
 
-### withQueriesResults
+withQueriesResults
+------------------
 
 Same as useQueriesResults hook.
 ```js
@@ -285,25 +372,24 @@ const MyComponent: React.FunctionComponent<Props> = ({ queriesResults: { queryId
 export default withQueriesResults<Props, QueryResponse, /* QueryResultProps */>([queryId, queryId2], /* resultToProps */)(MyComponent);
 ```
 
-## Moon provider props
+Moon provider props
+===================
 
 ```js
 interface IMoonProviderProps {
-  // The links ( HTTP clients config)
+    // The links ( HTTP clients config)
   links: ILink[];
   // The global Moon client factory (like the moon-axios Axios client for moon https://github.com/dktunited/moon-axios)
   clientFactory: ClientFactory;
-  // The react-query cache object
-  store?: QueryCache;
-  // The react-query cache config (please see https://react-query.tanstack.com/docs/api/#reactqueryconfigprovider for more details)
-  config?: ReactQueryConfig;
+  // The react-query QueryClient object
+  store?: QueryClient;
   // The react-query initial cache state (please see https://react-query.tanstack.com/docs/api#hydrationdehydrate for more details)
   hydrate?: HydrateProps;
 }
 ```
 
-## Query options
-
+Query props
+===========
 This the Typescript interface of the Query/useQuery component/hook.
 
 ```js
@@ -337,8 +423,27 @@ Valid fetchPolicy values are:
 - **cache-and-network:** This is the default value. This fetch policy will have Moon first trying to read data from your cache. If all the data needed to fulfill your query is in the cache then that data will be returned. However, regardless of whether or not the full data is in your cache this fetchPolicy will always execute query with the network interface unlike cache-first which will only execute your query if the query data is not in your cache. This fetch policy optimizes for users getting a quick response while also trying to keep cached data consistent with your server data at the cost of extra network requests.
 - **network-only:** This fetch policy will never return you initial data from the cache. Instead it will always make a request using your network interface to the server. This fetch policy optimizes for data consistency with the server, but at the cost of an instant response to the user when one is available.
 
+InfiniteQuery props
+===================
 
-## Mutation options
+```js
+export interface IInfiniteQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
+  id?: string;
+  /** The Link id of the http client. */
+  source?: string;
+  /** The REST end point. */
+  endPoint?: string;
+  /** The variables of your query. */
+  variables?: QueryVariables;
+  /** The http client options of your query. */
+  options?: QueryConfig;
+  /** The react-query config. Please see the react-query QueryConfig for more details. */
+  queryConfig?: ReactQueryConfig<QueryResponse | undefined, QueryError>;
+}
+```
+
+Mutation props
+===============
 
 This the Typescript interface of the Mutation/useMutation component/hook.
 
@@ -363,7 +468,8 @@ export interface IMutationProps<
   mutationConfig?: MutationConfig<MutationResponse, MutationError, MutationVariables, unknown>;
 }
 ```
-## Moon config
+Moon config
+===========
 
 For each Moon link we can add interceptors (middleware: language, api token, success Handler....) for the request and/or the response like this:
 
@@ -403,8 +509,15 @@ const links = [
 
 ```
 
+Demo
+====
 
-## Getting Started (Devs)
+- [Basic](https://codesandbox.io/s/moon-basic-u8042)
+
+- [Infinite / Load more](https://codesandbox.io/s/moon-infinite-query-ckerm)
+
+Getting Started Devs
+======================
 
 ```bash
 git clone ...
@@ -412,13 +525,14 @@ cd moon
 npm ci
 ```
 
-## Running the tests
-
+Running the tests
+-----------------
 ```bash
 npm run test
 ```
 
-## Contributing
+Contributing
+------------
 
 **PRs are welcome!**
 You noticed a bug, a possible improvement or whatever?

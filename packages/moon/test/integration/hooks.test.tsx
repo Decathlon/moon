@@ -5,8 +5,8 @@ import { render } from "@testing-library/react";
 import { QueryState } from "react-query/types/core/query";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
-import useQuery from "../../src/query-hook";
-import MoonProvider from "../../src/moon-provider";
+import useQuery from "../../src/useQuery";
+import MoonProvider from "../../src/moonProvider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
@@ -118,7 +118,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     //@ts-ignore response can't be undefined
-    const { result } = renderHook(() => useQueryResult<QueryData, number>("myQuery", response => response.users[0].id), {
+    const { result } = renderHook(() => useQueryResult<QueryData, number>("myQuery", response => response?.users[0].id), {
       wrapper
     });
     expect(result.current).toEqual(response.users[0].id);
@@ -146,7 +146,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     const { result } = renderHook(
-      () => useQueriesResults<typeof response, { myQuery1: QueryState<typeof response, unknown> }>(["myQuery1"]),
+      () => useQueriesResults<{ myQuery1: QueryState<typeof response, unknown> }>(["myQuery1"]),
       { wrapper }
     );
     expect(result.current.myQuery1).toEqual(response);
@@ -174,7 +174,7 @@ describe("Hooks", () => {
     );
     await waitForNextUpdate();
     //@ts-ignore data can't be undefined
-    const { result } = renderHook(() => useQueryState<QueryData, number>("myQuery2", response => response.data.users[0].id), {
+    const { result } = renderHook(() => useQueryState<QueryData, number>("myQuery2", response => response?.data.users[0].id), {
       wrapper
     });
     expect(result.current).toEqual(response.users[0].id);

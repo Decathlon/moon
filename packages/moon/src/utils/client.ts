@@ -1,6 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 
-import { QueryCache } from "react-query";
+import { QueryCache, QueryClient, MutationCache } from "react-query";
 
 interface InterceptorManagerUseParams<V> {
   onFulfilled?: (value: V) => V | Promise<V>;
@@ -51,7 +51,7 @@ export interface ClientInstance {
   put<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
 }
 
-let queryCache: QueryCache;
+let queryClient: QueryClient;
 
 export function getClients(links: ILink[], clientFactory?: ClientFactory): IClients {
   return links.reduce((clients, link) => {
@@ -64,14 +64,23 @@ export function getClients(links: ILink[], clientFactory?: ClientFactory): IClie
   }, {});
 }
 
-export function getMoonStore(store?: QueryCache): QueryCache {
+export function getMoonStore(store?: QueryClient): QueryClient {
   if (store) {
-    queryCache = store;
+    queryClient = store;
     return store;
   }
-  if (queryCache) {
-    return queryCache;
+  if (queryClient) {
+    return queryClient;
   }
-  queryCache = new QueryCache();
-  return queryCache;
+
+  const queryCache = new QueryCache();
+  const mutationCache = new MutationCache();
+  queryClient = new QueryClient({
+    queryCache,
+    mutationCache,
+    defaultOptions: {
+      queries: { refetchOnWindowFocus: false }
+    }
+  });
+  return queryClient;
 }

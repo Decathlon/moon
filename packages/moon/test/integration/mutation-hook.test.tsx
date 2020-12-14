@@ -4,8 +4,8 @@
 import * as React from "react";
 import { renderHook, act } from "@testing-library/react-hooks";
 
-import MoonProvider from "../../src/moon-provider";
-import useMutation from "../../src/mutation-hook";
+import MoonProvider from "../../src/moonProvider";
+import useMutation from "../../src/useMutation";
 import { links } from "../moon-client.test";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
 
@@ -38,23 +38,20 @@ describe("Mutation hook with MoonProvider", () => {
       { wrapper }
     );
     act(() => {
-      const [mutate, { data, isLoading, error }] = result.current;
+      const [{ data, error }, { mutate }] = result.current;
       expect(data).toBeUndefined();
-      expect(isLoading).toBeFalsy();
       expect(error).toBeNull();
       mutate();
     });
-    let state = result.current[1];
+    let state = result.current[0];
     expect(state.data).toBeUndefined();
-    expect(state.isLoading).toBeTruthy();
     expect(state.error).toBeNull();
     await waitForNextUpdate();
-    state = result.current[1];
+    state = result.current[0];
     expect(state.data).toBe(data);
-    expect(state.isLoading).toBeFalsy();
     expect(state.error).toBeNull();
     expect(onResponse).toBeCalledTimes(1);
-    expect(onResponse).toBeCalledWith(data, undefined);
+    expect(onResponse).toBeCalledWith(data, { foo: "bar" }, undefined);
   });
 
   test("should render an error", async () => {
@@ -79,22 +76,19 @@ describe("Mutation hook with MoonProvider", () => {
       { wrapper }
     );
     act(() => {
-      const [mutate, { data, isLoading, error }] = result.current;
+      const [{ data, error }, { mutate }] = result.current;
       expect(data).toBeUndefined();
-      expect(isLoading).toBeFalsy();
       expect(error).toBeNull();
       mutate();
     });
-    let state = result.current[1];
+    let state = result.current[0];
     expect(state.data).toBeUndefined();
-    expect(state.isLoading).toBeTruthy();
     expect(state.error).toBeNull();
     await waitForNextUpdate();
-    state = result.current[1];
+    state = result.current[0];
     expect(state.data).toBeUndefined();
-    expect(state.isLoading).toBeFalsy();
     expect(state.error).toBe(error);
     expect(onError).toBeCalledTimes(1);
-    expect(onError).toBeCalledWith(error, undefined, undefined);
+    expect(onError).toBeCalledWith(error, { foo: "bar" }, undefined);
   });
 });

@@ -1,5 +1,6 @@
 coverage/*
 dist/*
+lib/*
 node_modules/*
 README.md
 stats.json
@@ -8,6 +9,7 @@ jest-test-results.json
 
 packages/**/coverage/*
 packages/**/dist/*
+packages/**/lib/*
 packages/**/node_modules/*
 packages/**/README.md
 packages/**/stats.json

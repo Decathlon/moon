@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cleanup, render, fireEvent, waitFor } from "@testing-library/react";
 
-import MoonProvider from "../../src/moon-provider";
+import MoonProvider from "../../src/moonProvider";
 import Mutation from "../../src/mutation";
 import { links } from "../moon-client.test";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";

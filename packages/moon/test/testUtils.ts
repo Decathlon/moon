@@ -2,7 +2,7 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import MoonClient from "../src/moon-client";
+import MoonClient from "../src/moonClient";
 import { ClientInstance, ILink } from "../src/utils";
 
 export interface MockedClientConfig {

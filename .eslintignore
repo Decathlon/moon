@@ -1,5 +1,6 @@
 coverage/*
 dist/*
+lib/*
 test/polyfill/array.find.polyfill.js
 test/tests.entry.js
 test/global-test-setup
@@ -13,6 +14,7 @@ rollup.config.js
 
 packages/**/coverage/*
 packages/**/dist/*
+packages/**/lib/*
 packages/**/test/polyfill/array.find.polyfill.js
 packages/**/test/tests.entry.js
 packages/**/test/global-test-setup

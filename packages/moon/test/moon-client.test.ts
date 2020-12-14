@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="./typings/tests-entry.d.ts" />
 
-import { MutateType } from "../src/moon-client";
+import { MutateType } from "../src/moonClient";
 import { ILink } from "../src/utils/client";
 import { getMockedClientFactory, getMockedMoonClient } from "./testUtils";
 

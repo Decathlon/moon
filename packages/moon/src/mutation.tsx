@@ -1,12 +1,18 @@
-import { MutateFunction, MutationResult } from "react-query";
+import { UseMutationResult } from "react-query";
 
-import { MutateType } from "./moon-client";
+import { MutateType } from "./moonClient";
 import { Nullable } from "./typing";
-import useMutation, { IMutationProps } from "./mutation-hook";
+import useMutation, { IMutationProps } from "./useMutation";
 
 export interface IMutationChildrenProps<MutationVariables = any, MutationResponse = any, MutationError = any>
-  extends MutationResult<MutationResponse, MutationError> {
-  actions: { mutate: MutateFunction<MutationResponse, MutationError, MutationVariables> };
+  extends Omit<
+    UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>,
+    "mutate" | "mutateAsync" | "reset"
+  > {
+  actions: Pick<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "reset"> & {
+    mutate: () => void;
+    mutateAsync: () => Promise<MutationResponse>;
+  };
 }
 
 export type MutationChildren<MutationVariables, MutationResponse, MutationError> = (
@@ -24,8 +30,8 @@ function Mutation<MutationVariables = any, MutationResponse = any, MutationError
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...mutationProps } = props;
-  const [mutate, state] = useMutation<MutationVariables, MutationResponse, MutationError, MutationConfig>(mutationProps);
-  return children ? children({ ...state, actions: { mutate } }) : null;
+  const [state, actions] = useMutation<MutationVariables, MutationResponse, MutationError, MutationConfig>(mutationProps);
+  return children ? children({ ...state, actions }) : null;
 }
 
 Mutation.defaultProps = {
