@@ -58,7 +58,7 @@ describe("Hooks", () => {
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
+        useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",
@@ -83,7 +83,7 @@ describe("Hooks", () => {
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
+        useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "queryId",
           source: "FOO",
           endPoint: "/users",
@@ -108,7 +108,7 @@ describe("Hooks", () => {
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
+        useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery",
           source: "FOO",
           endPoint: "/users",
@@ -136,7 +136,7 @@ describe("Hooks", () => {
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
+        useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery1",
           source: "FOO",
           endPoint: "/users",
@@ -164,7 +164,7 @@ describe("Hooks", () => {
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
+        useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery2",
           source: "FOO",
           endPoint: "/users",
@@ -192,7 +192,7 @@ describe("Hooks", () => {
     const variables = { foo: "bar" };
     const { waitForNextUpdate } = renderHook(
       () =>
-        useQuery<QueryVariables, typeof response, any, MockedClientConfig>({
+        useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery3",
           source: "FOO",
           endPoint: "/users",
