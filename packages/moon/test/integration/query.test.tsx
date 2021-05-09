@@ -29,7 +29,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Query<QueryVariables, typeof response, any, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
           id="query1"
           source="FOO"
           endPoint="/users"
@@ -61,7 +61,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Query<QueryVariables, typeof response, any, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
           id="query2"
           source="FOO"
           endPoint="/users"
@@ -104,7 +104,7 @@ describe("Query component with MoonProvider", () => {
 
     const { container, getByText } = render(
       <MoonProvider links={links} clientFactory={clientFactory}>
-        <Query<QueryVariables, typeof response, string, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, string, MockedClientConfig>
           id="query3"
           source="FOO"
           endPoint="/users"
@@ -141,7 +141,7 @@ describe("Query component with MoonProvider", () => {
           state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
         }}
       >
-        <Query<QueryVariables, typeof response, any, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -190,7 +190,7 @@ describe("Query component with MoonProvider", () => {
           state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
         }}
       >
-        <Query<QueryVariables, typeof response, any, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
           id="query4"
           source="FOO"
           endPoint="/users"
@@ -240,7 +240,7 @@ describe("Query component with MoonProvider", () => {
           state: { queries: [{ queryKey: "query5", queryHash: hashQueryKey("query5"), state: { data: cachedResponse } }] }
         }}
       >
-        <Query<QueryVariables, typeof response, any, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
           id="query5"
           source="FOO"
           endPoint="/users"
@@ -292,7 +292,7 @@ describe("Query component with MoonProvider", () => {
           state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
         }}
       >
-        <Query<QueryVariables, typeof response, any, MockedClientConfig>
+        <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
           id="query4"
           source="FOO"
           endPoint="/users"

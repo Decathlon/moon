@@ -5,27 +5,27 @@ import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { FetchPolicy, IQueryProps } from "./useQuery";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
 
-export interface IQueryChildrenProps<QueryResponse, QueryError>
-  extends Omit<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove"> {
-  actions: Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove">;
+export interface IQueryChildrenProps<QueryData, QueryError>
+  extends Omit<UseQueryResult<QueryData, QueryError>, "refetch" | "remove"> {
+  actions: Pick<UseQueryResult<QueryData, QueryError>, "refetch" | "remove">;
 }
 
-export type QueryChildren<QueryResponse, QueryError> = (
-  props: IQueryChildrenProps<QueryResponse, QueryError>
+export type QueryChildren<QueryData, QueryError> = (
+  props: IQueryChildrenProps<QueryData, QueryError>
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
-  extends IQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig> {
-  children?: QueryChildren<QueryResponse, QueryError>;
+export interface IQueryComponentProps<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig>
+  extends IQueryProps<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig> {
+  children?: QueryChildren<QueryData, QueryError>;
 }
 
-function Query<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any>(
-  props: IQueryComponentProps<QueryVariables, QueryResponse, QueryError, QueryConfig>
+function Query<QueryVariables = any, QueryResponse = any, QueryData = QueryResponse, QueryError = any, QueryConfig = any>(
+  props: IQueryComponentProps<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
   const { children, ...queryProps } = props;
-  const [state, actions] = useQuery<QueryVariables, QueryResponse, QueryError, QueryConfig>(queryProps);
+  const [state, actions] = useQuery<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig>(queryProps);
   return children ? children({ ...state, actions }) : null;
 }
 
@@ -38,7 +38,7 @@ export function withQueryResult<Props = any, Data = any, QueryResultProps = Resu
   queryId: string,
   resutToProps?: (result?: Data) => QueryResultProps
 ) {
-  type QueryProps = QueryResultProps | { queryResult: Data | undefined };
+  type QueryProps = QueryResultProps | { queryResult: Data };
   type WrappedComponentPropsWithoutQuery = Pick<Props, Exclude<keyof Props, keyof QueryProps>>;
   return (WrappedComponent: React.ComponentClass<Props> | React.FunctionComponent<Props>) => {
     type WrappedComponentInstance = typeof WrappedComponent extends React.ComponentClass
@@ -50,9 +50,7 @@ export function withQueryResult<Props = any, Data = any, QueryResultProps = Resu
     >> = props => {
       const { forwardedRef, ...rest } = props;
       const queryResult = useQueryResult<Data, QueryResultProps>(queryId, resutToProps);
-      const queryProps: QueryProps = resutToProps
-        ? (queryResult as QueryResultProps)
-        : { queryResult: queryResult as Data | undefined };
+      const queryProps: QueryProps = resutToProps ? (queryResult as QueryResultProps) : { queryResult: queryResult as Data };
       const componentProps = ({ ...queryProps, ...((rest as unknown) as WrappedComponentPropsWithoutQuery) } as unknown) as Props;
       return <WrappedComponent ref={forwardedRef} {...componentProps} />;
     };

@@ -14,13 +14,19 @@ export enum FetchPolicy {
 }
 
 export type IQueryResultProps<QueryResponse, QueryError> = [
-  Omit<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove">,
-  Pick<UseQueryResult<QueryResponse | undefined, QueryError>, "refetch" | "remove"> & {
+  Omit<UseQueryResult<QueryResponse, QueryError>, "refetch" | "remove">,
+  Pick<UseQueryResult<QueryResponse, QueryError>, "refetch" | "remove"> & {
     cancel: () => void;
   }
 ];
 
-export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
+export interface IQueryProps<
+  QueryVariables = any,
+  QueryResponse = any,
+  QueryData = QueryResponse,
+  QueryError = any,
+  QueryConfig = any
+> {
   id?: string;
   /** The Link id of the http client. */
   source?: string;
@@ -36,7 +42,7 @@ export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryErr
   /** The http client options of your query. */
   options?: QueryConfig;
   /** The react-query config. Please see the react-query QueryConfig for more details. */
-  queryConfig?: ReactQueryConfig<QueryResponse | undefined, QueryError>;
+  queryConfig?: ReactQueryConfig<QueryResponse, QueryError, QueryData>;
 }
 
 export const getQueryId = (queryProps: Pick<IQueryProps, "id" | "source" | "endPoint" | "variables" | "options">): string => {
@@ -46,6 +52,7 @@ export const getQueryId = (queryProps: Pick<IQueryProps, "id" | "source" | "endP
 export default function useQuery<
   QueryVariables = any,
   QueryResponse = any,
+  QueryData = QueryResponse,
   QueryError = any,
   QueryConfig extends ClientConfig = any
 >({
@@ -56,7 +63,7 @@ export default function useQuery<
   options,
   fetchPolicy = FetchPolicy.CacheAndNetwork,
   queryConfig
-}: IQueryProps<QueryVariables, QueryResponse, QueryError, QueryConfig>): IQueryResultProps<QueryResponse, QueryError> {
+}: IQueryProps<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig>): IQueryResultProps<QueryData, QueryError> {
   const { client, store } = useMoon();
   const isInitialMount = React.useRef<boolean>(true);
 
@@ -67,7 +74,7 @@ export default function useQuery<
   const cacheOnly = fetchPolicy === FetchPolicy.CacheFirst;
   const networkOnly = fetchPolicy === FetchPolicy.NetworkOnly;
 
-  const queryOptions: ReactQueryConfig<QueryResponse | undefined, QueryError> = React.useMemo(
+  const queryOptions: ReactQueryConfig<QueryResponse, QueryError, QueryData> = React.useMemo(
     () =>
       store.defaultQueryObserverOptions({
         ...queryConfig,
@@ -79,7 +86,8 @@ export default function useQuery<
 
   if (isInitialMount.current && networkOnly) {
     // remove cache if networkOnly
-    store.setQueryData<QueryResponse | undefined>(queryId, queryConfig?.initialData);
+    // @ts-ignore @react-query must update to undefined
+    store.setQueryData<QueryData>(queryId, queryConfig?.initialData);
   }
 
   function fetch() {
@@ -89,7 +97,7 @@ export default function useQuery<
       : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
   }
 
-  const queryResult = useReactQuery<QueryResponse | undefined, QueryError>(queryId, fetch, queryOptions);
+  const queryResult = useReactQuery<QueryResponse, QueryError, QueryData>(queryId, fetch, queryOptions);
 
   const { refetch, remove, ...others } = queryResult;
 
