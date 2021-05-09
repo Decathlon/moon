@@ -1,5 +1,14 @@
 import * as React from "react";
-import { QueryObserver, QueriesObserver, hashQueryKey, InfiniteQueryObserver, notifyManager } from "react-query";
+import {
+  QueryObserver,
+  QueriesObserver,
+  hashQueryKey,
+  InfiniteQueryObserver,
+  notifyManager,
+  QueryKey,
+  InfiniteQueryObserverOptions,
+  QueryObserverOptions
+} from "react-query";
 import { Query, QueryState } from "react-query/types/core/query";
 
 import { MoonContext, RquiredMoonContextValue } from "./moonProvider";
@@ -40,14 +49,20 @@ export function useQueryObserver<State = any, Data = any>(
   const [state, setState] = React.useState<State | undefined>(initialSate);
 
   const observerRef = React.useRef<InfiniteQueryObserver<Data> | QueryObserver<Data>>();
-  const defaultOptions = React.useMemo(() => store.defaultQueryObserverOptions({ queryKey: queryId, enabled: false }), [queryId]);
+  const defaultOptions: InfiniteQueryObserverOptions<Data> | QueryObserverOptions<Data> = React.useMemo(
+    () => store.defaultQueryObserverOptions<Data, unknown, Data, Data, QueryKey>({ queryKey: queryId, enabled: false }),
+    [queryId]
+  );
   const createObserver = React.useCallback(() => {
-    return isInfinite ? new InfiniteQueryObserver<Data>(store, defaultOptions) : new QueryObserver<Data>(store, defaultOptions);
+    return isInfinite
+      ? new InfiniteQueryObserver<Data>(store, defaultOptions as InfiniteQueryObserverOptions<Data>)
+      : new QueryObserver<Data>(store, defaultOptions);
   }, [isInfinite, store, defaultOptions]);
   const observer = observerRef.current || createObserver();
   observerRef.current = observer;
 
   if (observer.hasListeners()) {
+    // @ts-ignore InfiniteQueryObserver | QueryObserver
     observer.setOptions(defaultOptions);
   }
 
@@ -86,7 +101,9 @@ export function useQueriesObserver<State = any>(
   const [states, setStates] = React.useState<QueriesResults>(queriesResults);
 
   const queries = React.useMemo(() => {
-    return queriesIds.map(queryId => store.defaultQueryObserverOptions({ queryKey: queryId, enabled: false }));
+    return queriesIds.map(queryId =>
+      store.defaultQueryObserverOptions<unknown, unknown, unknown, unknown, QueryKey>({ queryKey: queryId, enabled: false })
+    );
   }, [currentQueriesIds]);
 
   const observerRef = React.useRef<QueriesObserver>();
