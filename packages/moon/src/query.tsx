@@ -1,5 +1,5 @@
 import * as React from "react";
-import { UseQueryResult } from "react-query";
+import { InfiniteData, UseQueryResult } from "react-query";
 
 import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { FetchPolicy, IQueryProps } from "./useQuery";
@@ -36,7 +36,7 @@ Query.defaultProps = {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function withQueryResult<Props = any, Data = any, QueryResultProps = ResultProps>(
   queryId: string,
-  resutToProps?: (result?: Data) => QueryResultProps
+  resutToProps?: (result?: Data | InfiniteData<Data>) => QueryResultProps
 ) {
   type QueryProps = QueryResultProps | { queryResult: Data };
   type WrappedComponentPropsWithoutQuery = Pick<Props, Exclude<keyof Props, keyof QueryProps>>;

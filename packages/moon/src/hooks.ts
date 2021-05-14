@@ -7,7 +7,11 @@ import {
   notifyManager,
   QueryKey,
   InfiniteQueryObserverOptions,
-  QueryObserverOptions
+  QueryObserverOptions,
+  UseQueryResult,
+  UseInfiniteQueryResult,
+  QueryObserverResult,
+  InfiniteData
 } from "react-query";
 import { Query, QueryState } from "react-query/types/core/query";
 
@@ -26,20 +30,31 @@ export interface QueriesResults<Data = any> {
   [queryId: string]: Data | undefined;
 }
 
-export function getAdaptedQueryState<Data>(query?: Query<Data>): QueryState<Data, unknown> | undefined {
-  if (!query) {
+export type GetState<Data = any, State = Data> = (
+  query: Query<Data> | undefined,
+  result?: QueryState<Data> | UseQueryResult<Data> | UseInfiniteQueryResult<Data> | undefined,
+  isInfinite?: boolean
+) => State | undefined;
+
+export function getAdaptedQueryState<Data>(
+  query: Query<Data> | undefined,
+  result: QueryState<Data> | UseQueryResult<Data> | UseInfiniteQueryResult<Data> | undefined = query?.state,
+  isInfinite = false
+): QueryState<Data | InfiniteData<Data> | undefined> | undefined {
+  if (!query || !result) {
     return undefined;
   }
-  const networkOnly = query?.cacheTime === 0;
-  const { state } = (query as unknown) as Query<Data, unknown>;
-  const { isFetching, data } = state;
-  const queryData = isFetching && networkOnly ? undefined : data;
-  return { ...state, data: queryData };
+  const { data: newData, dataUpdatedAt, isFetching, error, errorUpdatedAt, status } = result;
+  const networkOnly = query.cacheTime === 0;
+  const cachedData = query.state.data;
+  const data = newData || cachedData;
+  const queryData = !isInfinite && isFetching && networkOnly ? undefined : data;
+  return { ...query?.state, dataUpdatedAt, isFetching, error, errorUpdatedAt, status, data: queryData };
 }
 
 export function useQueryObserver<State = any, Data = any>(
   queryId: string,
-  getState: (query?: Query<Data>) => State | undefined,
+  getState: GetState<Data, State>,
   isInfinite = false
 ): State | undefined {
   const { store } = useMoon();
@@ -66,14 +81,17 @@ export function useQueryObserver<State = any, Data = any>(
     observer.setOptions(defaultOptions);
   }
 
-  const listener = React.useCallback(() => {
-    if (isMounted()) {
-      const queryState = getState(query);
-      if (!equal(state || null, queryState || null)) {
-        setState(queryState);
+  const listener = React.useCallback(
+    (result: UseQueryResult<Data> | UseInfiniteQueryResult<Data>) => {
+      if (isMounted()) {
+        const queryState = getState(query, result);
+        if (!equal(state || null, queryState || null)) {
+          setState(queryState);
+        }
       }
-    }
-  }, [queryId]);
+    },
+    [queryId]
+  );
 
   React.useEffect(() => {
     return observer.subscribe(notifyManager.batchCalls(listener));
@@ -82,10 +100,7 @@ export function useQueryObserver<State = any, Data = any>(
   return state;
 }
 
-export function useQueriesObserver<State = any>(
-  queriesIds: string[],
-  getState: (query?: Query) => State | undefined
-): QueriesResults {
+export function useQueriesObserver<State = any>(queriesIds: string[], getState: GetState<unknown, State>): QueriesResults {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
   const { store } = useMoon();
   const isMounted = useIsMounted();
@@ -113,18 +128,20 @@ export function useQueriesObserver<State = any>(
   if (observer.hasListeners()) {
     observer.setQueries(queries);
   }
-
-  const listener = React.useCallback(() => {
-    if (isMounted()) {
-      queriesIds.forEach(queryId => {
-        const query = store.getQueryCache().get(hashQueryKey(queryId));
-        const queryState = getState(query);
-        if (!equal(states[queryId] || null, queryState || null)) {
-          setStates({ [queryId]: queryState });
-        }
-      });
-    }
-  }, [currentQueriesIds]);
+  const listener = React.useCallback(
+    (results: QueryObserverResult[]) => {
+      if (isMounted()) {
+        queriesIds.forEach((queryId, index) => {
+          const query = store.getQueryCache().get(hashQueryKey(queryId));
+          const queryState = getState(query, results[index]);
+          if (!equal(states[queryId] || null, queryState || null)) {
+            setStates({ [queryId]: queryState });
+          }
+        });
+      }
+    },
+    [currentQueriesIds]
+  );
 
   React.useEffect(() => {
     return observer.subscribe(notifyManager.batchCalls(listener));
@@ -135,15 +152,15 @@ export function useQueriesObserver<State = any>(
 
 export function useQueryResult<Data = any, Props = ResultProps>(
   queryId: string,
-  resultToProps?: (state?: Data) => Props,
+  resultToProps?: (state?: Data | InfiniteData<Data>) => Props,
   isInfinite = false
-): Data | Props | undefined {
-  const getState = (query?: Query<Data>) => {
-    const queryState = getAdaptedQueryState<Data>(query);
+): Data | InfiniteData<Data> | Props | undefined {
+  const getData: GetState<Data, Data | InfiniteData<Data>> = (query, result) => {
+    const queryState = getAdaptedQueryState<Data>(query, result);
     return queryState?.data;
   };
 
-  const queryResult = useQueryObserver<Data, Data>(queryId, getState, isInfinite);
+  const queryResult = useQueryObserver<Data | InfiniteData<Data>, Data>(queryId, getData, isInfinite);
   return resultToProps ? resultToProps(queryResult) : queryResult;
 }
 
@@ -151,8 +168,8 @@ export function useQueriesResults<Props = ResultProps>(
   queriesIds: string[],
   resultsToProps?: (results: QueriesResults) => Props
 ): QueriesResults | Props {
-  const getState = (query?: Query) => {
-    const queryState = getAdaptedQueryState(query);
+  const getState: GetState = (query, result) => {
+    const queryState = getAdaptedQueryState(query, result);
     return queryState?.data;
   };
   const queriesResult = useQueriesObserver(queriesIds, getState);
@@ -161,10 +178,14 @@ export function useQueriesResults<Props = ResultProps>(
 
 export function useQueryState<Data = any, Props = ResultProps>(
   queryId: string,
-  stateToProps?: (state?: QueryState<Data, unknown>) => Props,
+  stateToProps?: (state?: QueryState<Data | InfiniteData<Data> | undefined, unknown>) => Props,
   isInfinite = false
-): QueryState<Data, unknown> | Props | undefined {
-  const queryResult = useQueryObserver<QueryState<Data, unknown>, Data>(queryId, getAdaptedQueryState, isInfinite);
+): QueryState<Data | InfiniteData<Data> | undefined, unknown> | Props | undefined {
+  const queryResult = useQueryObserver<QueryState<Data | InfiniteData<Data> | undefined, unknown>, Data>(
+    queryId,
+    getAdaptedQueryState,
+    isInfinite
+  );
   return stateToProps ? stateToProps(queryResult) : queryResult;
 }
 
