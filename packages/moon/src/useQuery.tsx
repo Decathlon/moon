@@ -101,20 +101,20 @@ export default function useQuery<
 
   const { refetch, remove, ...others } = queryResult;
 
+  function cancel() {
+    return store.cancelQueries(queryId, { exact: true });
+  }
+
   React.useEffect(() => {
-    if (prevValue.queryId === value.queryId && !isInitialMount.current && queryOptions?.enabled) {
-      // refetch on update and when only client options have been changed
-      refetch();
+    if (prevValue.queryId === value.queryId && !isInitialMount.current && (queryOptions.enabled ?? true)) {
+      // cancel the prev query then refetch on update and when only client options have been changed
+      cancel().then(() => refetch());
     }
   }, [value.clientProps]);
 
   React.useEffect(() => {
     isInitialMount.current = false;
   }, []);
-
-  function cancel() {
-    store.cancelQueries(queryId, { exact: true });
-  }
 
   const data = networkOnly && others.isFetching ? undefined : others.data;
 
