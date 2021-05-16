@@ -61,7 +61,7 @@ export class MoonGraphQLInstance implements ClientInstance {
       }
     );
     //@ts-ignore
-    getPromise.cancel = controller.abort;
+    getPromise.cancel = () => controller.abort();
     return getPromise;
   }
 
