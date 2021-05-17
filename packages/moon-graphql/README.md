@@ -35,7 +35,7 @@ const requestInterceptors = [{ onFulfilled: setLanguage }];
 const responseInterceptors = [{ onFulfilled: successHandler }];
 
 
-const links: ILink<graphqlInstance, graphqlRequestConfig, graphqlResponse>[] = [
+const links: ILink<GraphqlInstance, GraphqlRequestConfig, GraphqlResponse>[] = [
   {
     id: "FOO",
     config: { baseURL: "http://foo.com" }, // RequestInit

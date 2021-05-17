@@ -6,6 +6,7 @@ import { QueryState } from "react-query/types/core/query";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
 import useQuery from "../../src/useQuery";
+import usePrefetchQuery from "../../src/usePrefetchQuery";
 import MoonProvider from "../../src/moonProvider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";
@@ -221,5 +222,41 @@ describe("Hooks", () => {
     const { value: newValue, prevValue: newPrevProps } = result.current;
     expect(value).toEqual(newPrevProps);
     expect(newValue).not.toEqual(value);
+  });
+
+  test("should render the prefetch query", async () => {
+    const get = jest.fn().mockImplementation(() => Promise.resolve(response));
+    const clientFactory = getMockedClientFactory({ get });
+
+    const wrapper = ({ children }: { children?: any }) => (
+      <MoonProvider links={links} clientFactory={clientFactory}>
+        {children}
+      </MoonProvider>
+    );
+    const variables = { foo: "bar" };
+    const { result } = renderHook(
+      () =>
+        usePrefetchQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
+          id: "myQuery4",
+          source: "FOO",
+          endPoint: "/users",
+          variables
+        }),
+      { wrapper }
+    );
+    expect(get).toBeCalledTimes(0);
+    // call prefetch
+    await result.current();
+    expect(get).toBeCalledTimes(1);
+    expect(get).toBeCalledWith("/users", { params: { foo: "bar" } });
+    const { result: cachedResult } = renderHook(
+      //@ts-ignore data can't be undefined
+      () => useQueryState<QueryData, number>("myQuery4", response => response?.data.users[0].id),
+      {
+        wrapper
+      }
+    );
+
+    expect(cachedResult.current).toEqual(response.users[0].id);
   });
 });
