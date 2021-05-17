@@ -20,6 +20,7 @@ Table of contents
    * [Usage](#usage)
       * [Query](#query-component)
       * [useQuery](#usequery)
+      * [usePrefetchQuery](#usePrefetchQuery)
       * [useInfiniteQuery](#useinfinitequery)
       * [Mutation / useMutation](#mutationusemutation)
    * [Other useful Hooks](#other-useful-hooks)
@@ -88,7 +89,7 @@ import { Query } from "@decathlon/moon";
 
 const MyComponent = () => {
   return (
-    <Query<QueryVariables, QueryResponse, QueryError>
+    <Query<QueryVariables, QueryResponse, QueryData, QueryError>
       id="queryId"
       source="FOO"
       endPoint="/users"
@@ -114,7 +115,7 @@ The same query with the **useQuery** hook
 import { useQuery } from "@decathlon/moon";
 
 const MyComponent = () => {
-  const [{ isLoading, error }, { refetch }] = useQuery<QueryVariables, QueryData, QueryError>({
+  const [{ isLoading, error }, { refetch }] = useQuery<QueryVariables, QueryResponse, QueryData, QueryError>({
     id: "queryId",
     source: "FOO",
     endPoint: "/users",
@@ -129,6 +130,27 @@ const MyComponent = () => {
 };
 ```
 Internally useQuery use the **react-query**'s useQuery hook connected to your HTTP client with a configuration allowing better cache management (fetch policy) and better referencing (management of query identifiers adapted to the use of HTTP clients, **useQueryState/useQueryResult**...) of requests for REST clients.
+
+usePrefetchQuery
+--------
+If you're lucky enough, you may know enough about what your users will do to be able to prefetch the data they need before it's needed! If this is the case, you can use the usePrefetchQuery hook. This hook return a prefetch function to prefetch the results of a query to be placed into the cache:
+
+```js
+import { usePrefetchQuery } from "@decathlon/moon";
+
+const MyComponent = ({page}) => {
+  const prefetchQuery = usePrefetchQuery<QueryVariables, QueryResponse, QueryData>({
+    id: "queryId",
+    source: "FOO",
+    endPoint: "/users",
+    variables: { foo: "bar", page: page + 1 },
+    // options: {...} // the http client config
+    // queryConfig: {...} // the react-query config
+  });
+  ...
+};
+```
+Internally usePrefetchQuery use the **react-query**'s queryClient.prefetchQuery method connected to your HTTP client.
 
 useInfiniteQuery
 ---------------
@@ -146,7 +168,7 @@ interface PageVariables {
 }
 
 const MyComponent = () => {
-  const [{ isLoading, error, data }] = useInfiniteQuery<QueryVariables, PageVariables, QueryData, QueryError>({
+  const [{ isLoading, error, data }] = useInfiniteQuery<QueryVariables, PageVariables, QueryResponse, QueryData, QueryError>({
     source: "FOO",
     endPoint: "/comments",
     variables: { user: "bar" },
@@ -195,7 +217,7 @@ const MyComponent = () => {
 The same mutation with **useMutation**:
 
 ```js
-import { useQuery } from '@decathlon/moon';
+import { useMutation } from '@decathlon/moon';
 
 const MyComponent = () => {
   const [{  error, data }, { mutate }] = useMutation<MutationResponse, MutationVariables>({
@@ -393,7 +415,7 @@ Query props
 This the Typescript interface of the Query/useQuery component/hook.
 
 ```js
-export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
+export interface IQueryProps<QueryVariables = any, QueryResponse = any, QueryData=QueryResponse, QueryError = any, QueryConfig = any> {
   id?: string;
   /** The Link id of the http client. */
   source: string;
@@ -427,7 +449,7 @@ InfiniteQuery props
 ===================
 
 ```js
-export interface IInfiniteQueryProps<QueryVariables = any, QueryResponse = any, QueryError = any, QueryConfig = any> {
+export interface IInfiniteQueryProps<QueryVariables = any, QueryResponse = any, QueryData = QueryResponse, QueryError = any, QueryConfig = any> {
   id?: string;
   /** The Link id of the http client. */
   source?: string;

@@ -12,6 +12,9 @@ export * from "./query";
 export { default as useQuery } from "./useQuery";
 export * from "./useQuery";
 
+export { default as usePrefetchQuery } from "./usePrefetchQuery";
+export * from "./usePrefetchQuery";
+
 export { default as Mutation } from "./mutation";
 export * from "./mutation";
 
