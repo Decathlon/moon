@@ -21,7 +21,7 @@ interface IMoonProviderProps {
   // The links ( HTTP clients config)
   links: ILink[];
   // The global Moon client factory (like the moon-axios Axios client for moon https://github.com/dktunited/moon-axios)
-  clientFactory: ClientFactory;
+  clientFactory?: ClientFactory;
   // eslint-disable-next-line no-undef
   children: JSX.Element;
   // The react-query cache object

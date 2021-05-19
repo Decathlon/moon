@@ -10,7 +10,7 @@ export enum MutateType {
 export default class MoonClient {
   private readonly clients: IClients;
 
-  constructor(links: ILink[], clientFactory: ClientFactory) {
+  constructor(links: ILink[], clientFactory?: ClientFactory) {
     this.clients = getClients(links, clientFactory);
   }
 
