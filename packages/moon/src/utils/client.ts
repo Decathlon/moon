@@ -49,6 +49,7 @@ export interface ClientInstance {
   delete<R = any>(url: string, config?: ClientConfig): Promise<R>;
   post<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
   put<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
+  patch<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
 }
 
 let queryClient: QueryClient;

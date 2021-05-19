@@ -3,7 +3,8 @@ import { IClients, getClients, ClientFactory, ILink, ClientConfig } from "./util
 export enum MutateType {
   Delete = "DELETE",
   Post = "POST",
-  Put = "PUT"
+  Put = "PUT",
+  Patch = "PATCH"
 }
 
 export default class MoonClient {
@@ -55,6 +56,8 @@ export default class MoonClient {
         }
         case MutateType.Put:
           return client.put(clientEndPoint, variables, options);
+        case MutateType.Patch:
+          return client.patch(clientEndPoint, variables, options);
         default:
           return client.post(clientEndPoint, variables, options);
       }

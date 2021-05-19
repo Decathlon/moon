@@ -1,6 +1,6 @@
 {
   "name": "@decathlon/moon-axios",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Axios for moon",
   "author": "Decathlon",
   "license": "Apache-2.0",

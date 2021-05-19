@@ -80,6 +80,10 @@ export class MoonGraphQLInstance implements ClientInstance {
   put<Response = any>(mutation: string, config?: GraphQLRequestConfig): Promise<Response> {
     return this.query<Response>(mutation, config);
   }
+
+  patch<Response = any>(mutation: string, config?: GraphQLRequestConfig): Promise<Response> {
+    return this.query<Response>(mutation, config);
+  }
 }
 
 export default function createAxiosClient(
