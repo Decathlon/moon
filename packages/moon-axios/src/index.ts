@@ -71,6 +71,14 @@ export class MoonAxiosInstance implements ClientInstance {
     putPromise.cancel = cancel;
     return putPromise;
   }
+
+  patch<T = any, R = AxiosResponse<T>>(url: string, data?: any, config?: AxiosRequestConfig): Promise<R> {
+    const cancel = updateCancelToken(config);
+    const patchPromise = this.instance.patch<T, R>(url, data, config);
+    //@ts-ignore
+    patchPromise.cancel = cancel;
+    return patchPromise;
+  }
 }
 
 export default function createAxiosClient(
