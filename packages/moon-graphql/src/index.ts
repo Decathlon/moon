@@ -55,9 +55,9 @@ export class MoonGraphQLInstance implements ClientInstance {
         this.useResponseInterceptors(result);
         return result;
       },
-      reason => {
-        this.useResponseInterceptors(reason);
-        return reason;
+      error => {
+        this.useResponseInterceptors(error);
+        throw error;
       }
     );
     //@ts-ignore
