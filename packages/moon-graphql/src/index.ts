@@ -69,7 +69,8 @@ export class MoonGraphQLInstance implements ClientInstance {
     return this.query<Response>(query, config);
   }
 
-  post<Response = any>(mutation: string, config?: GraphQLRequestConfig): Promise<Response> {
+  post<Response = any>(mutation: string, variables?: any, options?: GraphQLRequestConfig): Promise<Response> {
+    const config = { ...options, params: { ...options?.params, ...variables } };
     return this.query<Response>(mutation, config);
   }
 
@@ -77,11 +78,13 @@ export class MoonGraphQLInstance implements ClientInstance {
     return this.query<Response>(mutation, config);
   }
 
-  put<Response = any>(mutation: string, config?: GraphQLRequestConfig): Promise<Response> {
+  put<Response = any>(mutation: string, variables?: any, options?: GraphQLRequestConfig): Promise<Response> {
+    const config = { ...options, params: { ...options?.params, ...variables } };
     return this.query<Response>(mutation, config);
   }
 
-  patch<Response = any>(mutation: string, config?: GraphQLRequestConfig): Promise<Response> {
+  patch<Response = any>(mutation: string, variables?: any, options?: GraphQLRequestConfig): Promise<Response> {
+    const config = { ...options, params: { ...options?.params, ...variables } };
     return this.query<Response>(mutation, config);
   }
 }

@@ -18,6 +18,8 @@ export class MockedClient implements ClientInstance {
 
   public put: () => Promise<any>;
 
+  public patch: () => Promise<any>;
+
   public config: MockedClientConfig;
 
   constructor(config: MockedClientConfig) {
@@ -26,6 +28,7 @@ export class MockedClient implements ClientInstance {
     this.post = jest.fn();
     this.delete = jest.fn();
     this.put = jest.fn();
+    this.patch = jest.fn();
   }
 }
 
