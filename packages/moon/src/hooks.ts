@@ -63,7 +63,6 @@ export function useQueryObserver<State = any, Data = any>(
   const initialSate = getState(query);
   const [state, setState] = React.useState<State | undefined>(initialSate);
 
-  const observerRef = React.useRef<InfiniteQueryObserver<Data> | QueryObserver<Data>>();
   const defaultOptions: InfiniteQueryObserverOptions<Data> | QueryObserverOptions<Data> = React.useMemo(
     () => store.defaultQueryObserverOptions<Data, unknown, Data, Data, QueryKey>({ queryKey: queryId, enabled: false }),
     [queryId]
@@ -73,8 +72,7 @@ export function useQueryObserver<State = any, Data = any>(
       ? new InfiniteQueryObserver<Data>(store, defaultOptions as InfiniteQueryObserverOptions<Data>)
       : new QueryObserver<Data>(store, defaultOptions);
   }, [isInfinite, store, defaultOptions]);
-  const observer = observerRef.current || createObserver();
-  observerRef.current = observer;
+  const observer = createObserver();
 
   if (observer.hasListeners()) {
     // @ts-ignore InfiniteQueryObserver | QueryObserver
@@ -95,6 +93,12 @@ export function useQueryObserver<State = any, Data = any>(
 
   React.useEffect(() => {
     return observer.subscribe(notifyManager.batchCalls(listener));
+  }, [queryId]);
+
+  React.useEffect(() => {
+    if (isMounted()) {
+      setState(initialSate);
+    }
   }, [queryId]);
 
   return state;
@@ -121,9 +125,7 @@ export function useQueriesObserver<State = any>(queriesIds: string[], getState: 
     );
   }, [currentQueriesIds]);
 
-  const observerRef = React.useRef<QueriesObserver>();
-  const observer = observerRef.current || new QueriesObserver(store, queries);
-  observerRef.current = observer;
+  const observer = new QueriesObserver(store, queries);
 
   if (observer.hasListeners()) {
     observer.setQueries(queries);
@@ -145,6 +147,12 @@ export function useQueriesObserver<State = any>(queriesIds: string[], getState: 
 
   React.useEffect(() => {
     return observer.subscribe(notifyManager.batchCalls(listener));
+  }, [currentQueriesIds]);
+
+  React.useEffect(() => {
+    if (isMounted()) {
+      setStates(queriesResults);
+    }
   }, [currentQueriesIds]);
 
   return states;
