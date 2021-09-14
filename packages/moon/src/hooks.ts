@@ -58,10 +58,9 @@ export function useQueryObserver<State = any, Data = any>(
   isInfinite = false
 ): State | undefined {
   const { store } = useMoon();
-  const isMounted = useIsMounted();
-  const query = store.getQueryCache().get<Data>(hashQueryKey(queryId));
-  const initialSate = getState(query);
-  const [state, setState] = React.useState<State | undefined>(initialSate);
+  const [state, setState] = React.useState<State | undefined>();
+
+  const getQuery = React.useCallback(() => store.getQueryCache().get<Data>(hashQueryKey(queryId)), [queryId]);
 
   const defaultOptions: InfiniteQueryObserverOptions<Data> | QueryObserverOptions<Data> = React.useMemo(
     () => store.defaultQueryObserverOptions<Data, unknown, Data, Data, QueryKey>({ queryKey: queryId, enabled: false }),
@@ -81,11 +80,10 @@ export function useQueryObserver<State = any, Data = any>(
 
   const listener = React.useCallback(
     (result: UseQueryResult<Data> | UseInfiniteQueryResult<Data>) => {
-      if (isMounted()) {
-        const queryState = getState(query, result);
-        if (!equal(state || null, queryState || null)) {
-          setState(queryState);
-        }
+      const query = getQuery();
+      const queryState = getState(query, result);
+      if (!equal(state || null, queryState || null)) {
+        setState(queryState);
       }
     },
     [queryId]
@@ -96,9 +94,7 @@ export function useQueryObserver<State = any, Data = any>(
   }, [queryId]);
 
   React.useEffect(() => {
-    if (isMounted()) {
-      setState(initialSate);
-    }
+    setState(getState(getQuery()));
   }, [queryId]);
 
   return state;
@@ -107,7 +103,6 @@ export function useQueryObserver<State = any, Data = any>(
 export function useQueriesObserver<State = any>(queriesIds: string[], getState: GetState<unknown, State>): QueriesResults {
   const { value: currentQueriesIds } = usePrevValue(queriesIds);
   const { store } = useMoon();
-  const isMounted = useIsMounted();
 
   const queriesResults = React.useMemo(() => {
     return currentQueriesIds.reduce<QueriesResults<State>>((result, queryId) => {
@@ -132,15 +127,13 @@ export function useQueriesObserver<State = any>(queriesIds: string[], getState: 
   }
   const listener = React.useCallback(
     (results: QueryObserverResult[]) => {
-      if (isMounted()) {
-        queriesIds.forEach((queryId, index) => {
-          const query = store.getQueryCache().get(hashQueryKey(queryId));
-          const queryState = getState(query, results[index]);
-          if (!equal(states[queryId] || null, queryState || null)) {
-            setStates({ [queryId]: queryState });
-          }
-        });
-      }
+      queriesIds.forEach((queryId, index) => {
+        const query = store.getQueryCache().get(hashQueryKey(queryId));
+        const queryState = getState(query, results[index]);
+        if (!equal(states[queryId] || null, queryState || null)) {
+          setStates({ [queryId]: queryState });
+        }
+      });
     },
     [currentQueriesIds]
   );
@@ -150,9 +143,7 @@ export function useQueriesObserver<State = any>(queriesIds: string[], getState: 
   }, [currentQueriesIds]);
 
   React.useEffect(() => {
-    if (isMounted()) {
-      setStates(queriesResults);
-    }
+    setStates(queriesResults);
   }, [currentQueriesIds]);
 
   return states;
