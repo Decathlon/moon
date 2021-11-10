@@ -52,7 +52,7 @@ export default function useMutation<
   MutationVariables | undefined
 > {
   const { client } = useMoon();
-  function mutation() {
+  function mutation(variables: MutationVariables | undefined) {
     return client.mutate<MutationVariables, MutationResponse, MutationClientConfig>(source, endPoint, type, variables, options);
   }
 
