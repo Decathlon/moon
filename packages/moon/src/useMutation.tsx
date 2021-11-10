@@ -9,6 +9,8 @@ export type IMutationResultProps<MutationResponse, MutationError, MutationVariab
   Pick<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "reset"> & {
     mutate: () => void;
     mutateAsync: () => Promise<MutationResponse>;
+    dynamicMutate: (variables: MutationVariables) => void;
+    dynamicMutateAsync: (variables: MutationVariables) => Promise<MutationResponse>;
   }
 ];
 
@@ -69,5 +71,5 @@ export default function useMutation<
     return reactQueryMutateAsync(variables);
   }, [variables]);
 
-  return [others, { mutate, mutateAsync, reset }];
+  return [others, { mutate, mutateAsync, reset, dynamicMutate: reactQueryMutate, dynamicMutateAsync: reactQueryMutateAsync }];
 }
