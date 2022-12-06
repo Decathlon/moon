@@ -21,7 +21,7 @@
     "lib"
   ],
   "dependencies": {
-    "qs": "~6.9.4"
+    "qs": "~6.5.3"
   },
   "peerDependencies": {
     "@decathlon/moon": "~3.0.0",
