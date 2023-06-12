@@ -1,8 +1,8 @@
 {
-  "name": "@decathlon/moon-graphql",
+  "name": "@pricemoov-oss/moon-graphql",
   "version": "1.0.1",
   "description": "GraphQL for moon",
-  "author": "Decathlon",
+  "author": "PricemoovOSS",
   "license": "Apache-2.0",
   "main": "lib/moon-graphql/src/index.js",
   "module": "dist/index.es.js",
@@ -10,12 +10,12 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Decathlon/moon.git"
+    "url": "git+https://github.com/PricemoovOSS/moon.git"
   },
   "bugs": {
-    "url": "https://github.com/Decathlon/moon/issues"
+    "url": "https://github.com/PricemoovOSS/moon/issues"
   },
-  "homepage": "https://github.com/Decathlon/moon/blob/master/README.md",
+  "homepage": "https://github.com/PricemoovOSS/moon/blob/master/README.md",
   "files": [
     "dist",
     "lib"
@@ -24,12 +24,12 @@
     "qs": "~6.9.4"
   },
   "peerDependencies": {
-    "@decathlon/moon": "~3.0.0",
+    "@pricemoov-oss/moon": "~3.0.0",
     "graphql": "~15.3.0",
     "graphql-request": "~3.4.0"
   },
   "devDependencies": {
-    "@decathlon/moon": "^3.0.0"
+    "@pricemoov-oss/moon": "^3.0.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c && npm run build:lib",

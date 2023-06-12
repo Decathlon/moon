@@ -33,9 +33,9 @@
     "esModuleInterop": true,
     "baseUrl": "./packages",
     "paths": {
-      "@decathlon/moon": ["moon/src"],
-      "@decathlon/moon-axios": ["moon-axios/src"],
-      "@decathlon/*": ["*/src"]
+      "@pricemoov-oss/moon": ["moon/src"],
+      "@pricemoov-oss/moon-axios": ["moon-axios/src"],
+      "@pricemoov-oss/*": ["*/src"]
     }
   },
   "include": ["packages/**/*.ts"],

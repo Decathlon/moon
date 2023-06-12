@@ -1,4 +1,4 @@
-## Contributing to @decathlon/moon
+## Contributing to @pricemoov-oss/moon
 
 First off, thanks for taking the time to contribute!
 
