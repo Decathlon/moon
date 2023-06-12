@@ -1,7 +1,7 @@
 {
   "name": "@pricemoov-oss/moon",
   "version": "4.5.0",
-  "description": "A featured, production ready caching REST client for every React UI",
+  "description": "A featured, production ready caching REST client for every React UI (based on react-query)",
   "author": "PricemoovOSS",
   "license": "Apache-2.0",
   "main": "lib/index.js",
