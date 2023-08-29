@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosInterceptorManager } from "axios";
 import * as qs from "qs";
-import { IInterceptors, ClientInstance } from "@decathlon/moon";
+import { IInterceptors, ClientInstance } from "@pricemoov-oss/moon";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const paramsSerializer = (params: any) => qs.stringify(params, { arrayFormat: "repeat" });

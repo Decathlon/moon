@@ -1,8 +1,8 @@
 {
-  "name": "@decathlon/moon",
-  "version": "4.4.1",
-  "description": "A featured, production ready caching REST client for every React UI",
-  "author": "Decathlon",
+  "name": "@pricemoov-oss/moon",
+  "version": "4.6.0",
+  "description": "A featured, production ready caching REST client for every React UI (based on react-query)",
+  "author": "PricemoovOSS",
   "license": "Apache-2.0",
   "main": "lib/index.js",
   "module": "dist/index.es.js",
@@ -10,12 +10,12 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Decathlon/moon.git"
+    "url": "git+https://github.com/PricemoovOSS/moon.git"
   },
   "bugs": {
-    "url": "https://github.com/Decathlon/moon/issues"
+    "url": "https://github.com/PricemoovOSS/moon/issues"
   },
-  "homepage": "https://github.com/Decathlon/moon/blob/master/README.md",
+  "homepage": "https://github.com/PricemoovOSS/moon/blob/master/README.md",
   "files": [
     "dist",
     "lib"

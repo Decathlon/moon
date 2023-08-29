@@ -9,8 +9,8 @@ export type IMutationResultProps<MutationResponse, MutationError, MutationVariab
   Pick<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "reset"> & {
     mutate: () => void;
     mutateAsync: () => Promise<MutationResponse>;
-    dynamicMutate: (variables: MutationVariables) => void;
-    dynamicMutateAsync: (variables: MutationVariables) => Promise<MutationResponse>;
+    dynamicMutate: UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>["mutate"];
+    dynamicMutateAsync: UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>["mutateAsync"];
   }
 ];
 
@@ -56,13 +56,14 @@ export default function useMutation<
     return client.mutate<MutationVariables, MutationResponse, MutationClientConfig>(source, endPoint, type, variables, options);
   }
 
+  const mutationFn = mutationConfig?.mutationFn || mutation;
+
   const { mutate: reactQueryMutate, mutateAsync: reactQueryMutateAsync, reset, ...others } = useReactMutation<
     MutationResponse | undefined,
     MutationError,
     MutationVariables | undefined,
     unknown
-  >(mutation, mutationConfig);
-
+  >(mutationFn, mutationConfig);
   const mutate = React.useCallback(() => {
     return reactQueryMutate(variables);
   }, [variables]);
