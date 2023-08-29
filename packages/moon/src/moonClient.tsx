@@ -28,7 +28,7 @@ export default class MoonClient {
     endPoint?: string,
     variables?: Variables,
     options?: Config
-  ): Promise<Response> {
+  ): Promise<Response | undefined> {
     const client = this.getClientInstance(source);
     if (client) {
       return client.get(endPoint || "", {
@@ -45,7 +45,7 @@ export default class MoonClient {
     type: MutateType = MutateType.Post,
     variables?: Variables,
     options?: Config
-  ): Promise<Response> {
+  ): Promise<Response | undefined> {
     const client = this.getClientInstance(source);
     const clientEndPoint = endPoint || "";
     if (client) {

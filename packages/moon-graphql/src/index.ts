@@ -47,7 +47,7 @@ export class MoonGraphQLInstance implements ClientInstance {
     const options = this.useRequestInterceptors(config);
     const controller = new AbortController();
     if (!options.signal) {
-      options.signal = controller.signal;
+      options.signal = controller.signal as RequestInit["signal"];
     }
     const instance = new GraphQLClient(this.config.baseURL, options);
     const getPromise = instance.request<Response, any>(query, config?.params, options.headers).then(

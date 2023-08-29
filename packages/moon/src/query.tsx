@@ -4,6 +4,7 @@ import { InfiniteData, UseQueryResult } from "react-query";
 import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { FetchPolicy, IQueryProps } from "./useQuery";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
+import { ClientConfig } from "./utils";
 
 export interface IQueryChildrenProps<QueryData, QueryError>
   extends Omit<UseQueryResult<QueryData, QueryError>, "refetch" | "remove"> {
@@ -20,7 +21,13 @@ export interface IQueryComponentProps<QueryVariables, QueryResponse, QueryData, 
   children?: QueryChildren<QueryData, QueryError>;
 }
 
-function Query<QueryVariables = any, QueryResponse = any, QueryData = QueryResponse, QueryError = any, QueryConfig = any>(
+function Query<
+  QueryVariables = any,
+  QueryResponse = any,
+  QueryData = QueryResponse,
+  QueryError = any,
+  QueryConfig extends ClientConfig = any
+>(
   props: IQueryComponentProps<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {

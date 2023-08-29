@@ -55,6 +55,10 @@ module.exports = {
     "no-unused-expressions": 1,
     "jsx-a11y/click-events-have-key-events": 1,
     "jsx-a11y/no-static-element-interactions": 1,
-    "max-classes-per-file": 1
+    "max-classes-per-file": 1,
+    "no-unused-vars": 1,
+    "react/require-default-props": 1,
+    "react/default-props-match-prop-types": 1,
+    "react/no-unused-prop-types": 1
   }
 };

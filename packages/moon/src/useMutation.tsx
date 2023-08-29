@@ -3,6 +3,7 @@ import { useMutation as useReactMutation, UseMutationResult, MutationOptions } f
 
 import { MutateType } from "./moonClient";
 import { useMoon } from "./hooks";
+import { ClientConfig } from "./utils";
 
 export type IMutationResultProps<MutationResponse, MutationError, MutationVariables> = [
   Omit<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "mutate" | "mutateAsync" | "reset">,
@@ -38,7 +39,7 @@ export default function useMutation<
   MutationVariables = any,
   MutationResponse = any,
   MutationError = any,
-  MutationClientConfig = any
+  MutationClientConfig extends ClientConfig = any
 >({
   source,
   endPoint,
