@@ -24,12 +24,12 @@
     "qs": "~6.9.4"
   },
   "peerDependencies": {
-    "@pricemoov-oss/moon": "~3.0.0",
+    "@pricemoov-oss/moon": "~4.5.0",
     "graphql": "~15.3.0",
     "graphql-request": "~3.4.0"
   },
   "devDependencies": {
-    "@pricemoov-oss/moon": "^3.0.0"
+    "@pricemoov-oss/moon": "^4.5.0"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c && npm run build:lib",
