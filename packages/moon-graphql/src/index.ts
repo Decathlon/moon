@@ -1,6 +1,6 @@
 import { GraphQLClient } from "graphql-request";
 import { RequestInit } from "graphql-request/dist/types.dom";
-import { IInterceptors, ClientInstance } from "@decathlon/moon";
+import { IInterceptors, ClientInstance } from "@pricemoov-oss/moon";
 
 export interface GraphQLRequestConfig {
   params?: Record<string, any>;
