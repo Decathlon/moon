@@ -1,8 +1,9 @@
 import * as React from "react";
-import { useMutation as useReactMutation, UseMutationResult, MutationOptions } from "react-query";
 
+import { UseMutationResult, MutationOptions, UseMutationOptions, useReactMutation } from "./compat";
 import { MutateType } from "./moonClient";
 import { useMoon } from "./hooks";
+import { ClientConfig } from "./utils";
 
 export type IMutationResultProps<MutationResponse, MutationError, MutationVariables> = [
   Omit<UseMutationResult<MutationResponse | undefined, MutationError, MutationVariables>, "mutate" | "mutateAsync" | "reset">,
@@ -18,7 +19,7 @@ export interface IMutationProps<
   MutationVariables = any,
   MutationResponse = any,
   MutationError = any,
-  MutationClientConfig = any
+  MutationClientConfig extends ClientConfig = any
 > {
   /** The link id of the http client */
   source?: string;
@@ -30,7 +31,7 @@ export interface IMutationProps<
   type?: MutateType;
   /** The http client options of your mutation. */
   options?: MutationClientConfig;
-  /** The react-query config. Please see the react-query MutationConfig for more details. */
+  /** The cache library config (forwarded to @tanstack/react-query as `MutationOptions`). */
   mutationConfig?: MutationOptions<MutationResponse, MutationError, MutationVariables | undefined, unknown>;
 }
 
@@ -38,7 +39,7 @@ export default function useMutation<
   MutationVariables = any,
   MutationResponse = any,
   MutationError = any,
-  MutationClientConfig = any
+  MutationClientConfig extends ClientConfig = any
 >({
   source,
   endPoint,
@@ -63,7 +64,10 @@ export default function useMutation<
     MutationError,
     MutationVariables | undefined,
     unknown
-  >(mutationFn, mutationConfig);
+  >(
+    mutationFn as (variables: MutationVariables | undefined) => Promise<MutationResponse | undefined>,
+    mutationConfig as UseMutationOptions<MutationResponse | undefined, MutationError, MutationVariables | undefined, unknown>
+  );
 
   const mutate = React.useCallback(() => {
     return reactQueryMutate(variables);

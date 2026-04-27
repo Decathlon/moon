@@ -1,6 +1,11 @@
 import * as React from "react";
-import { UseQueryOptions as ReactQueryConfig } from "react-query";
 
+import {
+  QueryFunctionContext,
+  LegacyUseQueryOptions as ReactQueryConfig,
+  withDefaultQueryOptions,
+  prefetchQueryById
+} from "./compat";
 import { useMoon } from "./hooks";
 import { getQueryId, IQueryProps } from "./useQuery";
 import { ClientConfig } from "./utils";
@@ -23,15 +28,16 @@ export default function usePrefetchQuery<
   const queryId = getQueryId({ id, source, endPoint, variables });
 
   const queryOptions: ReactQueryConfig<QueryResponse, QueryError, QueryData> = React.useMemo(
-    () => store.defaultQueryObserverOptions(queryConfig),
+    () => withDefaultQueryOptions<QueryData, QueryError, QueryResponse>(store, queryConfig),
     [queryConfig, store]
   );
 
-  function fetch() {
-    return client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
+  function fetch(context: QueryFunctionContext) {
+    const optionsWithSignal = { ...(options as Record<string, unknown>), signal: context.signal } as QueryConfig;
+    return client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, optionsWithSignal);
   }
   async function prefetch() {
-    await store.prefetchQuery(queryId, fetch, queryOptions);
+    await prefetchQueryById(store, queryId, fetch, (queryOptions as unknown) as ReactQueryConfig<QueryResponse>);
   }
   return prefetch;
 }

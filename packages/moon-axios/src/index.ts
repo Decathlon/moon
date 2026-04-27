@@ -1,9 +1,24 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosInterceptorManager } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, ParamsSerializerOptions } from "axios";
 import * as qs from "qs";
 import { IInterceptors, ClientInstance } from "@pricemoov-oss/moon";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const paramsSerializer = (params: any) => qs.stringify(params, { arrayFormat: "indices" });
+const defaultSerialize = (params: any) => qs.stringify(params, { arrayFormat: "indices" });
+
+/**
+ * Axios 1.x expects `paramsSerializer: { serialize, indexes? }`. Moon historically
+ * accepted (and documented) `paramsSerializer: (params) => string`. We accept
+ * both forms here so existing callers don't have to change.
+ */
+function normalizeParamsSerializer(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: ParamsSerializerOptions | ((params: any) => string) | undefined
+): ParamsSerializerOptions {
+  if (typeof value === "function") {
+    return { serialize: value };
+  }
+  return value || { serialize: defaultSerialize };
+}
 
 function updateCancelToken(config?: AxiosRequestConfig) {
   if (!config?.cancelToken) {
@@ -19,24 +34,26 @@ function updateCancelToken(config?: AxiosRequestConfig) {
 export class MoonAxiosInstance implements ClientInstance {
   instance: AxiosInstance;
 
-  interceptors: {
-    request: AxiosInterceptorManager<AxiosRequestConfig>;
-    response: AxiosInterceptorManager<AxiosResponse>;
-  };
+  // Backward-compat: expose the underlying axios interceptors. We type them through
+  // the Moon `ClientInstance` contract so consumers using the loose Moon API keep
+  // compiling; cast to `any` at the assignment because axios 1.x tightened its own
+  // interceptor types in a way that does not satisfy Moon's narrower contract.
+  interceptors: ClientInstance["interceptors"];
 
   constructor(config?: AxiosRequestConfig, interceptors?: IInterceptors<AxiosRequestConfig, AxiosResponse>) {
     this.instance = axios.create(config);
-    this.interceptors = this.instance.interceptors;
-    // use request interceptors
-    if (interceptors && interceptors.request && interceptors.request.length > 0 && this.interceptors.request) {
-      interceptors.request.forEach(interceptor => this.interceptors.request.use(interceptor.onFulfilled, interceptor.onRejected));
-    }
-
-    // use response interceptors
-    if (interceptors && interceptors.response && interceptors.response.length > 0 && this.interceptors.response) {
-      interceptors.response.forEach(interceptor =>
-        this.interceptors.response.use(interceptor.onFulfilled, interceptor.onRejected)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.interceptors = this.instance.interceptors as any;
+    const reqI = this.instance.interceptors.request;
+    const resI = this.instance.interceptors.response;
+    if (interceptors?.request && interceptors.request.length > 0) {
+      interceptors.request.forEach(interceptor =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        reqI.use(interceptor.onFulfilled as any, interceptor.onRejected)
       );
+    }
+    if (interceptors?.response && interceptors.response.length > 0) {
+      interceptors.response.forEach(interceptor => resI.use(interceptor.onFulfilled, interceptor.onRejected));
     }
   }
 
@@ -85,11 +102,12 @@ export default function createAxiosClient(
   config?: AxiosRequestConfig,
   interceptors?: IInterceptors<AxiosRequestConfig, AxiosResponse>
 ): MoonAxiosInstance {
-  // create Axios client with custom params serializer
+  // create Axios client with custom params serializer (axios 1.x expects an object form;
+  // we accept the legacy function form too for backward compatibility).
   return new MoonAxiosInstance(
     {
       ...config,
-      paramsSerializer: config?.paramsSerializer || paramsSerializer
+      paramsSerializer: normalizeParamsSerializer(config?.paramsSerializer)
     },
     interceptors
   );

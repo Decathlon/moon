@@ -1,20 +1,32 @@
 import * as React from "react";
-import {
-  useInfiniteQuery as useInfiniteReactQuery,
-  UseInfiniteQueryResult,
-  UseInfiniteQueryOptions as ReactQueryConfig,
-  QueryFunctionContext,
-  QueryKey
-} from "react-query";
 
+import {
+  UseInfiniteQueryResult,
+  UseQueryResult,
+  LegacyUseInfiniteQueryOptions as ReactQueryConfig,
+  LegacyExtras,
+  QueryFunctionContext,
+  QueryKey,
+  InfiniteData,
+  useReactInfiniteQuery,
+  useLegacyQueryCallbacks,
+  withDefaultInfiniteOptions,
+  cancelQueryById,
+  removeQueryById
+} from "./compat";
 import { useMoon, usePrevValue } from "./hooks";
 import { getQueryId } from "./useQuery";
 import { ClientConfig } from "./utils";
 
+// `data` on infinite query results is wrapped in InfiniteData<QueryData> by the cache library.
+type WrappedInfiniteResult<QueryData, QueryError> = UseInfiniteQueryResult<InfiniteData<QueryData>, QueryError>;
+
 export type IInfiniteQueryResultProps<QueryData, QueryError> = [
-  Omit<UseInfiniteQueryResult<QueryData, QueryError>, "fetchNextPage" | "fetchPreviousPage" | "refetch" | "remove">,
-  Pick<UseInfiniteQueryResult<QueryData, QueryError>, "fetchNextPage" | "fetchPreviousPage" | "refetch" | "remove"> & {
+  Omit<WrappedInfiniteResult<QueryData, QueryError>, "fetchNextPage" | "fetchPreviousPage" | "refetch">,
+  Pick<WrappedInfiniteResult<QueryData, QueryError>, "fetchNextPage" | "fetchPreviousPage" | "refetch"> & {
     cancel: () => void;
+    /** Remove the cached entry for this query. Provided by Moon (was on `UseInfiniteQueryResult` in react-query v3). */
+    remove: () => void;
   }
 ];
 
@@ -34,7 +46,7 @@ export interface IInfiniteQueryProps<
   variables?: QueryVariables;
   /** The http client options of your query. */
   options?: QueryConfig;
-  /** The react-query config. Please see the react-query QueryConfig for more details. */
+  /** The cache library config (forwarded to @tanstack/react-query). Accepts the v5 `UseInfiniteQueryOptions` plus the v3 legacy fields `onSuccess`, `onError`, `onSettled`, `cacheTime`, `keepPreviousData` for backward compatibility. */
   queryConfig?: ReactQueryConfig<QueryResponse, QueryError, QueryData>;
 }
 
@@ -67,23 +79,38 @@ export default function useInfiniteQuery<
   const { value, prevValue } = usePrevValue({ queryId, clientProps });
 
   const queryOptions: ReactQueryConfig<QueryResponse, QueryError, QueryData> = React.useMemo(
-    () => store.defaultQueryObserverOptions(queryConfig),
+    () => withDefaultInfiniteOptions<QueryData, QueryError, QueryResponse>(store, queryConfig),
     [queryConfig, store]
   );
 
-  function fetch({ pageParam }: QueryFunctionContext<QueryKey, QueryPageVariables>) {
-    const queryVariables = { ...variables, ...pageParam } as QueryVariables & QueryPageVariables;
+  function fetch({ pageParam, signal }: QueryFunctionContext<QueryKey, QueryPageVariables>) {
+    const pageVars = (pageParam || {}) as Partial<QueryPageVariables>;
+    const queryVariables = { ...variables, ...pageVars } as QueryVariables & QueryPageVariables;
+    // Forward TanStack Query v5's AbortSignal so the underlying client can cancel
+    // the in-flight page request on refetch / unmount.
+    const optionsWithSignal = { ...(options as Record<string, unknown>), signal } as QueryConfig;
     return client.query<QueryVariables & QueryPageVariables, QueryResponse, QueryConfig>(
       source,
       endPoint,
       queryVariables,
-      options
+      optionsWithSignal
     );
   }
 
-  const queryResult = useInfiniteReactQuery<QueryResponse, QueryError, QueryData>(queryId, fetch, queryOptions);
+  const queryResult = useReactInfiniteQuery<QueryResponse, QueryError, QueryData>(queryId, fetch, queryOptions);
 
-  const { fetchNextPage, fetchPreviousPage, refetch, remove, ...others } = queryResult;
+  // Bridge react-query v3 onSuccess/onError/onSettled (removed in v5). The infinite-query
+  // result wraps `data` in `InfiniteData<QueryData>` — we forward that wrapped shape so
+  // the user's callbacks receive what they used to receive in v3.
+  useLegacyQueryCallbacks(
+    queryResult as Pick<
+      UseQueryResult<InfiniteData<QueryData>, QueryError>,
+      "data" | "error" | "dataUpdatedAt" | "errorUpdatedAt"
+    >,
+    queryConfig as LegacyExtras<InfiniteData<QueryData>, QueryError>
+  );
+
+  const { fetchNextPage, fetchPreviousPage, refetch, ...others } = queryResult;
 
   React.useEffect(() => {
     if (prevValue.queryId === value.queryId && !isInitialMount.current && queryOptions?.enabled) {
@@ -97,7 +124,11 @@ export default function useInfiniteQuery<
   }, []);
 
   function cancel() {
-    store.cancelQueries(queryId, { exact: true });
+    cancelQueryById(store, queryId);
+  }
+
+  function remove() {
+    removeQueryById(store, queryId);
   }
 
   return [others, { fetchNextPage, fetchPreviousPage, remove, refetch, cancel }];

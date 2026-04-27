@@ -1,4 +1,8 @@
-export * from "react-query";
+// Re-export the underlying cache library through the compat layer.
+// `compat` exposes both v5's native names AND the backward-compatible aliases
+// that Moon v4 / react-query v3 callers depended on (`Hydrate`, `hashQueryKey`,
+// `HydrateProps`).
+export * from "./compat";
 
 export { default as MoonClient } from "./moonClient";
 export * from "./moonClient";

@@ -44,7 +44,7 @@ describe("Mutation component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);
@@ -81,7 +81,7 @@ describe("Mutation component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
 
     expect(post).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);

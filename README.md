@@ -2,7 +2,7 @@
 
 _**The power of react-query with your favorite HTTP Client**_
 
-**Moon** is a featured, production ready caching **REST** client based on [**react-query**](https://github.com/tannerlinsley/react-query) for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via a HTTP client (Axios, fetch... ).
+**Moon** is a featured, production ready caching **REST** client based on [**TanStack Query**](https://tanstack.com/query) (formerly react-query) for every **React UI**. It allows you to manage queries life cycle with an api and easily build React UI components that fetch data via a HTTP client (Axios, fetch... ).
 The only thing you have to do is transmit the configuration. **Moon does the rest !** 🚀
 
 Moon client can be used in any React app where you want to use data. It's:
@@ -45,7 +45,7 @@ Table of contents
 Installation for Axios client
 ============================
 ```bash
-npm install @pricemoov-oss/moon @pricemoov-oss/moon-axios react-query axios --save
+npm install @pricemoov-oss/moon @pricemoov-oss/moon-axios @tanstack/react-query axios --save
 ```
 
 
@@ -401,11 +401,11 @@ Moon provider props
 interface IMoonProviderProps {
     // The links ( HTTP clients config)
   links: ILink[];
-  // The global Moon client factory (like the moon-axios Axios client for moon https://github.com/dktunited/moon-axios)
-  clientFactory: ClientFactory;
-  // The react-query QueryClient object
+  // The global Moon client factory (like the moon-axios Axios client https://github.com/PricemoovOSS/moon)
+  clientFactory?: ClientFactory;
+  // The @tanstack/react-query QueryClient object
   store?: QueryClient;
-  // The react-query initial cache state (please see https://react-query.tanstack.com/docs/api#hydrationdehydrate for more details)
+  // The @tanstack/react-query initial cache state (see https://tanstack.com/query/latest/docs/react/guides/ssr#using-the-hydration-apis)
   hydrate?: HydrateProps;
 }
 ```
@@ -487,7 +487,7 @@ export interface IMutationProps<
   /** The http client options of your mutation. */
   options?: MutationClientConfig;
   /** The react-query config. Please see the react-query MutationConfig for more details. */
-  mutationConfig?: MutationConfig<MutationResponse, MutationError, MutationVariables, unknown>;
+  mutationConfig?: MutationOptions<MutationResponse, MutationError, MutationVariables, unknown>;
 }
 ```
 Moon config

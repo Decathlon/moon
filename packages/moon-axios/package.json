@@ -1,6 +1,6 @@
 {
   "name": "@pricemoov-oss/moon-axios",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Axios for moon",
   "author": "PricemoovOSS",
   "license": "Apache-2.0",
@@ -24,11 +24,11 @@
     "qs": "~6.9.4"
   },
   "peerDependencies": {
-    "@pricemoov-oss/moon": "~3.0.0",
-    "axios": "~0.20.0"
+    "@pricemoov-oss/moon": "^5.0.0",
+    "axios": "^1.0.0"
   },
   "devDependencies": {
-    "@pricemoov-oss/moon": "^3.0.0"
+    "@pricemoov-oss/moon": "*"
   },
   "scripts": {
     "build": "rimraf dist && rollup -c && npm run build:lib",

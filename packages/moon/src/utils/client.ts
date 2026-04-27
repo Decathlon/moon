@@ -1,6 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 
-import { QueryCache, QueryClient, MutationCache } from "react-query";
+import { QueryCache, QueryClient, MutationCache } from "../compat";
 
 interface InterceptorManagerUseParams<V> {
   onFulfilled?: (value: V) => V | Promise<V>;
@@ -33,6 +33,13 @@ export type DataTransformer = (data: any) => any;
 export interface ClientConfig {
   baseURL?: string;
   params?: any;
+  /**
+   * AbortSignal forwarded by Moon to the underlying client (axios, fetch,
+   * graphql-request…). When `useQuery` / `useInfiniteQuery` re-fetches or
+   * unmounts, TanStack Query v5 aborts the in-flight signal which propagates
+   * here. Existing callers don't have to set this themselves.
+   */
+  signal?: AbortSignal;
 }
 
 export interface ClientInterceptorManager<V> {
@@ -52,10 +59,8 @@ export interface ClientInstance {
   patch<R = any>(url: string, data?: any, config?: ClientConfig): Promise<R>;
 }
 
-let queryClient: QueryClient;
-
 export function getClients(links: ILink[], clientFactory?: ClientFactory): IClients {
-  return links.reduce((clients, link) => {
+  return links.reduce<IClients>((clients, link) => {
     const linkClientFactory = link.clientFactory || clientFactory;
     if (!linkClientFactory) {
       throw new Error("A link client factory must be defined!");
@@ -65,23 +70,31 @@ export function getClients(links: ILink[], clientFactory?: ClientFactory): IClie
   }, {});
 }
 
-export function getMoonStore(store?: QueryClient): QueryClient {
-  if (store) {
-    queryClient = store;
-    return store;
-  }
-  if (queryClient) {
-    return queryClient;
-  }
-
-  const queryCache = new QueryCache();
-  const mutationCache = new MutationCache();
-  queryClient = new QueryClient({
-    queryCache,
-    mutationCache,
+/**
+ * Build a `QueryClient` for a `MoonProvider` instance.
+ *
+ * Historically Moon kept a `queryClient` cached at module level so multiple
+ * `MoonProvider`s shared the same cache. That made SSR and isolated tests
+ * unsafe (one suite poisoning another's cache, requests crossing tenants in
+ * SSR). The new behavior:
+ *   - if the caller supplies a `store`, use it as-is;
+ *   - otherwise create a fresh client scoped to the `MoonProvider` instance.
+ */
+export function createMoonStore(): QueryClient {
+  return new QueryClient({
+    queryCache: new QueryCache(),
+    mutationCache: new MutationCache(),
     defaultOptions: {
       queries: { refetchOnWindowFocus: false }
     }
   });
-  return queryClient;
+}
+
+/**
+ * @deprecated Kept for backward compatibility — use `createMoonStore()` directly
+ * or rely on `MoonProvider`, which now creates a per-instance client. Calling
+ * this without an argument no longer returns a shared singleton.
+ */
+export function getMoonStore(store?: QueryClient): QueryClient {
+  return store || createMoonStore();
 }

@@ -7,10 +7,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
       - name: Run tests
         run: |
-          npm i -g npm@6.14.17 --registry=https://registry.npmjs.org
           npm ci
           npm run test
           npm run lint

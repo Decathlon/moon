@@ -1,7 +1,7 @@
 {
   "name": "@pricemoov-oss/moon",
-  "version": "4.6.0",
-  "description": "A featured, production ready caching REST client for every React UI (based on react-query)",
+  "version": "5.0.0",
+  "description": "A featured, production ready caching REST client for every React UI (based on @tanstack/react-query)",
   "author": "PricemoovOSS",
   "license": "Apache-2.0",
   "main": "lib/index.js",
@@ -21,8 +21,14 @@
     "lib"
   ],
   "peerDependencies": {
-    "react": "^17.0.1",
-    "react-query": "~3.23.2"
+    "react": "^18.0.0 || ^19.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query-devtools": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query-devtools": {
+      "optional": true
+    }
   },
   "scripts": {
     "build": "rimraf dist && rollup -c && npm run build:lib",

@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v5
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v5
         with:
-          node-version: 14
+          node-version: 22
           registry-url: https://registry.npmjs.org/
       - name: Build
         run: |

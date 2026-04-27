@@ -3,8 +3,9 @@ import commonjs from "@rollup/plugin-commonjs";
 import external from "rollup-plugin-peer-deps-external";
 import resolve from "@rollup/plugin-node-resolve";
 import json from "@rollup/plugin-json";
+import { readFileSync } from "fs";
 
-import pkg from "./package.json";
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf-8"));
 
 const TARGETS = [
   { format: "umd", name: "MoonGraphQL", dir: "./dist", tsconfig: "./tsconfig.umd.json" },
