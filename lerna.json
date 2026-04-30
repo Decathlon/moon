@@ -1,8 +1,9 @@
 {
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "packages": ["packages/*"],
-  "useWorkspaces": true,
   "publishConfig": {
     "access": "public"
   },
-  "version": "independent"
+  "version": "independent",
+  "npmClient": "npm"
 }

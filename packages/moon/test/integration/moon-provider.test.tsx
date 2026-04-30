@@ -9,7 +9,7 @@ interface IProps extends IMoonContextValue {
   prop: string;
 }
 
-const MyComponent: React.FunctionComponent<IProps> = ({ client }) => {
+const MyComponent: React.FunctionComponent<IProps> = ({ client, prop }) => {
   const [response, setResponse] = React.useState<any>(null);
   React.useEffect(() => {
     //@ts-ignore can't be null
@@ -17,7 +17,7 @@ const MyComponent: React.FunctionComponent<IProps> = ({ client }) => {
       setResponse(result);
     });
   }, []);
-  return <span>{!response ? "Loading" : "Success"}</span>;
+  return <span data-prop={prop}>{!response ? "Loading" : "Success"}</span>;
 };
 
 const WithMoonComponent = withMoon<IProps>(MyComponent);

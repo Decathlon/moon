@@ -1,22 +1,22 @@
-# @decathlon/moon-graphql
+# @pricemoov-oss/moon-graphql
 
 _**The power of react-query with graphql**_
 
-**@decathlon/moon** is the [graphql](https://github.com/prisma-labs/graphql-request) HTTP client for [Moon](https://github.com/Decathlon/moon). 
+**@pricemoov-oss/moon** is the [graphql](https://github.com/prisma-labs/graphql-request) HTTP client for [Moon](https://github.com/PricemoovOSS/moon). 
 
 ## Installation
 
 ```bash
-npm install @decathlon/moon @decathlon/moon-graphql react-query graphql graphql-request --save
+npm install @pricemoov-oss/moon @pricemoov-oss/moon-graphql react-query graphql graphql-request --save
 ```
 
 ## Usage
 
-Please see the [Moon doc](https://github.com/Decathlon/moon/blob/master/README.md) for more details.
+Please see the [Moon doc](https://github.com/PricemoovOSS/moon/blob/master/README.md) for more details.
 
 ```js
-import { MoonProvider, ILink } from "@decathlon/moon";
-import graphqlClientFactory from "@decathlon/moon-graphql";
+import { MoonProvider, ILink } from "@pricemoov-oss/moon";
+import graphqlClientFactory from "@pricemoov-oss/moon-graphql";
 
 function successHandler(response){...};
 

@@ -1,21 +1,17 @@
 import * as React from "react";
+
 import {
-  QueryObserver,
-  QueriesObserver,
-  hashQueryKey,
-  InfiniteQueryObserver,
-  notifyManager,
-  QueryKey,
-  InfiniteQueryObserverOptions,
-  QueryObserverOptions,
+  hashId,
+  toQueryKey,
+  useQueries,
+  useObservedQuery,
   UseQueryResult,
   UseInfiniteQueryResult,
-  QueryObserverResult,
-  InfiniteData
-} from "react-query";
-import { Query, QueryState } from "react-query/types/core/query";
-
-import { MoonContext, RquiredMoonContextValue } from "./moonProvider";
+  InfiniteData,
+  Query,
+  QueryState
+} from "./compat";
+import { MoonContext, RequiredMoonContextValue } from "./moonProvider";
 import { equal, isServer } from "./utils";
 
 export interface QueriesStates {
@@ -40,113 +36,80 @@ export function getAdaptedQueryState<Data>(
   query: Query<Data> | undefined,
   result: QueryState<Data> | UseQueryResult<Data> | UseInfiniteQueryResult<Data> | undefined = query?.state,
   isInfinite = false
-): QueryState<Data | InfiniteData<Data> | undefined> | undefined {
+): (QueryState<Data | InfiniteData<Data> | undefined> & { isFetching: boolean }) | undefined {
   if (!query || !result) {
     return undefined;
   }
-  const { data: newData, dataUpdatedAt, isFetching, error, errorUpdatedAt, status } = result;
-  const networkOnly = query.cacheTime === 0;
+  // `isFetching` is on the hook results (UseQueryResult / UseInfiniteQueryResult) but not on
+  // QueryState (v5 only exposes `fetchStatus` there) — derive a unified boolean.
+  const isFetching =
+    "isFetching" in result
+      ? Boolean((result as UseQueryResult<Data>).isFetching)
+      : (result as QueryState<Data>).fetchStatus === "fetching";
+  const { data: newData, dataUpdatedAt, error, errorUpdatedAt, status } = result;
+  const networkOnly = query.gcTime === 0;
   const cachedData = query.state.data;
   const data = newData || cachedData;
   const queryData = !isInfinite && isFetching && networkOnly ? undefined : data;
-  return { ...query?.state, dataUpdatedAt, isFetching, error, errorUpdatedAt, status, data: queryData };
+  return { ...query?.state, dataUpdatedAt, error, errorUpdatedAt, status, data: queryData, isFetching };
 }
 
+/**
+ * Subscribe to a single query in the cache.
+ *
+ * Internally piggybacks on the native `useQuery({ enabled: false })` hook:
+ * TanStack Query already wires the subscription, the equality comparison and
+ * the re-render on cache change — Moon used to re-implement that on top of
+ * a `QueryObserver` (≈50 lines plus listener/effect plumbing). This wrapper
+ * is the same observation, served by the native primitive.
+ */
 export function useQueryObserver<State = any, Data = any>(
   queryId: string,
   getState: GetState<Data, State>,
   isInfinite = false
 ): State | undefined {
   const { store } = useMoon();
-  const [state, setState] = React.useState<State | undefined>();
-
-  const getQuery = React.useCallback(() => store.getQueryCache().get<Data>(hashQueryKey(queryId)), [queryId]);
-
-  const defaultOptions: InfiniteQueryObserverOptions<Data> | QueryObserverOptions<Data> = React.useMemo(
-    () => store.defaultQueryObserverOptions<Data, unknown, Data, Data, QueryKey>({ queryKey: queryId, enabled: false }),
-    [queryId]
-  );
-  const createObserver = React.useCallback(() => {
-    return isInfinite
-      ? new InfiniteQueryObserver<Data>(store, defaultOptions as InfiniteQueryObserverOptions<Data>)
-      : new QueryObserver<Data>(store, defaultOptions);
-  }, [isInfinite, store, defaultOptions]);
-  const observer = createObserver();
-
-  if (observer.hasListeners()) {
-    // @ts-ignore InfiniteQueryObserver | QueryObserver
-    observer.setOptions(defaultOptions);
-  }
-
-  const listener = React.useCallback(
-    (result: UseQueryResult<Data> | UseInfiniteQueryResult<Data>) => {
-      const query = getQuery();
-      const queryState = getState(query, result);
-      if (!equal(state || null, queryState || null)) {
-        setState(queryState);
-      }
-    },
-    [queryId]
-  );
-
-  React.useEffect(() => {
-    return observer.subscribe(notifyManager.batchCalls(listener));
-  }, [queryId]);
-
-  React.useEffect(() => {
-    setState(getState(getQuery()));
-  }, [queryId]);
-
-  return state;
+  // Subscribes to the cache entry; re-renders this component whenever the
+  // entry's state changes.
+  const result = useObservedQuery<Data>(queryId);
+  // Fetch the matching `Query` object so `getState` has access to the full
+  // metadata (gcTime, etc.).
+  const query = store.getQueryCache().get<Data>(hashId(queryId)) as Query<Data> | undefined;
+  return getState(query, result as UseQueryResult<Data> | UseInfiniteQueryResult<Data>, isInfinite);
 }
 
+/**
+ * Subscribe to multiple queries in the cache. Same trick as `useQueryObserver`
+ * but built on `useQueries` so re-renders only fire when at least one observed
+ * entry changes.
+ */
 export function useQueriesObserver<State = any>(queriesIds: string[], getState: GetState<unknown, State>): QueriesResults {
-  const { value: currentQueriesIds } = usePrevValue(queriesIds);
+  const { value: ids } = usePrevValue(queriesIds);
   const { store } = useMoon();
 
-  const queriesResults = React.useMemo(() => {
-    return currentQueriesIds.reduce<QueriesResults<State>>((result, queryId) => {
-      const query = store.getQueryCache().get(hashQueryKey(queryId));
-      result[queryId] = getState(query);
-      return result;
-    }, {});
-  }, [currentQueriesIds, store]);
-
-  const [states, setStates] = React.useState<QueriesResults>(queriesResults);
-
-  const queries = React.useMemo(() => {
-    return queriesIds.map(queryId =>
-      store.defaultQueryObserverOptions<unknown, unknown, unknown, unknown, QueryKey>({ queryKey: queryId, enabled: false })
-    );
-  }, [currentQueriesIds]);
-
-  const observer = new QueriesObserver(store, queries);
-
-  if (observer.hasListeners()) {
-    observer.setQueries(queries);
-  }
-  const listener = React.useCallback(
-    (results: QueryObserverResult[]) => {
-      queriesIds.forEach((queryId, index) => {
-        const query = store.getQueryCache().get(hashQueryKey(queryId));
-        const queryState = getState(query, results[index]);
-        if (!equal(states[queryId] || null, queryState || null)) {
-          setStates({ [queryId]: queryState });
-        }
-      });
-    },
-    [currentQueriesIds]
+  const queries = React.useMemo(
+    () =>
+      ids.map(id => ({
+        queryKey: toQueryKey(id),
+        queryFn: () => undefined,
+        enabled: false
+      })),
+    [ids]
   );
 
-  React.useEffect(() => {
-    return observer.subscribe(notifyManager.batchCalls(listener));
-  }, [currentQueriesIds]);
+  const results = useQueries({ queries: queries as never }) as ReadonlyArray<UseQueryResult<unknown>>;
 
-  React.useEffect(() => {
-    setStates(queriesResults);
-  }, [currentQueriesIds]);
-
-  return states;
+  return React.useMemo<QueriesResults<State>>(
+    () =>
+      ids.reduce<QueriesResults<State>>((acc, id, index) => {
+        const query = store.getQueryCache().get(hashId(id)) as Query<unknown> | undefined;
+        acc[id] = getState(query, results[index]);
+        return acc;
+      }, {}),
+    // `store` and `getState` change every render but are stable; we recompute
+    // only when the observed ids set or the underlying results change.
+    [ids, results]
+  );
 }
 
 export function useQueryResult<Data = any, Props = ResultProps>(
@@ -197,22 +160,40 @@ export function useQueriesStates<Props = ResultProps>(
 }
 
 export function usePrevValue<Value = any>(value: Value): { value: Value; prevValue: Value } {
+  // Tracks the previous value as a ref. We mutate the ref inside `useMemo`
+  // (not directly during render) so React 18 strict-mode double-render does
+  // not desynchronise the ref with the rendered value.
   const valueRef = React.useRef<Value>(value);
-  const prevValue = valueRef.current;
-  //@ts-ignore prevValue is an object
-  if (typeof prevValue === "object" && typeof value === "object" && !equal(prevValue, value, true)) {
-    valueRef.current = value;
-  }
-  return { value: valueRef.current, prevValue };
+  const previousRef = React.useRef<Value>(value);
+
+  React.useMemo(() => {
+    const { current } = valueRef;
+    const isDeepObject = typeof current === "object" && current !== null && typeof value === "object" && value !== null;
+    if (!isDeepObject) {
+      // Primitive or null: update only when the identity differs.
+      if (current !== value) {
+        previousRef.current = current;
+        valueRef.current = value;
+      }
+      return;
+    }
+    // Object: deep compare so a stable reference doesn't trigger churn.
+    if (!equal((current as unknown) as Record<string, unknown>, (value as unknown) as Record<string, unknown>, true)) {
+      previousRef.current = current;
+      valueRef.current = value;
+    }
+  }, [value]);
+
+  return { value: valueRef.current, prevValue: previousRef.current };
 }
 
-export function useMoon(): RquiredMoonContextValue {
+export function useMoon(): RequiredMoonContextValue {
   const moonContext = React.useContext(MoonContext);
   const { client, store } = moonContext;
   if (!client || !store) {
     throw new Error("Invariant Violation: Please wrap the root component in a <MoonProvider>");
   }
-  return moonContext as RquiredMoonContextValue;
+  return moonContext as RequiredMoonContextValue;
 }
 
 export function useIsMounted(): () => boolean {

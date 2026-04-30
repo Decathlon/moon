@@ -1,8 +1,9 @@
-import { UseMutationResult } from "react-query";
+import { UseMutationResult } from "./compat";
 
 import { MutateType } from "./moonClient";
 import { Nullable } from "./typing";
 import useMutation, { IMutationProps } from "./useMutation";
+import { ClientConfig } from "./utils";
 
 export interface IMutationChildrenProps<MutationVariables = any, MutationResponse = any, MutationError = any>
   extends Omit<
@@ -20,12 +21,17 @@ export type MutationChildren<MutationVariables, MutationResponse, MutationError>
   // eslint-disable-next-line no-undef
 ) => Nullable<JSX.Element>;
 
-export interface IMutationComponentProps<MutationVariables, MutationResponse, MutationError, MutationConfig>
+export interface IMutationComponentProps<MutationVariables, MutationResponse, MutationError, MutationConfig extends ClientConfig>
   extends IMutationProps<MutationVariables, MutationResponse, MutationError, MutationConfig> {
   children?: MutationChildren<MutationVariables, MutationResponse, MutationError>;
 }
 
-function Mutation<MutationVariables = any, MutationResponse = any, MutationError = any, MutationConfig = any>(
+function Mutation<
+  MutationVariables = any,
+  MutationResponse = any,
+  MutationError = any,
+  MutationConfig extends ClientConfig = any
+>(
   props: IMutationComponentProps<MutationVariables, MutationResponse | undefined, MutationError, MutationConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {

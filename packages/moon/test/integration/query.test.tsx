@@ -1,8 +1,8 @@
 /* eslint-disable max-classes-per-file */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { hashQueryKey } from "react-query";
 import { render, fireEvent, waitFor, queryByText } from "@testing-library/react";
+import { hashQueryKey } from "../../src/compat";
 
 import MoonProvider from "../../src/moonProvider";
 import { FetchPolicy } from "../../src/useQuery";
@@ -49,7 +49,7 @@ describe("Query component with MoonProvider", () => {
         </Query>
       </MoonProvider>
     );
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(get).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/John Smith/)).toBeTruthy();
@@ -90,7 +90,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(get).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/John Smith/)).toBeTruthy();
@@ -124,7 +124,7 @@ describe("Query component with MoonProvider", () => {
         </Query>
       </MoonProvider>
     );
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(container.querySelectorAll("span")).toHaveLength(1);
     expect(getByText(/Bimm!/)).toBeTruthy();
   });
@@ -138,7 +138,9 @@ describe("Query component with MoonProvider", () => {
         links={links}
         clientFactory={clientFactory}
         hydrate={{
-          state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
+          state: {
+            queries: [{ queryKey: ["query4"], queryHash: hashQueryKey("query4"), state: { data: cachedResponse } } as any]
+          }
         }}
       >
         <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
@@ -170,7 +172,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);
@@ -187,7 +189,9 @@ describe("Query component with MoonProvider", () => {
         links={links}
         clientFactory={clientFactory}
         hydrate={{
-          state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
+          state: {
+            queries: [{ queryKey: ["query4"], queryHash: hashQueryKey("query4"), state: { data: cachedResponse } } as any]
+          }
         }}
       >
         <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
@@ -220,7 +224,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);
@@ -237,7 +241,9 @@ describe("Query component with MoonProvider", () => {
         links={links}
         clientFactory={clientFactory}
         hydrate={{
-          state: { queries: [{ queryKey: "query5", queryHash: hashQueryKey("query5"), state: { data: cachedResponse } }] }
+          state: {
+            queries: [{ queryKey: ["query5"], queryHash: hashQueryKey("query5"), state: { data: cachedResponse } } as any]
+          }
         }}
       >
         <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
@@ -271,7 +277,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);
@@ -289,7 +295,9 @@ describe("Query component with MoonProvider", () => {
         links={links}
         clientFactory={clientFactory}
         hydrate={{
-          state: { queries: [{ queryKey: "query4", queryHash: hashQueryKey("query4"), state: { data: cachedResponse } }] }
+          state: {
+            queries: [{ queryKey: ["query4"], queryHash: hashQueryKey("query4"), state: { data: cachedResponse } } as any]
+          }
         }}
       >
         <Query<QueryVariables, typeof response, typeof response, any, MockedClientConfig>
@@ -322,7 +330,7 @@ describe("Query component with MoonProvider", () => {
     expect(container.querySelectorAll("#button")).toHaveLength(1);
     fireEvent.click(container.querySelectorAll("#button")[0]);
 
-    await waitFor(() => container.querySelector("span"));
+    await waitFor(() => expect(container.querySelector("span")).toBeTruthy());
     expect(get).toHaveBeenCalledTimes(1);
     // only Johan Smith
     expect(container.querySelectorAll("span")).toHaveLength(1);

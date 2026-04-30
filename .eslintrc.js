@@ -43,6 +43,15 @@ module.exports = {
     "@typescript-eslint/triple-slash-reference": 0,
     "import/extensions": 0,
     "@typescript-eslint/ban-ts-comment": 0,
+    // The base `no-unused-vars` rule does not understand TypeScript type
+    // signatures and falsely flags arguments in interfaces / function-type
+    // declarations. Use the TypeScript-aware variant instead.
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error", { args: "none", ignoreRestSiblings: true }],
+    // Optional TypeScript props should not be required to declare a
+    // `defaultProps` static — TS handles defaults via destructuring defaults.
+    "react/require-default-props": 0,
+    "react/default-props-match-prop-types": 0,
     "react/sort-comp": 1,
     "no-restricted-globals": 1,
     "react/no-did-update-set-state": 1,

@@ -1,8 +1,7 @@
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { renderHook } from "@testing-library/react-hooks";
-import { render } from "@testing-library/react";
-import { QueryState } from "react-query/types/core/query";
+import { renderHook, render, waitFor } from "@testing-library/react";
+import { QueryState, QueryClient } from "../../src/compat";
 
 import { usePrevValue, useQueryResult, useQueriesResults, useQueryState, useQueriesStates } from "../../src/hooks";
 import useQuery from "../../src/useQuery";
@@ -11,6 +10,21 @@ import MoonProvider from "../../src/moonProvider";
 import { links } from "../moon-client.test";
 import { withQueryResult, withQueriesResults } from "../../src/query";
 import { getMockedClientFactory, MockedClientConfig } from "../testUtils";
+
+/**
+ * These tests mount a query in one renderHook, then read the resulting cache
+ * from another renderHook (or render) that uses a separate `wrapper` element.
+ * Now that `MoonProvider` owns its QueryClient (no module-level singleton),
+ * both renders need an explicit shared `store` prop to see the same cache.
+ */
+function makeWrapper(clientFactory: any) {
+  const store = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
+  return ({ children }: { children?: any }) => (
+    <MoonProvider links={links} clientFactory={clientFactory} store={store}>
+      {children}
+    </MoonProvider>
+  );
+}
 
 interface QueryData {
   users: { id: number; name: string }[];
@@ -29,8 +43,8 @@ interface Props {
   queryResult: QueryState<typeof response, unknown>;
 }
 
-const MyComponent: React.FunctionComponent<Props> = ({ queryResult }) => {
-  return <span>{!queryResult ? "Loading" : "Success"}</span>;
+const MyComponent: React.FunctionComponent<Props> = ({ queryResult, prop }) => {
+  return <span data-prop={prop}>{!queryResult ? "Loading" : "Success"}</span>;
 };
 
 const WithQueryResultComponent = withQueryResult<Props, QueryData>("queryId")(MyComponent);
@@ -40,8 +54,8 @@ interface PropsResults {
   queriesResults: { queryId: QueryState<typeof response, unknown> };
 }
 
-const MyResultsComponent: React.FunctionComponent<PropsResults> = ({ queriesResults }) => {
-  return <span>{!queriesResults.queryId ? "Loading" : "Success"}</span>;
+const MyResultsComponent: React.FunctionComponent<PropsResults> = ({ queriesResults, prop }) => {
+  return <span data-prop={prop}>{!queriesResults.queryId ? "Loading" : "Success"}</span>;
 };
 
 const WithQueriesResultsComponent = withQueriesResults<PropsResults, QueryData>(["queryId"])(MyResultsComponent);
@@ -51,13 +65,9 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "queryId",
@@ -67,7 +77,7 @@ describe("Hooks", () => {
         }),
       { wrapper }
     );
-    await waitForNextUpdate();
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     const { getByText } = render(<WithQueryResultComponent prop="test" />, { wrapper });
     expect(getByText(/Success/)).toBeTruthy();
   });
@@ -76,13 +86,9 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "queryId",
@@ -92,7 +98,7 @@ describe("Hooks", () => {
         }),
       { wrapper }
     );
-    await waitForNextUpdate();
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     const { getByText } = render(<WithQueriesResultsComponent prop="test" />, { wrapper });
     expect(getByText(/Success/)).toBeTruthy();
   });
@@ -101,13 +107,9 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery",
@@ -117,7 +119,7 @@ describe("Hooks", () => {
         }),
       { wrapper }
     );
-    await waitForNextUpdate();
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     //@ts-ignore response can't be undefined
     const { result } = renderHook(() => useQueryResult<QueryData, number>("myQuery", response => response?.users[0].id), {
       wrapper
@@ -129,13 +131,9 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery1",
@@ -145,7 +143,7 @@ describe("Hooks", () => {
         }),
       { wrapper }
     );
-    await waitForNextUpdate();
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     const { result } = renderHook(
       () => useQueriesResults<{ myQuery1: QueryState<typeof response, unknown> }>(["myQuery1"]),
       { wrapper }
@@ -157,13 +155,9 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery2",
@@ -173,7 +167,7 @@ describe("Hooks", () => {
         }),
       { wrapper }
     );
-    await waitForNextUpdate();
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     //@ts-ignore data can't be undefined
     const { result } = renderHook(() => useQueryState<QueryData, number>("myQuery2", response => response?.data.users[0].id), {
       wrapper
@@ -185,13 +179,9 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
-    const { waitForNextUpdate } = renderHook(
+    renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "myQuery3",
@@ -201,7 +191,7 @@ describe("Hooks", () => {
         }),
       { wrapper }
     );
-    await waitForNextUpdate();
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
     const { result } = renderHook(
       () => useQueriesStates<QueryData>(["myQuery3"]),
       { wrapper }
@@ -228,11 +218,7 @@ describe("Hooks", () => {
     const get = jest.fn().mockImplementation(() => Promise.resolve(response));
     const clientFactory = getMockedClientFactory({ get });
 
-    const wrapper = ({ children }: { children?: any }) => (
-      <MoonProvider links={links} clientFactory={clientFactory}>
-        {children}
-      </MoonProvider>
-    );
+    const wrapper = makeWrapper(clientFactory);
     const variables = { foo: "bar" };
     const { result } = renderHook(
       () =>
@@ -248,7 +234,7 @@ describe("Hooks", () => {
     // call prefetch
     await result.current();
     expect(get).toBeCalledTimes(1);
-    expect(get).toBeCalledWith("/users", { params: { foo: "bar" } });
+    expect(get).toBeCalledWith("/users", expect.objectContaining({ params: { foo: "bar" } }));
     const { result: cachedResult } = renderHook(
       //@ts-ignore data can't be undefined
       () => useQueryState<QueryData, number>("myQuery4", response => response?.data.users[0].id),

@@ -2,8 +2,8 @@
 /* eslint-disable  prefer-destructuring */
 /// <reference path="../typings/tests-entry.d.ts" />
 import * as React from "react";
-import { renderHook, act } from "@testing-library/react-hooks";
-import { hashQueryKey } from "react-query";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { hashQueryKey } from "../../src/compat";
 
 import MoonProvider from "../../src/moonProvider";
 import useQuery from "../../src/useQuery";
@@ -30,7 +30,7 @@ describe("Query component with MoonProvider", () => {
     );
     const variables = { foo: "bar" };
     const onResponse = jest.fn();
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           source: "FOO",
@@ -44,12 +44,11 @@ describe("Query component with MoonProvider", () => {
     expect(state.data).toBeUndefined();
     expect(state.isLoading).toBeTruthy();
     expect(state.error).toBeFalsy();
-    await waitForNextUpdate();
+    await waitFor(() => expect(result.current[0].data).toBe(response));
     state = result.current[0];
-    expect(state.data).toBe(response);
     expect(state.isLoading).toBeFalsy();
     expect(state.error).toBeFalsy();
-    expect(onResponse).toBeCalledTimes(1);
+    await waitFor(() => expect(onResponse).toHaveBeenCalledTimes(1));
     expect(onResponse).toBeCalledWith(response);
   });
 
@@ -65,13 +64,15 @@ describe("Query component with MoonProvider", () => {
       <MoonProvider
         links={links}
         clientFactory={clientFactory}
-        hydrate={{ state: { queries: [{ queryKey: "queryId", queryHash: hashQueryKey("queryId"), state: { data: cache } }] } }}
+        hydrate={{
+          state: { queries: [{ queryKey: ["queryId"], queryHash: hashQueryKey("queryId"), state: { data: cache } } as any] }
+        }}
       >
         {children}
       </MoonProvider>
     );
     const variables = { foo: "bar" };
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, any, MockedClientConfig>({
           id: "queryId",
@@ -87,11 +88,11 @@ describe("Query component with MoonProvider", () => {
     expect(isLoading).toBeFalsy();
     expect(error).toBeFalsy();
     // fetch
-    //@ts-ignore
-    act(() => actions.refetch());
-    await waitForNextUpdate();
+    await act(async () => {
+      await actions.refetch();
+    });
+    await waitFor(() => expect(result.current[0].data).toEqual(response));
     const state = result.current[0];
-    expect(state.data).toEqual(response);
     expect(state.isLoading).toBeFalsy();
     expect(state.error).toBeFalsy();
   });
@@ -108,7 +109,7 @@ describe("Query component with MoonProvider", () => {
       </MoonProvider>
     );
     const variables = { foo: "bar" };
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () =>
         useQuery<QueryVariables, typeof response, typeof response, string, MockedClientConfig>({
           id: "queryId2",
@@ -123,12 +124,11 @@ describe("Query component with MoonProvider", () => {
     expect(state.data).toBeUndefined();
     expect(state.isLoading).toBeTruthy();
     expect(state.error).toBeFalsy();
-    await waitForNextUpdate();
+    await waitFor(() => expect(result.current[0].error).toBe(error));
     state = result.current[0];
     expect(state.data).toBeUndefined();
     expect(state.isLoading).toBeFalsy();
-    expect(state.error).toBe(error);
-    expect(onError).toBeCalledTimes(1);
+    await waitFor(() => expect(onError).toHaveBeenCalledTimes(1));
     expect(onError).toBeCalledWith(error);
   });
 });

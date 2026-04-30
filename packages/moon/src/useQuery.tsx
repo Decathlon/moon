@@ -1,6 +1,17 @@
 import * as React from "react";
-import { useQuery as useReactQuery, UseQueryResult, UseQueryOptions as ReactQueryConfig } from "react-query";
 
+import {
+  QueryFunctionContext,
+  UseQueryResult,
+  LegacyUseQueryOptions as ReactQueryConfig,
+  useReactQuery,
+  useLegacyQueryCallbacks,
+  withDefaultQueryOptions,
+  cancelQueryById,
+  setQueryDataById,
+  getQueryDataById,
+  removeQueryById
+} from "./compat";
 import { useMoon, usePrevValue } from "./hooks";
 import { ClientConfig, getId } from "./utils";
 
@@ -14,9 +25,11 @@ export enum FetchPolicy {
 }
 
 export type IQueryResultProps<QueryResponse, QueryError> = [
-  Omit<UseQueryResult<QueryResponse, QueryError>, "refetch" | "remove">,
-  Pick<UseQueryResult<QueryResponse, QueryError>, "refetch" | "remove"> & {
+  Omit<UseQueryResult<QueryResponse, QueryError>, "refetch">,
+  Pick<UseQueryResult<QueryResponse, QueryError>, "refetch"> & {
     cancel: () => void;
+    /** Remove the cached entry for this query. Provided by Moon (was on `UseQueryResult` in react-query v3). */
+    remove: () => void;
   }
 ];
 
@@ -41,7 +54,7 @@ export interface IQueryProps<
   fetchPolicy?: FetchPolicy;
   /** The http client options of your query. */
   options?: QueryConfig;
-  /** The react-query config. Please see the react-query QueryConfig for more details. */
+  /** The cache library config (forwarded to @tanstack/react-query). Accepts the v5 `UseQueryOptions` plus the v3 legacy fields `onSuccess`, `onError`, `onSettled`, `cacheTime`, `keepPreviousData` for backward compatibility. */
   queryConfig?: ReactQueryConfig<QueryResponse, QueryError, QueryData>;
 }
 
@@ -76,33 +89,46 @@ export default function useQuery<
 
   const queryOptions: ReactQueryConfig<QueryResponse, QueryError, QueryData> = React.useMemo(
     () =>
-      store.defaultQueryObserverOptions({
+      withDefaultQueryOptions<QueryData, QueryError, QueryResponse>(store, {
         ...queryConfig,
-        // to fix (react-query)
+        // NetworkOnly forces gcTime: 0 so the entry is dropped as soon as the query unmounts,
+        // making the next mount fall back to the network instead of returning the cached result.
         cacheTime: networkOnly ? 0 : queryConfig?.cacheTime
       }),
     [queryConfig, networkOnly, store]
   );
 
   if (isInitialMount.current && networkOnly) {
-    // remove cache if networkOnly
-    // @ts-ignore @react-query must update to undefined
-    store.setQueryData<QueryData>(queryId, queryConfig?.initialData);
+    // Reset the cache entry to `initialData` (or undefined) so NetworkOnly always
+    // starts from a clean slate, not from a stale cached value left by a sibling query.
+    setQueryDataById<QueryData | undefined>(store, queryId, queryConfig?.initialData as QueryData | undefined);
   }
 
-  function fetch() {
-    const cachedResult = store.getQueryData<QueryResponse>(queryId, { exact: true });
-    return cacheOnly && cachedResult
-      ? cachedResult
-      : client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, options);
+  function fetch(context: QueryFunctionContext) {
+    const cachedResult = getQueryDataById<QueryResponse>(store, queryId);
+    if (cacheOnly && cachedResult) {
+      return cachedResult;
+    }
+    // Forward the AbortSignal supplied by TanStack Query v5 so the underlying
+    // client (axios / fetch / graphql-request) can natively cancel on refetch
+    // or unmount.
+    const optionsWithSignal = { ...(options as Record<string, unknown>), signal: context.signal } as QueryConfig;
+    return client.query<QueryVariables, QueryResponse, QueryConfig>(source, endPoint, variables, optionsWithSignal);
   }
 
   const queryResult = useReactQuery<QueryResponse, QueryError, QueryData>(queryId, fetch, queryOptions);
 
-  const { refetch, remove, ...others } = queryResult;
+  // Bridge react-query v3 onSuccess/onError/onSettled (removed in v5).
+  useLegacyQueryCallbacks(queryResult, queryConfig);
+
+  const { refetch, ...others } = queryResult;
 
   function cancel() {
-    return store.cancelQueries(queryId, { exact: true });
+    return cancelQueryById(store, queryId);
+  }
+
+  function remove() {
+    removeQueryById(store, queryId);
   }
 
   React.useEffect(() => {

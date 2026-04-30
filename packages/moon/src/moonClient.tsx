@@ -36,7 +36,7 @@ export default class MoonClient {
         params: { ...options?.params, ...variables }
       });
     }
-    return new Promise(reject => reject(undefined));
+    return Promise.resolve((undefined as unknown) as Response);
   }
 
   public mutate<Variables = any, Response = any, Config extends ClientConfig = any>(
@@ -63,6 +63,6 @@ export default class MoonClient {
       }
     }
 
-    return new Promise(reject => reject(undefined));
+    return Promise.resolve((undefined as unknown) as Response);
   }
 }

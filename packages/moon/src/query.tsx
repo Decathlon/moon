@@ -1,13 +1,16 @@
 import * as React from "react";
-import { InfiniteData, UseQueryResult } from "react-query";
 
+import { InfiniteData, UseQueryResult } from "./compat";
 import { PropsWithForwardRef, Nullable } from "./typing";
 import useQuery, { FetchPolicy, IQueryProps } from "./useQuery";
 import { useQueriesResults, ResultProps, useQueryResult, QueriesResults } from "./hooks";
+import { ClientConfig } from "./utils";
 
-export interface IQueryChildrenProps<QueryData, QueryError>
-  extends Omit<UseQueryResult<QueryData, QueryError>, "refetch" | "remove"> {
-  actions: Pick<UseQueryResult<QueryData, QueryError>, "refetch" | "remove">;
+export interface IQueryChildrenProps<QueryData, QueryError> extends Omit<UseQueryResult<QueryData, QueryError>, "refetch"> {
+  actions: Pick<UseQueryResult<QueryData, QueryError>, "refetch"> & {
+    remove: () => void;
+    cancel: () => Promise<void> | void;
+  };
 }
 
 export type QueryChildren<QueryData, QueryError> = (
@@ -20,7 +23,13 @@ export interface IQueryComponentProps<QueryVariables, QueryResponse, QueryData, 
   children?: QueryChildren<QueryData, QueryError>;
 }
 
-function Query<QueryVariables = any, QueryResponse = any, QueryData = QueryResponse, QueryError = any, QueryConfig = any>(
+function Query<
+  QueryVariables = any,
+  QueryResponse = any,
+  QueryData = QueryResponse,
+  QueryError = any,
+  QueryConfig extends ClientConfig = any
+>(
   props: IQueryComponentProps<QueryVariables, QueryResponse, QueryData, QueryError, QueryConfig>
   // eslint-disable-next-line no-undef
 ): Nullable<JSX.Element> {
@@ -56,8 +65,7 @@ export function withQueryResult<Props = any, Data = any, QueryResultProps = Resu
     };
 
     return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutQuery>((props, ref) => {
-      // @ts-ignore I don't know how to implement this without breaking out of the types.
-      return <WithQueryComponent forwardedRef={ref} {...props} />;
+      return <WithQueryComponent forwardedRef={ref} {...(props as React.PropsWithChildren<WrappedComponentPropsWithoutQuery>)} />;
     });
   };
 }
@@ -88,8 +96,7 @@ export function withQueriesResults<Props = any, Data = any, QueryResultProps = R
     };
 
     return React.forwardRef<WrappedComponentInstance, WrappedComponentPropsWithoutQuery>((props, ref) => {
-      // @ts-ignore I don't know how to implement this without breaking out of the types.
-      return <WithQueryComponent forwardedRef={ref} {...props} />;
+      return <WithQueryComponent forwardedRef={ref} {...(props as WrappedComponentPropsWithoutQuery)} />;
     });
   };
 }
